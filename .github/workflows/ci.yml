@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  issues: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,8 +37,27 @@ jobs:
       # `npm install` (le lock sera généré au premier `npm install` local
       # puis committé ; on repassera alors à `cache: npm` + `npm ci`).
       - run: npm install --no-audit --no-fund
-      - run: npm run check:logic
-      - run: npx prisma db push
-      - run: npm run db:seed
-      - run: npm run typecheck
-      - run: npm run build
+      - run: npm run check:logic 2>&1 | tee step-check.log
+      - run: npx prisma db push 2>&1 | tee step-db.log
+      - run: npm run db:seed 2>&1 | tee step-seed.log
+      - run: npm run typecheck 2>&1 | tee step-typecheck.log
+      - run: npm run build 2>&1 | tee step-build.log
+      # En cas d'échec, publier la fin des logs dans une issue du repo
+      # pour diagnostiquer sans accès authentifié aux logs Actions.
+      - name: Journal d'echec vers issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for f in step-*.log; do echo "--- $f (fin) ---" >> tutti.log; tail -n 80 "$f" >> tutti.log; done
+          gh issue create -R olivierpellegrin-ops/cheminsetfontaines \
+            -t "CI : journal d'echec (${GITHUB_SHA::7})" \
+            -F tutti.log || true
+      - name: Fermer l'issue si succes
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue list -R olivierpellegrin-ops/cheminsetfontaines --state open --limit 5 \
+            --json number,title --jq '.[] | select(.title | startswith("CI : journal")) | .number' \
+            | while read n; do gh issue close "$n" -R olivierpellegrin-ops/cheminsetfontaines || true; done
