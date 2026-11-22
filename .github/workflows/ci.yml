@@ -26,8 +26,8 @@ jobs:
       DATABASE_URL: "postgresql://cf:cf@localhost:5432/cheminsetfontaines_test?schema=public"
       NOTIFY_EMAIL: "contact@cheminsetfontaines.fr"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       # NOTE : tant que package-lock.json n'est pas committé, on utilise

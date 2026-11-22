@@ -13,17 +13,21 @@ export const metadata: Metadata = {
     "Tous les itinéraires de l'association, regroupés par commune. Téléchargez nos traces GPX et préparez votre prochaine marche en Corrèze.",
 };
 
-type Rt = {
+// Ligne brute renvoyée par Prisma (avant enrichissement).
+type RouteRow = {
   slug: string;
   title: string;
   description: string;
   townshipLabel: string;
   imageUrl: string | null;
-  hasAlbum: boolean;
+  photos: { id: string }[];
 };
 
+// Ligne enrichie : hasAlbum est calculé localement.
+type Rt = RouteRow & { hasAlbum: boolean };
+
 export default async function RoutesPage() {
-  const routes: Rt[] = await prisma.route.findMany({
+  const rows: RouteRow[] = await prisma.route.findMany({
     where: { status: "published" },
     orderBy: [{ townshipLabel: "asc" }, { title: "asc" }],
     select: {
@@ -38,8 +42,8 @@ export default async function RoutesPage() {
 
   // Q16 : regroupement par commune (Township), libellés d'origine conservés.
   const groups = new Map<string, Rt[]>();
-  for (const r of routes) {
-    const item = { ...r, hasAlbum: r.photos.length > 0 };
+  for (const r of rows) {
+    const item: Rt = { ...r, hasAlbum: r.photos.length > 0 };
     const list = groups.get(r.townshipLabel) ?? [];
     list.push(item);
     groups.set(r.townshipLabel, list);
