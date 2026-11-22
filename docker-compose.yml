@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: cheminsetfontaines-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cf
+      POSTGRES_PASSWORD: cf
+      POSTGRES_DB: cheminsetfontaines
+    ports:
+      - "5432:5432"
+    volumes:
+      - cf_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cf -d cheminsetfontaines"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  cf_pgdata:
