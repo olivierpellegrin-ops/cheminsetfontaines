@@ -30,8 +30,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+      # NOTE : tant que package-lock.json n'est pas committé, on utilise
+      # `npm install` (le lock sera généré au premier `npm install` local
+      # puis committé ; on repassera alors à `cache: npm` + `npm ci`).
+      - run: npm install --no-audit --no-fund
+      - run: npm run check:logic
       - run: npx prisma db push
       - run: npm run db:seed
       - run: npm run typecheck

@@ -2,7 +2,11 @@
    Couleurs Assets Framer : Parchment #F4F1E8, Forest Green #163C32,
    Ochre #C18A21, Moss #587551, variantes #4D6B4B/#43534A,
    bordures/fonds clairs #D2DCCB/#D9DED5/#E8EEE4.
-   Typo : National Park 700 (display), Fira Sans (body 17px/1.6). */
+   Typo : National Park 700 (display), Fira Sans (body 17px/1.6).
+   Chargées via Google Fonts CSS2 (display=swap) — aucune validation
+   de polices au build, repli système si indisponibles. */
+
+@import url("https://fonts.googleapis.com/css2?family=National+Park:wght@700&family=Fira+Sans:wght@400;500;600&display=swap");
 
 :root {
   --parchment: #f4f1e8;
@@ -15,8 +19,8 @@
   --border-mid: #d9ded5;
   --bg-tint: #e8eee4;
 
-  --font-display: var(--font-national-park), Georgia, serif;
-  --font-body: var(--font-fira-sans), "Fira Sans", system-ui, sans-serif;
+  --font-display: "National Park", Georgia, serif;
+  --font-body: "Fira Sans", system-ui, sans-serif;
 
   --container: 1120px;
   --radius: 14px;

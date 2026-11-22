@@ -29,6 +29,17 @@ Les traces GPX ne sont pas dans le dépôt distant initial : voir
 [docs/MEDIA.md](docs/MEDIA.md) pour les ajouter depuis le PC
 (dossier OneDrive `03_Itineraires/migration-auto/`).
 
+## Vérifications
+
+```bash
+npm run check:logic   # 27 assertions sur les données CSV réelles (slugs, communes, détails, dates) — sans base de données
+npm run typecheck     # TypeScript strict
+```
+
+> Note : `package-lock.json` n'est pas encore committé. Après ton premier
+> `npm install` local, committes-le — on repassera ensuite la CI sur
+> `cache: npm` + `npm ci` (installation reproductible).
+
 ## Structure
 
 ```

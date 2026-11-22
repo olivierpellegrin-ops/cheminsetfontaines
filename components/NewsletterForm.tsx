@@ -68,5 +68,4 @@ const honeypotStyle: React.CSSProperties = {
   opacity: 0,
   height: 1,
   width: 1,
-  tabIndex: -1,
 };
