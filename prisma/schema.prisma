@@ -1,0 +1,160 @@
+// Schéma Prisma — Chemins et Fontaines (v0.1)
+// Correspondance collections Framer -> tables :
+//   ROUTES -> Route (+ RoutePhoto), EVENTS -> Event, NEWSLETTERS -> Newsletter,
+//   SUBSCRIBERS -> Subscriber (source de vérité locale, double opt-in).
+// Nouvelles tables refonte : Commune (Xaintrie), MembershipRequest, ContactMessage.
+// Extension prévue agent Strava : StravaActivity (§7 des spécifications),
+// publiée APRÈS validation humaine par clonage dans Route (source="strava").
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Difficulty {
+  facile
+  moyen
+  difficile
+}
+
+enum ContentStatus {
+  published
+  draft
+}
+
+enum SubscriberStatus {
+  pending
+  subscribed
+  unsubscribed
+  invalid
+}
+
+enum SubscriptionSource {
+  formulaire
+  import
+  adhesion
+}
+
+model Commune {
+  id            String   @id @default(cuid())
+  name          String   @unique // nom canonique INSEE (ex. "Saint-Chamant")
+  slug          String   @unique
+  inseeCode     String? // ex. "19192"
+  lat           Float?
+  lng           Float?
+  // Truth de regroupement des itinéraires (Q16) ; le libellé d'affichage
+  // historique (ex. "St-Chamand") est conservé sur Route.townshipLabel.
+  routes        Route[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Route {
+  id             String     @id @default(cuid())
+  slug           String     @unique // normalisé (Q2) : sans accents, tirets simples
+  legacySlug     String? // slug Framer d'origine, pour audit 301
+  title          String
+  detailsRaw     String // texte Framer d'origine ("12 kms - dénivellé 280m - niveau facile")
+  distanceKm     Float?
+  elevationGainM Int?
+  difficulty     Difficulty?
+  description    String
+  gpxFileName    String? // nom lisible pour le téléchargement (ex. "Auriac_CdF_2024.gpx")
+  gpxUrl         String? // fallback Framer tant que public/gpx/<slug>.gpx est absent
+  imageUrl       String?
+  imageAlt       String?
+  townshipLabel  String // libellé Township Framer d'origine (affichage à l'identique)
+  commune        Commune?   @relation(fields: [communeId], references: [id])
+  communeId      String?
+  status         ContentStatus @default(published)
+  source         String     @default("saisie_manuelle") // saisie_manuelle | strava
+  sourceStravaId String?
+  photos         RoutePhoto[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([communeId])
+  @@index([status])
+}
+
+model RoutePhoto {
+  id        String  @id @default(cuid())
+  title     String
+  imageUrl  String
+  imageAlt  String?
+  route     Route   @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  routeId   String
+  createdAt DateTime @default(now())
+}
+
+model Event {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  title       String
+  dateLabel   String // libellé affiché à l'identique ("31 OCT 2026 · 14:00")
+  sortDate    DateTime? // pour "3 derniers" de la home (dates sans année : à compléter à publication)
+  details     String
+  imageUrl    String?
+  imageAlt    String?
+  status      ContentStatus @default(published)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, sortDate])
+}
+
+model Newsletter {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  title            String
+  publicationDate  DateTime
+  publicationLabel String // "Septembre 2026"
+  summary          String
+  coverImageUrl    String?
+  featured          String? // "Featured Route Or Township"
+  externalUrl      String? // archive Mailchimp conservée
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Subscriber {
+  id               String             @id @default(cuid())
+  email            String             @unique
+  firstName        String?
+  lastName         String?
+  phone            String?
+  language         String             @default("fr")
+  status           SubscriberStatus   @default(pending)
+  source           SubscriptionSource @default(formulaire)
+  confirmedAt      DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+}
+
+model MembershipRequest {
+  id         String   @id @default(cuid())
+  civilite   String? // Madame | Monsieur | Autre
+  firstName  String?
+  lastName   String?
+  address    String?
+  email      String
+  phone      String?
+  postalCode String?
+  city       String?
+  country    String? // France | Belgique | Suisse | Autre
+  handledAt  DateTime? // traité par le bureau
+  createdAt  DateTime @default(now())
+}
+
+model ContactMessage {
+  id        String    @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  handledAt DateTime?
+  createdAt DateTime  @default(now())
+}
