@@ -3,14 +3,18 @@
 import { useActionState, useState } from "react";
 import type { RouteFormState } from "@/app/actions/admin-routes";
 import { composeDetailsRaw } from "@/lib/details";
+import { normalizeSlug } from "@/lib/slug";
 
 type Commune = { id: string; name: string };
 type Difficulty = "facile" | "moyen" | "difficile" | null;
+type PhotoRow = { key: number };
 
 /**
- * Formulaire itinéraire (B2 : création ; réutilisé tel quel en B4 pour l'édition).
- * - prè-remplit le libellé affiché avec le nom INSEE au choix de commune ;
- * - montre en direct la ligne détails qui sera composée côté serveur.
+ * Formulaire itinéraire complet (B3) — champs à l'identique du CMS Framer :
+ * Title, Status (toggle Publié), Slug (auto-éditable), Details (composée,
+ * surchargable), GPX Upload, Description, Route Image, Township,
+ * Photo Gallery (+), Has Photo Album (toggle).
+ * Réutilisable tel quel pour l'édition (B4).
  */
 export default function RouteForm({
   communes,
@@ -24,11 +28,20 @@ export default function RouteForm({
   const [state, formAction, pending] = useActionState(action, {} as RouteFormState);
   const [communeId, setCommuneId] = useState("");
   const [townshipLabel, setTownshipLabel] = useState("");
+  const [title, setTitle] = useState("");
+  const [slugInput, setSlugInput] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
   const [distance, setDistance] = useState("");
   const [elevation, setElevation] = useState("");
   const [difficulty, setDifficulty] = useState("");
+  const [detailsOverride, setDetailsOverride] = useState("");
+  const [published, setPublished] = useState(false);
+  const [hasAlbum, setHasAlbum] = useState(false);
+  const [photoRows, setPhotoRows] = useState<PhotoRow[]>([]);
 
   const communeName = communes.find((c) => c.id === communeId)?.name ?? "";
+  const autoSlug = normalizeSlug(title);
+  const slug = slugTouched ? slugInput : autoSlug;
   const detailsPreview = composeDetailsRaw(
     distance === "" ? null : Number(distance.replace(",", ".")),
     elevation === "" ? null : Number(elevation),
@@ -43,7 +56,31 @@ export default function RouteForm({
 
       <label>
         Titre *
-        <input name="title" type="text" required placeholder="Ex. Panoramas d'automne" />
+        <input
+          name="title"
+          type="text"
+          required
+          placeholder="Ex. Panoramas d'automne"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </label>
+
+      <label>
+        Slug
+        <input
+          name="slug"
+          type="text"
+          value={slug}
+          onChange={(e) => {
+            setSlugTouched(true);
+            setSlugInput(e.target.value);
+          }}
+          placeholder="Auto-généré depuis le titre"
+        />
+        <span className="cf-admin__hint">
+          Normalisé (sans accents) : /fr/routes/{autoSlug || "…"}
+        </span>
       </label>
 
       <div className="cf-admin__form-row">
@@ -56,7 +93,7 @@ export default function RouteForm({
             onChange={(e) => {
               setCommuneId(e.target.value);
               const name = communes.find((c) => c.id === e.target.value)?.name;
-              if (name) setTownshipLabel((cur) => cur === "" || cur === communeName ? name : cur);
+              if (name) setTownshipLabel((cur) => (cur === "" || cur === communeName ? name : cur));
             }}
           >
             <option value="">— Choisir —</option>
@@ -112,21 +149,108 @@ export default function RouteForm({
         </label>
       </div>
 
-      <p className="cf-admin__form-preview">
-        Ligne détails enregistrée&nbsp;:{" "}
-        <strong>{detailsPreview ?? "(vide — composée automatiquement depuis les 3 champs)"}</strong>
-      </p>
+      <label>
+        Ligne détails
+        <input
+          name="detailsRaw"
+          type="text"
+          value={detailsOverride}
+          onChange={(e) => setDetailsOverride(e.target.value)}
+          placeholder={detailsPreview ?? "Composée automatiquement depuis les 3 champs"}
+        />
+        <span className="cf-admin__hint">
+          Laisser vide pour la ligne automatique
+          {detailsPreview ? ` : « ${detailsPreview} »` : " (renseignez distance/dénivelé/niveau)."}
+        </span>
+      </label>
 
       <label>
         Description *
-        <textarea name="description" rows={8} required placeholder="Texte de présentation de l'itinéraire (page publique)." />
+        <textarea
+          name="description"
+          rows={8}
+          required
+          placeholder="Texte de présentation de l'itinéraire (page publique)."
+        />
       </label>
+
+      <div className="cf-admin__form-row">
+        <label>
+          Fichier GPX (.gpx, max 10 Mo)
+          <input name="gpxFile" type="file" accept=".gpx,.xml" />
+        </label>
+        <label>
+          Photo principale (JPG/PNG/WebP, max 4 Mo)
+          <input name="imageFile" type="file" accept=".jpg,.jpeg,.png,.webp" />
+        </label>
+      </div>
+      <label>
+        Texte alternatif de la photo principale
+        <input name="imageAlt" type="text" placeholder="Ex. Le tracé vu depuis le village" />
+      </label>
+
+      <div className="cf-admin__album">
+        <div className="cf-admin__form-toggles">
+          <label className="cf-admin__toggle">
+            <input
+              type="checkbox"
+              name="hasPhotoAlbum"
+              checked={hasAlbum}
+              onChange={(e) => setHasAlbum(e.target.checked)}
+            />
+            A un album photo (badge public)
+          </label>
+          <label className="cf-admin__toggle">
+            <input
+              type="checkbox"
+              name="published"
+              checked={published}
+              onChange={(e) => setPublished(e.target.checked)}
+            />
+            Publié (sinon brouillon)
+          </label>
+        </div>
+
+        <p className="cf-admin__form-legend">Album photos</p>
+        {photoRows.map((row, i) => (
+          <div className="cf-admin__photo-row" key={row.key}>
+            <label>
+              Fichier {i + 1}
+              <input name={`photo.file-${i}`} type="file" accept=".jpg,.jpeg,.png,.webp" required />
+            </label>
+            <label>
+              Titre
+              <input name={`photo.title-${i}`} type="text" placeholder="Ex. Au sommet" />
+            </label>
+            <label>
+              Texte alternatif
+              <input name={`photo.alt-${i}`} type="text" placeholder="Ex. Vue sur la vallée" />
+            </label>
+            <button
+              type="button"
+              className="cf-admin__photo-remove"
+              onClick={() => setPhotoRows((rows) => rows.filter((r) => r.key !== row.key))}
+            >
+              Retirer
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          className="cf-admin__photo-add"
+          onClick={() => setPhotoRows((rows) => [...rows, { key: Date.now() + rows.length }])}
+        >
+          + Ajouter une photo (max 4 Mo)
+        </button>
+      </div>
 
       <div className="cf-admin__form-actions">
         <button type="submit" disabled={pending}>
           {pending ? "Enregistrement…" : submitLabel}
         </button>
-        <span className="cf-admin__hint">Créé en brouillon — la publication est une action séparée.</span>
+        <span className="cf-admin__hint">
+          {published ? "Sera visible publiquement dès l'enregistrement." : "Créé en brouillon — publication possible ensuite."}
+        </span>
       </div>
     </form>
   );

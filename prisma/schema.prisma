@@ -88,6 +88,7 @@ model Route {
   commune        Commune?   @relation(fields: [communeId], references: [id])
   communeId      String?
   status         ContentStatus @default(published)
+  hasPhotoAlbum  Boolean    @default(false) // badge « Album photos » de la page publique (toggle Framer Has Photo Album)
   source         String     @default("saisie_manuelle") // saisie_manuelle | strava
   sourceStravaId String?
   photos         RoutePhoto[]
