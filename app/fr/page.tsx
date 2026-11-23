@@ -76,13 +76,13 @@ export default async function HomePage() {
       >
         <p className="kicker" style={{ color: "rgb(230, 215, 174)", fontSize: 21, letterSpacing: "1.4px" }}>
             {SITE.kicker}
-          </p>
-          <h1 className="h1" style={{ margin: "16px 0 12px" }}>
+        </p>
+        <h1 className="h1" style={{ margin: "16px 0 12px" }}>
             {SITE.name}
-          </h1>
-          <p style={{ fontSize: 20, maxWidth: 640, opacity: 0.92 }}>
+        </h1>
+        <p style={{ fontSize: 20, maxWidth: 640, opacity: 0.92 }}>
             {SITE.baseline}
-          </p>
+        </p>
       </section>
 
       {/* NOTRE MISSION — « About Us » Framer : 2 colonnes, logo à gauche
@@ -123,125 +123,117 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* PROCHAINES SORTIES */}
-      <section className="section section-tint">
-        <div className="container">
-          <h2 className="h2" style={{ marginBottom: 8 }}>
-            Prochaines sorties
-          </h2>
-          <p className="body-muted" style={{ marginBottom: 28 }}>
-            Des rendez-vous ouverts à tous, au rythme des saisons.
-          </p>
-          <div className="section-grid">
-            {events.map((e) => (
-              <article key={e.slug} className="card">
-                <div className="card-body">
-                  <p className="card-meta" style={{ color: "var(--ochre)", fontWeight: 600 }}>
-                    {e.dateLabel}
-                  </p>
-                  <h3 className="card-title" style={{ marginTop: 4 }}>
-                    {e.title}
-                  </h3>
-                  <p className="card-meta">{e.details}</p>
-                  <p style={{ marginTop: 12 }}>
-                    <Link href="/fr/events" className="link-more">
-                      Voir les sorties
-                    </Link>
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
+      {/* PROCHAINES SORTIES — wrapper Framer « Events » (.framer-14zj7ct) :
+          max 1080 CENTRÉ, fond blanc, padding 22/72 (64/48 tablette),
+          colonne gap 24, h2 = lien ; grille 3 colonnes gap 16 ;
+          Hike Card (.framer-kd1vos) blanche, bordure #d9ded5, radius 16,
+          padding 16, gap 8, SANS lien ni image. */}
+      <section className="home-wrap home-wrap--events">
+        <h2 className="h2" style={{ margin: 0 }}>
+          <Link href="/fr/events">Prochaines sorties</Link>
+        </h2>
+        <p className="body-muted" style={{ margin: 0 }}>
+          Des rendez-vous ouverts à tous, au rythme des saisons.
+        </p>
+        <div className="home-grid">
+          {events.map((e) => (
+            <article key={e.slug} className="hike-card">
+              <p className="hike-date">{e.dateLabel}</p>
+              <h3 className="hike-title">{e.title}</h3>
+              <p className="hike-desc">{e.details}</p>
+            </article>
+          ))}
         </div>
       </section>
 
-      {/* ITINÉRAIRES À TÉLÉCHARGER */}
-      <section className="section">
-        <div className="container">
-          <h2 className="h2" style={{ marginBottom: 8 }}>
-            Itinéraires à télécharger
-          </h2>
-          <p className="body-muted" style={{ marginBottom: 28 }}>
-            Préparez votre prochaine marche avec nos traces GPX.
-          </p>
-          <div className="section-grid">
-            {routes.map((r) => (
-              <article key={r.slug} className="card">
-                {r.imageUrl && (
-                  <Link href={`/fr/routes/${r.slug}`} aria-label={r.title}>
-                    <Image
-                      src={r.imageUrl}
-                      alt={r.title}
-                      width={1200}
-                      height={800}
-                      className="card-image"
-                    />
-                  </Link>
-                )}
-                <div className="card-body">
-                  <span className="badge">{r.townshipLabel}</span>
-                  <h3 className="card-title" style={{ marginTop: 8 }}>
-                    <Link href={`/fr/routes/${r.slug}`}>{r.title}</Link>
-                  </h3>
-                  <p className="card-meta">{r.detailsRaw}</p>
-                  <p style={{ marginTop: 12 }}>
-                    <GPXButton slug={r.slug} />
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
+      {/* ITINÉRAIRES À TÉLÉCHARGER — wrapper Framer « Routes »
+          (.framer-2jlug8) : padding 30/72, h2 = lien ;
+          Route Download Card (.framer-8coc2z) : fond #e8eee4,
+          bordure #d2dccb, radius 14, padding 16, gap 8 ; image pleine
+          largeur .framer-qdtoyc height 150 radius 10 ; GPX button
+          (.framer-1i8uyt4) bg #e8eee4 radius 10 ; township moss. */}
+      <section className="home-wrap">
+        <h2 className="h2" style={{ margin: 0 }}>
+          <Link href="/fr/routes">Itinéraires à télécharger</Link>
+        </h2>
+        <p className="body-muted" style={{ margin: 0 }}>
+          Préparez votre prochaine marche avec nos traces GPX.
+        </p>
+        <div className="home-grid">
+          {routes.map((r) => (
+            <article key={r.slug} className="route-card">
+              {r.imageUrl && (
+                <Link href={"/fr/routes/" + r.slug} aria-label={r.title} className="route-img">
+                  <Image
+                    src={r.imageUrl}
+                    alt={r.title}
+                    width={1200}
+                    height={800}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                </Link>
+              )}
+              <h3 className="route-title">
+                <Link href={"/fr/routes/" + r.slug}>{r.title}</Link>
+              </h3>
+              <p className="route-desc">{r.detailsRaw}</p>
+              <GPXButton slug={r.slug} />
+              {r.townshipLabel && <p className="route-town">{r.townshipLabel}</p>}
+            </article>
+          ))}
         </div>
       </section>
 
-      {/* SOUTENIR NOS CHEMINS */}
-      <section className="section section-tint">
+      {/* SOUTENIR NOS CHEMINS + DEVENIR ADHÉRENT — wrapper Framer
+          « Funds & Membership » (.framer-1wwb8ye) : bandeau MOSS #4d6b4b,
+          max 1080 centré, padding 72, gap 48 (28/48 tablette, 20/32 colonne
+          mobile). Carte dons (.framer-5cqewx) : photo BsraFx… en fond +
+          voile #0c261c8f (.framer-1irbqt6), titre 30px blanc = lien,
+          bouton ochre (.framer-1m9feh4). Carte adhésion (.framer-khbiqw) :
+          parchemin #f4f1e8, radius 16, padding 26, titre 24px #163c32,
+          texte 15px #43534A, bouton ochre (.framer-1y256fi). */}
+      <section className="funds-band">
         <div
-          className="container"
-          style={{ display: "grid", gap: 24, gridTemplateColumns: "1fr" }}
+          className="funds-card"
+          style={{
+            backgroundImage:
+              "url(https://framerusercontent.com/images/BsraFx20t9LcEEnbZKrl8cCqCMU.png?width=1344&height=1008)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
         >
-          <div>
-            <h2 className="h2" style={{ marginBottom: 8 }}>
-              Soutenir nos chemins
-            </h2>
-            <p className="body-muted" style={{ maxWidth: 640 }}>
-              Vos dons financent le balisage, l&apos;entretien des sentiers et
-              nos actions de sensibilisation à la nature.
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <Link className="btn btn-ochre" href="/fr/dons">
-              Faites un don à l&apos;association
-            </Link>
-          </div>
-
-          {/* DEVENIR ADHÉRENT (modale, aucune page dédiée — Q3) */}
-          <div>
-            <h3 style={{ fontFamily: "var(--font-display)", fontSize: 26, marginBottom: 8 }}>
-              Devenir adhérent
-            </h3>
-            <p className="body-muted" style={{ maxWidth: 640, marginBottom: 12 }}>
-              Rejoignez une communauté qui marche et agit, toute l&apos;année.
-            </p>
-            <MembershipModal label="Adhérer à l'association" />
-          </div>
+          <div className="funds-overlay" aria-hidden />
+          <h2 className="funds-title">
+            <Link href="/fr/dons">Soutenir nos chemins</Link>
+          </h2>
+          <p className="funds-text">
+            Vos dons financent le balisage, l&apos;entretien des sentiers et
+            nos actions de sensibilisation à la nature.
+          </p>
+          <Link href="/fr/dons" className="btn btn-ochre btn-sm">
+            Faites un don à l&apos;association
+          </Link>
+        </div>
+        <div className="member-card">
+          <h3 className="member-title">Devenir adhérent</h3>
+          <p className="member-text">
+            Rejoignez une communauté qui marche et agit, toute l&apos;année.
+          </p>
+          <MembershipModal label="Adhérer à l'association" />
         </div>
       </section>
 
-      {/* LES NOUVELLES DU SENTIER */}
-      <section className="section">
-        <div className="container" style={{ display: "grid", gap: 20, gridTemplateColumns: "1fr" }}>
-          <div>
-            <h2 className="h2" style={{ marginBottom: 8 }}>
-              Les nouvelles du sentier
-            </h2>
-            <p className="body-muted" style={{ marginBottom: 20 }}>
-              Recevez nos prochaines sorties, nos nouveaux itinéraires et les
-              nouvelles de l&apos;association.
-            </p>
-            <NewsletterForm />
-          </div>
-        </div>
+      {/* LES NOUVELLES DU SENTIER — wrapper Framer « Newsletter »
+          (.framer-1srut8z) : bandeau FOREST #163c32, max 1080 centré,
+          padding 64/72 (56/24 mobile), align-items center, gap 18 ;
+          titre 34px blanc, texte 17px #F4F1E8, boutons ochre pill. */}
+      <section className="news-band">
+        <h2 className="news-title">Les nouvelles du sentier</h2>
+        <p className="news-lead">
+          Recevez nos prochaines sorties, nos nouveaux itinéraires et les
+          nouvelles de l&apos;association.
+        </p>
+        <NewsletterForm dark />
       </section>
     </>
   );
