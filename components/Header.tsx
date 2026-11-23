@@ -23,20 +23,21 @@ export default function Header() {
       }}
     >
       {/* Barre Framer d'origine : pleine largeur, padding 18px 48px,
-          PAS de logo visible (ancre « Chemins et Fontaines Logo » vide
-          dans le HTML source), liens Fira Sans 18px/500 blancs. */}
+          structure à 3 zones — logo (emplacement vide chez Framer),
+          liens CENTRÉS, FR/EN à droite (nav display:flex space-between). */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-end",
-          gap: 32,
+          justifyContent: "space-between",
           padding: "18px 48px",
         }}
       >
+        {/* Emplacement du logo Framer (ancre vide dans le HTML source) */}
+        <span aria-hidden style={{ width: 0 }} />
 
         {/* Navigation desktop */}
-        <nav aria-label="Navigation principale" className="desktop-nav" style={{ display: "flex", alignItems: "center", gap: 32 }}>
+        <nav aria-label="Navigation principale" className="desktop-nav" style={{ display: "flex", alignItems: "center", gap: 18 }}>
           {NAV_LINKS.map((l) => (
             <Link
               key={l.href}
@@ -53,8 +54,8 @@ export default function Header() {
           <Link href="/fr/newsletters" style={{ fontSize: 18, fontWeight: 500, color: "#fff" }}>
             Newsletters
           </Link>
-          <span style={{ fontSize: 18, fontWeight: 600, color: "rgba(255, 255, 255, 0.85)" }}>FR / EN</span>
         </nav>
+        <span className="desktop-nav" style={{ fontSize: 18, fontWeight: 600, color: "rgba(255, 255, 255, 0.85)" }}>FR / EN</span>
 
         {/* Bouton menu mobile */}
         <button

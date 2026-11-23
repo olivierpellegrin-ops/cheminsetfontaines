@@ -68,10 +68,19 @@ img {
   display: block;
 }
 
+/* Sections Framer d'origine : pleine largeur, colonnes de contenu
+   max 1080px ancrées à GAUCHE (inset 72px, 24px sur mobile),
+   alignement reproduit du site d'origine (padding 72px des sections). */
 .container {
   max-width: var(--container);
-  margin: 0 auto;
-  padding: 0 24px;
+  margin: 0 24px 0 72px;
+  padding: 0;
+}
+
+@media (max-width: 809.98px) {
+  .container {
+    margin: 0 24px;
+  }
 }
 
 /* Héros home — composant Framer « Introduction » : pleine largeur,
