@@ -898,3 +898,112 @@ img {
     width: 100%;
   }
 }
+
+/* ---------- Page Dons (fr/dons, .framer-c5b806) ----------
+   Relevé HTTrack 23/11/2026 : colonne max 780px centrée (racine
+   align-items:center), flex column align center, gap 28, padding
+   112px 72px (mobile 72px 24px, pas d'override tablette). */
+.dons-wrap {
+  max-width: 780px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 112px 72px;
+}
+
+.dons-kicker {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-align: center;
+  color: var(--ochre);
+}
+
+.dons-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 46px;
+  line-height: 1.08em;
+  text-align: center;
+  color: var(--forest);
+}
+
+.dons-lead {
+  margin: 0;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.55em;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* Carte Impact (.framer-1doz046) : fond #4d6b4b, radius 16, colonne
+   align-start, gap 12, padding 28 (titre National Park 24px/700
+   blanc, puces 16px lh 1.55 parchemin). */
+.dons-impact {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--green-mid);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 28px;
+}
+
+.dons-impact-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  color: #ffffff;
+}
+
+.dons-impact-list {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55em;
+  color: var(--parchment);
+}
+
+/* Bouton Stripe (.framer-1dv2aug) : ochre #c18a21, radius 100px,
+   padding 15px 24px, Fira Sans 600 16px #163C32. */
+.dons-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ochre);
+  border-radius: var(--radius-pill);
+  padding: 15px 24px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--forest);
+  text-decoration: none;
+}
+
+.dons-note {
+  margin: 0;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 13px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+@media (max-width: 809.98px) {
+  .dons-wrap {
+    padding: 72px 24px;
+  }
+}
