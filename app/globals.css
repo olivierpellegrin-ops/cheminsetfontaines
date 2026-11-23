@@ -692,7 +692,7 @@ img {
   font-size: 14px;
 }
 
-/* Bouton GPX (.framer-1i8uyt4 inline) : bg #e8eee4, radius 10,
+/* Bouton GPX (.framer-1i8uyt4 inline, home) : bg #e8eee4, radius 10,
    padding 10/8, 14px/600, lettres -0.01em. */
 .btn-gpx {
   display: inline-flex;
@@ -715,4 +715,30 @@ img {
 
 .btn-gpx:hover {
   opacity: 0.85;
+}
+
+/* Variantes du bouton GPX selon la page (relevés HTTrack) :
+   liste itinéraires (fr/routes) : blanc, radius 8, padding 10/12,
+   12px/600, sur carte tintée ; détail itinéraire : pastille ochre,
+   radius 100px, padding 12/20, 14px/600. */
+.btn-gpx--list {
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  font-size: 12px;
+}
+
+.btn-gpx--detail {
+  border-radius: 100px;
+  padding: 12px 20px;
+  background: var(--ochre);
+  font-size: 14px;
+}
+
+/* Carte Itinéraire de la liste (fr/routes d'origine, .framer-f99bng) :
+   fond tinté #e8eee4, bordure #d2dccb, radius 14 — le reste = .card. */
+.card--tint {
+  background: var(--bg-tint);
+  border-color: var(--border-soft);
+  border-radius: 14px;
 }
