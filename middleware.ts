@@ -17,5 +17,8 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*", "/api/auth/:path*"],
+  // IMPORTANT : ne JAMAIS intercepter /api/auth/* ici — Auth.js gère ses
+  // propres routes (csrf, callback credentials...) et un middleware dessus
+  // bloque le login (requête jamais terminee).
+  matcher: ["/admin", "/admin/:path*"],
 };
