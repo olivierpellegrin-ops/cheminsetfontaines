@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { NAV_LINKS, SITE } from "@/lib/site";
+import { NAV_LINKS } from "@/lib/site";
 
 /**
  * Header reproduit du composant Framer « Association Layout » + Mobile
@@ -22,40 +22,27 @@ export default function Header() {
         background: "var(--forest)",
       }}
     >
+      {/* Barre Framer d'origine : pleine largeur, padding 18px 48px,
+          PAS de logo visible (ancre « Chemins et Fontaines Logo » vide
+          dans le HTML source), liens Fira Sans 18px/500 blancs. */}
       <div
-        className="container"
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
-          height: 72,
+          justifyContent: "flex-end",
+          gap: 32,
+          padding: "18px 48px",
         }}
       >
-        <Link href="/fr" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Logo : « Chemins & Fontaines » en display serif + point ochre */}
-          <span
-            aria-hidden
-            style={{
-              width: 12,
-              height: 12,
-              borderRadius: "50%",
-              background: "var(--ochre)",
-              display: "inline-block",
-            }}
-          />
-          <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20, color: "#fff" }}>
-            {SITE.name.includes("&") ? "Chemins & Fontaines" : SITE.name}
-          </span>
-        </Link>
 
         {/* Navigation desktop */}
-        <nav aria-label="Navigation principale" className="desktop-nav">
+        <nav aria-label="Navigation principale" className="desktop-nav" style={{ display: "flex", alignItems: "center", gap: 32 }}>
           {NAV_LINKS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
               style={{
-                fontSize: 15,
+                fontSize: 18,
                 fontWeight: 500,
                 color: pathname === l.href ? "var(--parchment)" : "#fff",
               }}
@@ -63,10 +50,10 @@ export default function Header() {
               {l.label}
             </Link>
           ))}
-          <Link href="/fr/newsletters" style={{ fontSize: 15, fontWeight: 500, color: "#fff" }}>
+          <Link href="/fr/newsletters" style={{ fontSize: 18, fontWeight: 500, color: "#fff" }}>
             Newsletters
           </Link>
-          <span style={{ fontSize: 15, color: "rgba(255, 255, 255, 0.85)" }}>FR / EN</span>
+          <span style={{ fontSize: 18, fontWeight: 600, color: "rgba(255, 255, 255, 0.85)" }}>FR / EN</span>
         </nav>
 
         {/* Bouton menu mobile */}

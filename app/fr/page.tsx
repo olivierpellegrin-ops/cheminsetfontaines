@@ -64,6 +64,7 @@ export default async function HomePage() {
           image framerusercontent PgAwvDzKwsXpUrrYpHZyKfslAw 1344x1008, height 600px,
           padding 120/72, kicker beige rgb(230,215,174)), texte blanc. */}
       <section
+        className="hero-intro"
         style={{
           backgroundImage:
             "url(https://framerusercontent.com/images/PgAwvDzKwsXpUrrYpHZyKfslAw.png?width=1344&height=1008)",
@@ -71,11 +72,9 @@ export default async function HomePage() {
           backgroundPosition: "center",
           color: "var(--parchment)",
           minHeight: 600,
-          padding: "120px 0",
         }}
       >
-        <div className="container">
-          <p className="kicker" style={{ color: "rgb(230, 215, 174)", fontSize: 21, letterSpacing: "1.4px" }}>
+        <p className="kicker" style={{ color: "rgb(230, 215, 174)", fontSize: 21, letterSpacing: "1.4px" }}>
             {SITE.kicker}
           </p>
           <h1 className="h1" style={{ margin: "16px 0 12px" }}>
@@ -84,7 +83,6 @@ export default async function HomePage() {
           <p style={{ fontSize: 20, maxWidth: 640, opacity: 0.92 }}>
             {SITE.baseline}
           </p>
-        </div>
       </section>
 
       {/* NOTRE MISSION */}

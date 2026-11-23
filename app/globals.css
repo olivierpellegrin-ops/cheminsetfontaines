@@ -74,6 +74,19 @@ img {
   padding: 0 24px;
 }
 
+/* Héros home — composant Framer « Introduction » : pleine largeur,
+   padding 120px/72px (pas de container centré), texte calé à gauche.
+   Mobile : padding réduit. */
+.hero-intro {
+  padding: 120px 72px;
+}
+
+@media (max-width: 809.98px) {
+  .hero-intro {
+    padding: 96px 24px;
+  }
+}
+
 /* ---------- Typographie ---------- */
 
 .h1 {
