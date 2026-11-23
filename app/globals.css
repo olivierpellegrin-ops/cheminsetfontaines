@@ -1607,3 +1607,26 @@ img {
     height: 240px;
   }
 }
+
+/* ---------- Zoom photos plein écran (overlay Framer) ----------
+   L'original ouvre un overlay plein écran au clic sur les photos
+   d'itinéraires (curseur zoom-in déjà relevé sur .framer-kupkp9,
+   .framer-6meyew, .framer-14t0x8l). Le bouton trigger reprend le
+   style de l'image (className .card-image / .route-detail-image),
+   l'image affichée est recadrée dedans, arrondis hérités. */
+.zoom-trigger {
+  border: none;
+  padding: 0;
+  background: none;
+  display: block;
+  cursor: zoom-in;
+}
+
+.zoom-trigger img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: inherit;
+}

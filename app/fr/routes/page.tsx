@@ -1,9 +1,9 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { normalizeSlug } from "@/lib/slug";
 import GPXButton from "@/components/GPXButton";
+import ZoomImage from "@/components/ZoomImage";
 
 export const dynamic = "force-dynamic";
 
@@ -70,11 +70,9 @@ export default async function RoutesPage() {
             {items.map((r) => (
               <article key={r.slug} className="card card--tint">
                 {r.imageUrl && (
-                  <Image
+                  <ZoomImage
                     src={r.imageUrl}
                     alt={r.title}
-                    width={1200}
-                    height={800}
                     className="card-image"
                   />
                 )}

@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import GPXButton from "@/components/GPXButton";
 import Gallery from "@/components/Gallery";
+import ZoomImage from "@/components/ZoomImage";
 
 export const dynamic = "force-dynamic";
 
@@ -48,12 +48,11 @@ export default async function RouteDetailPage({ params }: Props) {
       <p className="route-detail-meta">{route.detailsRaw}</p>
 
       {route.imageUrl && (
-        <Image
+        <ZoomImage
           src={route.imageUrl}
           alt={route.imageAlt || route.title}
-          width={1200}
-          height={800}
           priority
+          caption={route.title}
           className="route-detail-image"
         />
       )}
