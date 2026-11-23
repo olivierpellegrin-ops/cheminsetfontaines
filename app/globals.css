@@ -207,6 +207,66 @@ img {
   border-radius: 10px;
 }
 
+/* Mission — composant Framer « About Us » : 2 colonnes égales (gap 80),
+   logo en carte blanche 428x258 radius 12 padding 12, texte à droite
+   (colonne gap 18, kicker 33px/600 ls 1.2px ochre).
+   Relevé HTTrack : .framer-tyd8sq (max 1080, flex row, padding 25/72),
+   .framer-1eo9evw, .framer-bwvhpp. */
+.about-columns {
+  max-width: 1080px;
+  margin: 0 24px 0 72px;
+  padding: 48px 72px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 80px;
+}
+
+.about-columns > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.about-logo-card {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 428px;
+  height: 258px;
+  padding: 12px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.about-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+@media (max-width: 809.98px) {
+  .about-columns {
+    margin: 0 24px;
+    padding: 32px 24px;
+    gap: 24px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .about-logo-card {
+    width: 100%;
+    max-width: none;
+  }
+}
+
 .section {
   padding: 72px 0;
 }

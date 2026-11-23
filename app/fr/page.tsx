@@ -85,18 +85,41 @@ export default async function HomePage() {
           </p>
       </section>
 
-      {/* NOTRE MISSION */}
-      <section className="section">
-        <div className="container">
-          <p className="kicker">NOTRE MISSION</p>
-          <h2 className="h2" style={{ margin: "12px 0" }}>
-            Préserver les sentiers, partager le vivant.
-          </h2>
-          <p className="body-muted" style={{ maxWidth: 720 }}>
-            Chemins et Fontaines rassemble les marcheurs de Corrèze autour de
-            randonnées attentives et de gestes concrets pour préserver les
-            paysages, les sources et la biodiversité locale.
-          </p>
+      {/* NOTRE MISSION — « About Us » Framer : 2 colonnes, logo à gauche
+          (carte blanche 428x258), texte à droite (kicker 33px ochre). */}
+      <section>
+        <div className="about-columns">
+          <div className="about-logo-card">
+            <Image
+              src="https://framerusercontent.com/images/08OWyE53wBlq7B9DrXOKRkUsnE.png?width=1800&height=1200"
+              alt="Logo de l'association Chemins et Fontaines, Bassignac-le-Haut"
+              width={1800}
+              height={1200}
+              className="about-logo"
+            />
+          </div>
+          <div className="about-text">
+            <p
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 33,
+                fontWeight: 600,
+                letterSpacing: "1.2px",
+                color: "rgb(193, 138, 33)",
+                margin: 0,
+              }}
+            >
+              NOTRE MISSION
+            </p>
+            <h2 className="h2" style={{ margin: 0 }}>
+              Préserver les sentiers, partager le vivant.
+            </h2>
+            <p className="body-muted" style={{ margin: 0 }}>
+              Chemins et Fontaines rassemble les marcheurs de Corrèze autour de
+              randonnées attentives et de gestes concrets pour préserver les
+              paysages, les sources et la biodiversité locale.
+            </p>
+          </div>
         </div>
       </section>
 
