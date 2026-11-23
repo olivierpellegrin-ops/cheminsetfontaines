@@ -33,32 +33,22 @@ export default async function EventsPage() {
   });
 
   return (
-    <section className="section">
-      <div className="container">
-        <p className="kicker">SORTIES</p>
-        <h1 className="h2" style={{ fontSize: 44, margin: "12px 0 8px" }}>
-          Toutes les sorties
-        </h1>
-        <p className="body-muted" style={{ marginBottom: 40 }}>
-          Retrouvez les randonnées à venir et les informations pratiques pour
-          chaque rendez-vous.
-        </p>
-
-        <div className="section-grid">
-          {events.map((e) => (
-            <article key={e.slug} className="card">
-              <div className="card-body">
-                <p className="card-meta" style={{ color: "var(--ochre)", fontWeight: 600 }}>
-                  {e.dateLabel}
-                </p>
-                <h2 className="card-title" style={{ marginTop: 4 }}>
-                  {e.title}
-                </h2>
-                <p className="card-meta">{e.details}</p>
-              </div>
-            </article>
-          ))}
-        </div>
+    <section className="events-arc">
+      <h2 className="events-h2">Toutes les sorties</h2>
+      <p className="events-lead">
+        Retrouvez les randonnées à venir et les informations pratiques pour
+        chaque rendez-vous.
+      </p>
+      <div className="events-list">
+        {events.map((e) => (
+          <article key={e.slug} className="card card--event">
+            <div className="event-chip">{e.dateLabel}</div>
+            <div className="event-body">
+              <h2 className="event-title">{e.title}</h2>
+              <p className="event-desc">{e.details}</p>
+            </div>
+          </article>
+        ))}
       </div>
     </section>
   );

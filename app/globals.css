@@ -1,1171 +1,130 @@
-/* Chemins et Fontaines — charte extraite du site Framer (spec §9.6).
-   Couleurs Assets Framer : Parchment #F4F1E8, Forest Green #163C32,
-   Ochre #C18A21, Moss #587551, variantes #4D6B4B/#43534A,
-   bordures/fonds clairs #D2DCCB/#D9DED5/#E8EEE4.
-   Typo : National Park 700 (display), Fira Sans (body 17px/1.6).
-   Chargées via Google Fonts CSS2 (display=swap) — aucune validation
-   de polices au build, repli système si indisponibles. */
+successfully downloaded text file (SHA: 1d1833f2919f6b80f0890f31bfeda3cda3854ac5)
 
-@import url("https://fonts.googleapis.com/css2?family=National+Park:wght@700&family=Fira+Sans:wght@400;500;600&display=swap");
-
-:root {
-  --parchment: #f4f1e8;
-  --forest: #163c32;
-  --ochre: #c18a21;
-  --moss: #587551;
-  --green-mid: #4d6b4b;
-  --text-muted: #43534a;
-  --border-soft: #d2dccb;
-  --border-mid: #d9ded5;
-  --bg-tint: #e8eee4;
-
-  --font-display: "National Park", Georgia, serif;
-  --font-body: "Fira Sans", system-ui, sans-serif;
-
-  --container: 1120px;
-  --radius: 14px;
-  --radius-pill: 100px;
-}
-
-* {
+/* ---------- Page Sorties (/fr/events, « Events Archive » .framer-1sq2s5g) ----------
+   Relevé HTTrack 23/11/2026 : colonne max 1080 centrée (racine
+   align-items:center), align center, gap 24, padding 96px 72px
+   (mobile 56px 24px, pas d'override tablette). Titre = preset
+   FdNg41_20 : National Park 38px/700 lh 1.1em ls -0.5px #163C32,
+   SANS kicker. Lead = preset hFYMqJiG7 : 17px ls -0.02em lh 1.55em
+   #43534A. Liste .framer-6ocsvf : colonne gap 16 width 100%.
+   Carte .framer-h2tzxk : blanche, bordure 1px #d9ded5, radius 16,
+   flex row align center, gap 20, padding 20 (mobile : column,
+   align-items flex-start, gap 14, padding 18). Chip date .framer-v1k390 :
+   bg #e8eee4, radius 10, colonne centrée, width 180 (170 mobile),
+   padding 12, Fira Sans 12px/600 #C18A21 centré. Bloc texte
+   .framer-zq4n0y : flex 1 0 0, colonne gap 8 (mobile flex none
+   width 100%) ; titre 22px/700 #163C32 ; desc 15px ls -0.02em
+   lh 1.55em #43534A. Pas d'image ni bouton GPX sur les cartes. */
+.events-arc {
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 96px 72px;
+}
+
+.events-h2 {
   margin: 0;
-  padding: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 38px;
+  line-height: 1.1em;
+  letter-spacing: -0.5px;
+  color: var(--forest);
+  text-align: center;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-body {
+.events-lead {
+  margin: 0;
   font-family: var(--font-body);
   font-size: 17px;
-  line-height: 1.6;
-  color: var(--forest);
-  background: var(--parchment);
-  -webkit-font-smoothing: antialiased;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-img {
-  max-width: 100%;
-  display: block;
-}
-
-/* Sections Framer d'origine : la racine du site est en align-items:center
-   — les colonnes de contenu (max 1080px) sont CENTRÉES sous le menu,
-   avec le padding horizontal 72px des wrappers (48px tablette, 24px
-   mobile), comme sur le site Framer. */
-.container {
-  max-width: 1080px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 72px;
-  box-sizing: border-box;
-}
-
-@media (min-width: 810px) and (max-width: 1199.98px) {
-  .container {
-    padding: 0 48px;
-  }
-}
-
-@media (max-width: 809.98px) {
-  .container {
-    padding: 0 24px;
-  }
-}
-
-/* Héros home — composant Framer « Introduction » : pleine largeur,
-   padding 120px/72px (pas de container centré), texte calé à gauche.
-   Mobile : padding réduit. */
-.hero-intro {
-  padding: 120px 72px;
-}
-
-@media (max-width: 809.98px) {
-  .hero-intro {
-    padding: 96px 24px;
-  }
-}
-
-/* ---------- Typographie ---------- */
-
-.h1 {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 48px;
-  line-height: 1;
-  letter-spacing: -0.01em;
-}
-
-@media (min-width: 900px) {
-  .h1 {
-    font-size: 64px;
-  }
-}
-
-.h2 {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 30px;
-  line-height: 1.1;
-}
-
-@media (min-width: 900px) {
-  .h2 {
-    font-size: 38px;
-  }
-}
-
-.kicker {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ochre);
-}
-
-.body-muted {
+  letter-spacing: -0.02em;
+  line-height: 1.55em;
   color: var(--text-muted);
+  text-align: center;
 }
 
-/* ---------- Boutons ---------- */
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border-radius: var(--radius-pill);
-  padding: 12px 24px;
-  font-weight: 600;
-  font-size: 15px;
-  border: none;
-  cursor: pointer;
-  transition: opacity 0.15s ease, background-color 0.15s ease;
-  font-family: var(--font-body);
-}
-
-.btn-ochre {
-  background: var(--ochre);
-  color: var(--forest);
-}
-
-.btn-ochre:hover {
-  opacity: 0.9;
-}
-
-.btn-outline {
-  background: transparent;
-  color: var(--forest);
-  border: 1px solid var(--forest);
-}
-
-.btn-outline:hover {
-  background: rgba(22, 60, 50, 0.06);
-}
-
-.btn-ghost {
-  background: transparent;
-  color: var(--forest);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
-/* ---------- Cartes / sections ---------- */
-
-/* Cartes à l'identique Framer : vignette 180x120 à gauche du texte
-   (relevé copie HTTrack : .framer-kupkp9 cursor:zoom-in;height:120px;
-   width:180px;border-radius:10px — carte flex, align-items:center,
-   gap:20px, padding:20px). Mobile : empilement, image pleine largeur
-   (sizes d'origine calc(min(100vw, 1080px) - 80px)). */
-.card {
-  background: #fff;
-  border: 1px solid var(--border-mid);
-  border-radius: 10px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-.card-image {
-  width: 180px;
-  height: 120px;
-  flex: none;
-  object-fit: cover;
-  border-radius: 10px;
-}
-
-/* Mission — composant Framer « About Us » : 2 colonnes égales (gap 80),
-   logo en carte blanche 428x258 radius 12 padding 12, texte à droite
-   (colonne gap 18, kicker 33px/600 ls 1.2px ochre).
-   Relevé HTTrack : .framer-tyd8sq (max 1080, flex row, padding 25/72),
-   .framer-1eo9evw, .framer-bwvhpp. */
-.about-columns {
-  max-width: 1080px;
+.events-list {
   width: 100%;
-  /* Original : racine Framer align-items:center -> bloc centré sous le menu. */
-  margin: 0 auto;
-  padding: 25px 72px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 80px;
-}
-
-.about-columns > * {
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-.about-logo-card {
-  background: #fff;
-  border-radius: 12px;
-  max-width: 428px;
-  height: 258px;
-  padding: 12px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.about-logo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.about-text {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 18px;
-}
-
-/* Tablette Framer (810-1199px) : gap 40, padding 72/48. */
-@media (min-width: 810px) and (max-width: 1199.98px) {
-  .about-columns {
-    gap: 40px;
-    padding: 72px 48px;
-  }
-}
-
-/* Mobile Framer (<810px) : column, gap 28, padding 56/24. */
-@media (max-width: 809.98px) {
-  .about-columns {
-    padding: 56px 24px;
-    gap: 28px;
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .about-logo-card {
-    width: 100%;
-    max-width: none;
-  }
-}
-
-.section {
-  padding: 72px 0;
-}
-
-.section-tint {
-  background: var(--bg-tint);
-}
-
-.section-grid {
-  display: grid;
-  gap: 24px;
-}
-
-@media (min-width: 800px) {
-  .section-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1050px) {
-  .section-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.badge {
-  display: inline-block;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--moss);
-  background: var(--bg-tint);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-pill);
-  padding: 4px 12px;
-}
-
-.card-body {
-  flex: 1 0 0;
-  min-width: 0;
-  padding: 0;
-}
-
-@media (max-width: 640px) {
-  .card {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .card-image {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 3 / 2;
-  }
-}
-
-.card-title {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 21px;
-  line-height: 1.15;
-  margin-bottom: 6px;
-}
-
-.card-meta {
-  font-size: 15px;
-  color: var(--text-muted);
-}
-
-.link-more {
-  color: var(--ochre);
-  font-weight: 600;
-  font-size: 15px;
-}
-
-.link-more:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
-/* ---------- Responsive header ---------- */
-
-.desktop-nav {
-  display: none;
-  align-items: center;
-  gap: 28px;
-}
-
-.mobile-toggle {
-  display: block;
-}
-
-@media (min-width: 900px) {
-  .desktop-nav {
-    display: flex;
-  }
-  .mobile-toggle {
-    display: none;
-  }
-}
-
-/* ---------- Galerie (grille 3/2/1, ratio 4:3 — cf. RoutePhotoGallery.tsx) ---------- */
-
-.gallery-grid {
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 700px) {
-  .gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1000px) {
-  .gallery-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* ---------- Home : sections à l'identique Framer (wrappers centrés) ----------
-   Relevés HTTrack : .framer-14zj7ct « Events » (max 1080, flex column,
-   gap 24, padding 22/72, tablette 64/48), .framer-2jlug8 « Routes »
-   (padding 30/72), grille .framer-8tkhji/.framer-sitvrm (3 colonnes
-   gap 16, colonne gap 12 en mobile). */
-
-.home-wrap {
-  max-width: 1080px;
-  width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 24px;
-  padding: 30px 72px;
-}
-
-.home-wrap--events {
-  padding-top: 22px;
-  padding-bottom: 22px;
-}
-
-@media (min-width: 810px) and (max-width: 1199.98px) {
-  .home-wrap {
-    padding: 64px 48px;
-  }
-}
-
-@media (max-width: 809.98px) {
-  .home-wrap {
-    padding: 48px 24px;
-    gap: 16px;
-  }
-}
-
-.home-grid {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 
-@media (max-width: 809.98px) {
-  .home-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
+/* La carte events réutilise .card (fond blanc, bordure #d9ded5,
+   flex row align center, gap 20, padding 20) avec radius 16. */
+.card--event {
+  border-radius: 16px;
 }
 
-/* Hike Card (.framer-kd1vos) : blanche, bordure #d9ded5, radius 16,
-   padding 16, colonne gap 8, sans image ni lien. */
-.hike-card {
-  width: 100%;
+.event-chip {
+  flex: none;
+  width: 180px;
   box-sizing: border-box;
-  background: #fff;
-  border: 1px solid var(--border-mid);
-  border-radius: 16px;
-  padding: 16px;
+  background: var(--bg-tint);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--ochre);
+}
+
+.event-body {
+  flex: 1 0 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
 }
 
-.hike-date {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: var(--ochre);
-}
-
-.hike-title {
+.event-title {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 22px;
-  line-height: 1.1;
+  line-height: 1.2;
   color: var(--forest);
 }
 
-.hike-desc {
+.event-desc {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.4;
-  color: var(--text-muted);
-}
-
-/* Route Download Card (.framer-8coc2z) : fond #e8eee4, bordure #d2dccb,
-   radius 14, padding 16, colonne gap 8 ; image .framer-qdtoyc height 150
-   radius 10 ; township 13px moss uppercase. */
-.route-card {
-  width: 100%;
-  box-sizing: border-box;
-  background: var(--bg-tint);
-  border: 1px solid var(--border-soft);
-  border-radius: 14px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.route-img {
-  display: block;
-  width: 100%;
-  height: 150px;
-  border-radius: 10px;
-  overflow: hidden;
-  flex: none;
-}
-
-.route-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 19px;
-  line-height: 1.15;
-  color: var(--forest);
-}
-
-.route-desc {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.4;
-  color: var(--text-muted);
-}
-
-.route-town {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--moss);
-  text-transform: uppercase;
-}
-
-/* Funds & Membership (.framer-1wwb8ye) : bandeau MOSS #4d6b4b,
-   max 1080 centré, flex row align center, gap 48, padding 72
-   (28/48 tablette ; colonne gap 20, padding 32/24 mobile). */
-.funds-band {
-  max-width: 1080px;
-  width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-  background: var(--green-mid);
-  padding: 72px;
-  display: flex;
-  align-items: center;
-  gap: 48px;
-}
-
-@media (min-width: 810px) and (max-width: 1199.98px) {
-  .funds-band {
-    gap: 28px;
-    padding: 48px;
-  }
-}
-
-@media (max-width: 809.98px) {
-  .funds-band {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
-    padding: 32px 24px;
-  }
-}
-
-.funds-card,
-.member-card {
-  flex: 1 1 0;
-  min-width: 0;
-  box-sizing: border-box;
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-/* Carte dons (.framer-5cqewx) : photo en fond + voile #0c261c8f
-   (.framer-1irbqt6), contenu au-dessus (relative), padding 28. */
-.funds-card {
-  position: relative;
-  overflow: hidden;
-  padding: 28px;
-}
-
-.funds-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(12, 38, 28, 0.56);
-}
-
-.funds-card > *:not(.funds-overlay) {
-  position: relative;
-}
-
-.funds-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 30px;
-  line-height: 1.1;
-}
-
-.funds-title a,
-.funds-title a:hover {
-  color: #fff;
-}
-
-.funds-text {
-  margin: 0;
-  font-size: 17px;
-  line-height: 1.5;
-  color: #f4f1e8;
-}
-
-/* Carte adhésion (.framer-khbiqw) : parchemin #f4f1e8, padding 26,
-   titre 24px #163c32, texte 15px #43534A. */
-.member-card {
-  background: #f4f1e8;
-  padding: 26px;
-}
-
-.member-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 24px;
-  line-height: 1.1;
-  color: var(--forest);
-}
-
-.member-text {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.55;
-  color: var(--text-muted);
-}
-
-/* Newsletter (.framer-1srut8z) : bandeau FOREST #163c32, max 1080
-   centré, colonne align center, gap 18, padding 64/72 (56/24 mobile),
-   titre 34px blanc, texte 17px #F4F1E8. */
-.news-band {
-  max-width: 1080px;
-  width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-  background: var(--forest);
-  color: var(--parchment);
-  padding: 64px 72px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  text-align: center;
-}
-
-@media (max-width: 809.98px) {
-  .news-band {
-    padding: 56px 24px;
-  }
-}
-
-.news-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 34px;
-  line-height: 1.1;
-  color: #fff;
-}
-
-.news-lead {
-  margin: 0;
-  font-size: 17px;
-  line-height: 1.5;
-  color: #f4f1e8;
-}
-
-/* Boutons pill ochre taille Framer (padding 10-11/16-18, 14px/600). */
-.btn-sm {
-  padding: 10px 16px;
-  font-size: 14px;
-}
-
-/* Bouton GPX (.framer-1i8uyt4 inline, home) : bg #e8eee4, radius 10,
-   padding 10/8, 14px/600, lettres -0.01em. */
-.btn-gpx {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 8px;
-  background: #e8eee4;
-  color: var(--forest);
   font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.01em;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.2s ease;
-}
-
-.btn-gpx:hover {
-  opacity: 0.85;
-}
-
-/* Variantes du bouton GPX selon la page (relevés HTTrack) :
-   liste itinéraires (fr/routes) : blanc, radius 8, padding 10/12,
-   12px/600, sur carte tintée ; détail itinéraire : pastille ochre,
-   radius 100px, padding 12/20, 14px/600. */
-.btn-gpx--list {
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: #fff;
-  font-size: 12px;
-}
-
-.btn-gpx--detail {
-  border-radius: 100px;
-  padding: 12px 20px;
-  background: var(--ochre);
-  font-size: 14px;
-}
-
-/* Carte Itinéraire de la liste (fr/routes d'origine, .framer-f99bng) :
-   fond tinté #e8eee4, bordure #d2dccb, radius 14 — le reste = .card. */
-.card--tint {
-  background: var(--bg-tint);
-  border-color: var(--border-soft);
-  border-radius: 14px;
-}
-
-/* ---------- Footer « Association Footer » (.framer-24m9fj) ----------
-   Relevé HTTrack 23/11/2026 : fond forest #163c32, colonne centrée,
-   gap 28, padding 48px 72px 24px (tablette 42px 48px 24px,
-   mobile gap 24 + padding 40px 24px 24px), contenu max 1080 en
-   space-between, colonne gauche 45% (gap 10, nom National Park
-   26px/700 blanc, baseline 15px parchemin max 420, localisation
-   14px/600 ochre, lien Facebook rangée gap 8 + icône 18px),
-   colonne droite Explorer (titre 14px/600 ochre, liens 15px
-   parchemin → hover ochre .2s), divider 1px #f4f1e833, légale
-   13px centrée. */
-.footer {
-  background: var(--forest);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 28px;
-  width: 100%;
-  padding: 48px 72px 24px;
-  box-sizing: border-box;
-}
-
-.footer__content {
-  max-width: 1080px;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.footer__details {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  width: 45%;
-}
-
-.footer__name {
-  width: 100%;
-  font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 700;
-  line-height: 1.1em;
-  color: #ffffff;
-}
-
-.footer__purpose {
-  width: 100%;
-  max-width: 420px;
   font-size: 15px;
-  line-height: 1.5em;
-  color: var(--parchment);
-}
-
-.footer__location {
-  width: 100%;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.3em;
-  color: var(--ochre);
-}
-
-.footer__facebook {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  text-decoration: none;
-}
-
-.footer__facebook-label {
-  font-size: 15px;
-  line-height: 1.3em;
-  color: var(--parchment);
-}
-
-.footer__facebook-icon {
-  height: 18px;
-  width: auto;
-  aspect-ratio: 1;
-  color: var(--parchment);
-  flex: none;
-}
-
-.footer__links {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  width: min-content;
-}
-
-.footer__heading {
-  align-self: stretch;
-  width: auto;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.3em;
-  color: var(--ochre);
-}
-
-.footer__link {
-  font-size: 15px;
-  line-height: 1.3em;
-  color: var(--parchment);
-  text-decoration: none;
-  transition: color 0.2s cubic-bezier(0.44, 0, 0.56, 1);
-}
-
-.footer__link:hover {
-  color: var(--ochre);
-}
-
-.footer__divider {
-  max-width: 1080px;
-  width: 100%;
-  height: 1px;
-  background: rgba(244, 241, 232, 0.2);
-}
-
-.footer__legal {
-  width: 100%;
-  font-size: 13px;
-  line-height: 1.3em;
-  text-align: center;
-  color: var(--parchment);
-}
-
-@media (min-width: 810px) and (max-width: 1199.98px) {
-  .footer {
-    padding: 42px 48px 24px;
-  }
-}
-
-@media (max-width: 809.98px) {
-  .footer {
-    gap: 24px;
-    padding: 40px 24px 24px;
-  }
-
-  .footer__content {
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: 28px;
-  }
-
-  .footer__details,
-  .footer__links {
-    width: 100%;
-  }
-
-  .footer__heading {
-    align-self: unset;
-    width: 100%;
-  }
-}
-
-/* ---------- Page Dons (fr/dons, .framer-c5b806) ----------
-   Relevé HTTrack 23/11/2026 : colonne max 780px centrée (racine
-   align-items:center), flex column align center, gap 28, padding
-   112px 72px (mobile 72px 24px, pas d'override tablette). */
-.dons-wrap {
-  max-width: 780px;
-  width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 28px;
-  padding: 112px 72px;
-}
-
-.dons-kicker {
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 1.2px;
-  text-align: center;
-  color: var(--ochre);
-}
-
-.dons-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 46px;
-  line-height: 1.08em;
-  text-align: center;
-  color: var(--forest);
-}
-
-.dons-lead {
-  margin: 0;
-  width: 100%;
-  font-family: var(--font-body);
-  font-size: 17px;
-  font-weight: 400;
   letter-spacing: -0.02em;
   line-height: 1.55em;
-  text-align: center;
-  color: var(--text-muted);
-}
-
-/* Carte Impact (.framer-1doz046) : fond #4d6b4b, radius 16, colonne
-   align-start, gap 12, padding 28 (titre National Park 24px/700
-   blanc, puces 16px lh 1.55 parchemin). */
-.dons-impact {
-  width: 100%;
-  box-sizing: border-box;
-  background: var(--green-mid);
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 28px;
-}
-
-.dons-impact-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 24px;
-  color: #ffffff;
-}
-
-.dons-impact-list {
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.55em;
-  color: var(--parchment);
-}
-
-/* Bouton Stripe (.framer-1dv2aug) : ochre #c18a21, radius 100px,
-   padding 15px 24px, Fira Sans 600 16px #163C32. */
-.dons-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--ochre);
-  border-radius: var(--radius-pill);
-  padding: 15px 24px;
-  font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--forest);
-  text-decoration: none;
-}
-
-.dons-note {
-  margin: 0;
-  width: 100%;
-  font-family: var(--font-body);
-  font-size: 13px;
-  text-align: center;
   color: var(--text-muted);
 }
 
 @media (max-width: 809.98px) {
-  .dons-wrap {
-    padding: 72px 24px;
+  .events-arc {
+    padding: 56px 24px;
   }
-}
 
-/* ---------- Modale adhésion « Membership Registration » ----------
-   Relevé du HTML original (enregistrement de la page live,
-   23/11/2026) : backdrop #0a1d17f0 quasi opaque pleine page ;
-   modale parchemin #f4f1e8, radius 18px, 640px (342px mobile),
-   padding 32px (20px mobile), colonne gap 18 ; titre National Park
-   30px/700 lh 1.1em #163C32 ; sous-titre 16px lh 1.5em #43534A ;
-   formulaire colonne gap 12 ; champs 44px fond blanc, bordure 1px
-   #d2dccb, radius 8px, padding 12px, Fira Sans 14px/400, focus
-   #09f ; CP + Ville côte à côte (flex 1) ; bouton pleine largeur
-   ochre radius 100px, 14px/600 #163C32 ; message de statut vert
-   foncé ; bouton « Fermer » texte (14px/600) en bas. */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: rgba(10, 29, 23, 0.94);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 50px 24px 32px;
-  overflow-y: auto;
-}
-
-.modal-member {
-  background: var(--parchment);
-  border-radius: 18px;
-  width: 640px;
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 18px;
-  padding: 32px;
-  box-sizing: border-box;
-  text-align: left;
-}
-
-.modal-member__title {
-  margin: 0;
-  width: 100%;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 30px;
-  line-height: 1.1em;
-  color: var(--forest);
-}
-
-.modal-member__subtitle {
-  margin: 0;
-  width: 100%;
-  font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 1.5em;
-  color: var(--text-muted);
-}
-
-.modal-member__form {
-  margin: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.modal-member__input {
-  width: 100%;
-  height: 44px;
-  padding: 12px;
-  box-sizing: border-box;
-  background: #fff;
-  border: 1px solid var(--border-soft);
-  border-radius: 8px;
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.2em;
-  color: var(--forest);
-}
-
-.modal-member__input:focus {
-  outline: none;
-  border-color: #09f;
-}
-
-.modal-member__input::placeholder {
-  color: var(--text-muted);
-  opacity: 0.75;
-}
-
-.modal-member__city {
-  width: 100%;
-  display: flex;
-  gap: 12px;
-}
-
-.modal-member__city .modal-member__input {
-  flex: 1 0 0;
-  width: 1%;
-  min-width: 0;
-}
-
-.modal-member__submit {
-  width: 100%;
-  background: var(--ochre);
-  border: none;
-  border-radius: var(--radius-pill);
-  padding: 11px 18px;
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--forest);
-  cursor: pointer;
-}
-
-.modal-member__submit:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-
-.modal-member__error {
-  margin: 0;
-  width: 100%;
-  font-family: var(--font-body);
-  font-size: 14px;
-  line-height: 1.4;
-  color: var(--ochre);
-}
-
-.modal-member__close {
-  padding: 10px 16px;
-  background: none;
-  border: none;
-  border-radius: 10px;
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--forest);
-  cursor: pointer;
-}
-
-.modal-member__close:hover {
-  opacity: 0.8;
-}
-
-.modal-member__honeypot {
-  position: absolute;
-  transform: scale(0);
-}
-
-@media (max-width: 809.98px) {
-  .modal-backdrop {
-    padding: 32px 24px;
+  .card--event {
+    flex-direction: column;
     align-items: flex-start;
+    gap: 14px;
+    padding: 18px;
   }
 
-  .modal-member {
-    width: 342px;
-    padding: 20px;
+  .event-chip {
+    width: 170px;
+  }
+
+  .event-body {
+    flex: none;
+    width: 100%;
   }
 }
