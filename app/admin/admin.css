@@ -132,3 +132,19 @@
   border-radius: 6px;
   padding: 8px 10px;
 }
+
+/* Zone de debug diagnostic (B0) */
+.cf-admin-login__debug {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  list-style: none;
+  background: #eef6ef;
+  border: 1px dashed #9fc2a7;
+  border-radius: 8px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  color: #2c4a33;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
