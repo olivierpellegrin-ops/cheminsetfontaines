@@ -6,6 +6,7 @@ import { SITE } from "@/lib/site";
 import NewsletterForm from "@/components/NewsletterForm";
 import MembershipModal from "@/components/MembershipModal";
 import GPXButton from "@/components/GPXButton";
+import ZoomImage from "@/components/ZoomImage";
 
 export const dynamic = "force-dynamic";
 
@@ -163,15 +164,7 @@ export default async function HomePage() {
           {routes.map((r) => (
             <article key={r.slug} className="route-card">
               {r.imageUrl && (
-                <Link href={"/fr/routes/" + r.slug} aria-label={r.title} className="route-img">
-                  <Image
-                    src={r.imageUrl}
-                    alt={r.title}
-                    width={1200}
-                    height={800}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                </Link>
+                <ZoomImage src={r.imageUrl} alt={r.title} className="route-img" />
               )}
               <h3 className="route-title">
                 <Link href={"/fr/routes/" + r.slug}>{r.title}</Link>

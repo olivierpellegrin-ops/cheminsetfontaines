@@ -2,14 +2,20 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 /**
- * Photo cliquable + lightbox plein écran (reproduit l'overlay Framer :
- * clic sur une photo d'itinéraire — vignette de liste ou image de
- * fiche — ouverture plein écran, Échap ou clic sur le fond pour
- * fermer). Le bouton trigger reprend le style de l'image via className
- * (.card-image / .route-detail-image) : l'image est recadrée dedans,
- * arrondis hérités, cursor zoom-in.
+ * Photo cliquable + lightbox plein écran, à l'identique du site Framer
+ * original : clic (curseur zoom-in) → ouverture plein écran, Échap ou
+ * clic sur le fond pour fermer. L'overlay est rendu via un portail
+ * document.body (comme le <div id="overlay"> racine de Framer) avec
+ * zIndex 9999, pour ne pas être capturé par les ancêtres overflow
+ * hidden des cartes. Specs de RoutePhotoGallery.tsx d'origine : image
+ * max 96vw x 90vh en object-fit contain, radius 14, ombre
+ * 0 12px 40px rgba(0, 0, 0, 0.35), sans bouton ni légende visibles
+ * (caption sert uniquement au libellé d'accessibilité). Le bouton
+ * trigger reprend le style de l'image via className (.route-img /
+ * .card-image / .route-detail-image).
  */
 export default function ZoomImage({
   src,
@@ -29,87 +35,77 @@ export default function ZoomImage({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const close = useCallback(() => setOpen(false), []);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, close]);
+
+  const lightbox =
+    open && mounted
+      ? createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Photo agrandie"
+            onClick={close}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 9999,
+              backgroundColor: "rgba(22, 60, 50, 0.85)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 24,
+            }}
+          >
+            <Image
+              src={src}
+              alt={alt}
+              width={1600}
+              height={1067}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: "96vw",
+                maxHeight: "90vh",
+                width: "auto",
+                height: "auto",
+                objectFit: "contain",
+                borderRadius: 14,
+                boxShadow: "0 12px 40px rgba(0, 0, 0, 0.35)",
+              }}
+            />
+          </div>,
+          document.body
+        )
+      : null;
 
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label={`Agrandir : ${caption ?? alt}`}
+        aria-label={"Agrandir : " + (caption ?? alt)}
         className={"zoom-trigger " + (className ?? "")}
       >
         <Image src={src} alt={alt} width={width} height={height} priority={priority} />
       </button>
-
-      {open && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Photo agrandie"
-          onClick={close}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 100,
-            background: "rgba(22, 60, 50, 0.85)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 24,
-          }}
-        >
-          <figure style={{ maxWidth: "min(1100px, 92vw)" }} onClick={(e) => e.stopPropagation()}>
-            <Image
-              src={src}
-              alt={alt}
-              width={1600}
-              height={1067}
-              style={{ width: "100%", height: "auto", borderRadius: 14 }}
-            />
-            {caption ? (
-              <figcaption
-                style={{
-                  color: "var(--parchment)",
-                  textAlign: "center",
-                  marginTop: 12,
-                  fontSize: 15,
-                }}
-              >
-                {caption}
-              </figcaption>
-            ) : null}
-          </figure>
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Fermer"
-            style={{ position: "absolute", top: 20, right: 20, ...navBtnStyle }}
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      {lightbox}
     </>
   );
 }
-
-const navBtnStyle: React.CSSProperties = {
-  background: "rgba(244, 241, 232, 0.15)",
-  color: "var(--parchment)",
-  border: "1px solid rgba(244,241,232,0.4)",
-  borderRadius: "50%",
-  width: 44,
-  height: 44,
-  fontSize: 20,
-  cursor: "pointer",
-};

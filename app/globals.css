@@ -1609,11 +1609,17 @@ img {
 }
 
 /* ---------- Zoom photos plein écran (overlay Framer) ----------
-   L'original ouvre un overlay plein écran au clic sur les photos
-   d'itinéraires (curseur zoom-in déjà relevé sur .framer-kupkp9,
-   .framer-6meyew, .framer-14t0x8l). Le bouton trigger reprend le
-   style de l'image (className .card-image / .route-detail-image),
-   l'image affichée est recadrée dedans, arrondis hérités. */
+   L'original zoome au clic TOUTES les photos d'itinéraires : home
+   (vignette .framer-qdtoyc height 150, cursor zoom-in, SANS lien),
+   liste /fr/routes (vignette .framer-kupkp9) et fiche détail (image
+   .framer-6meyew), comme la galerie RoutePhotoGallery (.framer-14t0x8l).
+   ZoomImage / Gallery : overlay rendu via un portail document.body
+   (comme le <div id="overlay"> racine de Framer), zIndex 9999 ; specs
+   de RoutePhotoGallery.tsx d'origine : image max 96vw x 90vh en
+   object-fit contain, radius 14, ombre 0 12px 40px rgba(0, 0, 0, 0.35),
+   sans flèches ni bouton ni légende visibles ; Échap ou clic sur le
+   fond pour fermer. Le bouton trigger reprend le style de l'image via
+   className, l'image affichée est recadrée dedans, arrondis hérités. */
 .zoom-trigger {
   border: none;
   padding: 0;
