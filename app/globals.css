@@ -1009,116 +1009,118 @@ img {
 }
 
 /* ---------- Modale adhésion « Membership Registration » ----------
-   Capture d'écran Framer 23/11/2026 (modale absente de la copie
-   HTTrack) : blanche, large (~2/3 écran), 2 colonnes — texte à
-   gauche, formulaire à droite empilé (bordures fines, fond blanc),
-   croix de fermeture grise en haut à droite, arrière-plan site
-   flouté, bouton ochre aligné à droite, pas de bouton Fermer. */
+   Relevé du HTML original (enregistrement de la page live,
+   23/11/2026) : backdrop #0a1d17f0 quasi opaque pleine page ;
+   modale parchemin #f4f1e8, radius 18px, 640px (342px mobile),
+   padding 32px (20px mobile), colonne gap 18 ; titre National Park
+   30px/700 lh 1.1em #163C32 ; sous-titre 16px lh 1.5em #43534A ;
+   formulaire colonne gap 12 ; champs 44px fond blanc, bordure 1px
+   #d2dccb, radius 8px, padding 12px, Fira Sans 14px/400, focus
+   #09f ; CP + Ville côte à côte (flex 1) ; bouton pleine largeur
+   ochre radius 100px, 14px/600 #163C32 ; message de statut vert
+   foncé ; bouton « Fermer » texte (14px/600) en bas. */
 .modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(22, 60, 50, 0.4);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(10, 29, 23, 0.94);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 32px;
+  padding: 50px 24px 32px;
+  overflow-y: auto;
 }
 
 .modal-member {
-  position: relative;
-  background: #fff;
-  border-radius: 16px;
-  width: 100%;
-  max-width: 920px;
-  max-height: 88vh;
-  overflow-y: auto;
-  display: grid;
-  grid-template-columns: 2fr 3fr;
-  text-align: left;
-}
-
-.modal-member__close {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  z-index: 1;
-}
-
-.modal-member__close:hover {
-  color: var(--forest);
-}
-
-.modal-member__text {
-  padding: 48px 32px 48px 48px;
+  background: var(--parchment);
+  border-radius: 18px;
+  width: 640px;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  gap: 14px;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 32px;
+  box-sizing: border-box;
+  text-align: left;
 }
 
 .modal-member__title {
   margin: 0;
+  width: 100%;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 30px;
-  line-height: 1.15;
+  line-height: 1.1em;
   color: var(--forest);
 }
 
 .modal-member__subtitle {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.55;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5em;
   color: var(--text-muted);
 }
 
 .modal-member__form {
-  padding: 48px;
+  margin: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 12px;
 }
 
-.modal-member__field {
-  display: grid;
-  gap: 4px;
-  font-size: 14px;
-  color: var(--forest);
-}
-
-.modal-member__field input,
-.modal-member__field select {
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border-mid);
-  background: #fff;
-  font-family: var(--font-body);
-  font-size: 15px;
-  color: var(--forest);
+.modal-member__input {
   width: 100%;
+  height: 44px;
+  padding: 12px;
   box-sizing: border-box;
+  background: #fff;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.2em;
+  color: var(--forest);
 }
 
-.modal-member__field input:focus,
-.modal-member__field select:focus {
-  outline: 1px solid var(--ochre);
+.modal-member__input:focus {
+  outline: none;
+  border-color: #09f;
+}
+
+.modal-member__input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
+.modal-member__city {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+}
+
+.modal-member__city .modal-member__input {
+  flex: 1 0 0;
+  width: 1%;
+  min-width: 0;
 }
 
 .modal-member__submit {
-  align-self: flex-end;
-  font-size: 15px;
+  width: 100%;
+  background: var(--ochre);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 11px 18px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--forest);
+  cursor: pointer;
 }
 
 .modal-member__submit:disabled {
@@ -1128,34 +1130,42 @@ img {
 
 .modal-member__error {
   margin: 0;
+  width: 100%;
+  font-family: var(--font-body);
   font-size: 14px;
+  line-height: 1.4;
   color: var(--ochre);
-  text-align: right;
+}
+
+.modal-member__close {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--forest);
+  cursor: pointer;
+}
+
+.modal-member__close:hover {
+  opacity: 0.8;
 }
 
 .modal-member__honeypot {
   position: absolute;
-  left: -5000px;
-  opacity: 0;
-  height: 1px;
-  width: 1px;
+  transform: scale(0);
 }
 
 @media (max-width: 809.98px) {
   .modal-backdrop {
-    padding: 16px;
+    padding: 32px 24px;
+    align-items: flex-start;
   }
 
   .modal-member {
-    grid-template-columns: 1fr;
-    max-height: 92vh;
-  }
-
-  .modal-member__text {
-    padding: 40px 24px 8px;
-  }
-
-  .modal-member__form {
-    padding: 16px 24px 32px;
+    width: 342px;
+    padding: 20px;
   }
 }
