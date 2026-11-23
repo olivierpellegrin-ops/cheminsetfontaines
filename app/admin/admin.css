@@ -148,3 +148,18 @@
   flex-direction: column;
   gap: 4px;
 }
+
+/* Neutralisation de la charte publique (parchemin, Fira Sans 17px, vert #163c32)
+   sur les pages admin uniquement — :has est supporté par tous les navigateurs cibles. html/admin/body */
+html:has(.cf-admin),
+html:has(.cf-admin-login) {
+  scroll-behavior: auto;
+}
+body:has(.cf-admin),
+body:has(.cf-admin-login) {
+  background: #f4f6f5;
+  color: #1c2b24;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
