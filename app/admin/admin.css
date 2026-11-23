@@ -1,0 +1,134 @@
+/* Styles du back-office — neutres, découplés de la charte publique (B0). */
+
+.cf-admin {
+  min-height: 100vh;
+  background: #f4f6f5;
+  color: #1c2b24;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.cf-admin__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: #163c32;
+  color: #fff;
+}
+.cf-admin__brand {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 15px;
+}
+.cf-admin__me {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+.cf-admin__me em {
+  opacity: 0.8;
+  font-style: normal;
+}
+.cf-admin__logout {
+  background: #fff;
+  color: #163c32;
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cf-admin__main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+.cf-admin h1 { font-size: 26px; margin: 0 0 20px; }
+.cf-admin h2 { font-size: 18px; margin: 28px 0 12px; }
+
+.cf-admin__stats {
+  display: flex;
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+}
+.cf-admin__stats li {
+  background: #fff;
+  border: 1px solid #dde4e0;
+  border-radius: 10px;
+  padding: 14px 20px;
+  font-size: 14px;
+}
+.cf-admin__stats strong { display: block; font-size: 22px; }
+
+.cf-admin__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #dde4e0;
+  border-radius: 10px;
+  font-size: 14px;
+}
+.cf-admin__table th,
+.cf-admin__table td {
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid #eef2f0;
+}
+.cf-admin__table th { font-weight: 600; color: #43534a; }
+
+/* Page de connexion */
+.cf-admin-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #163c32;
+  padding: 24px;
+}
+.cf-admin-login__card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cf-admin-login__kicker {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6a7a70;
+}
+.cf-admin-login__title { margin: 0 0 16px; font-size: 22px; color: #163c32; }
+.cf-admin-login label { font-size: 13px; color: #43534a; margin-top: 8px; }
+.cf-admin-login input {
+  padding: 10px 12px;
+  border: 1px solid #c9d2cc;
+  border-radius: 8px;
+  font-size: 15px;
+}
+.cf-admin-login button {
+  margin-top: 16px;
+  padding: 11px;
+  background: #163c32;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.cf-admin-login button:disabled { opacity: 0.6; cursor: default; }
+.cf-admin-login__error {
+  margin: 0;
+  color: #a3252c;
+  font-size: 14px;
+  background: #fbeaea;
+  border-radius: 6px;
+  padding: 8px 10px;
+}

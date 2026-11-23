@@ -27,6 +27,29 @@ import {
 
 const prisma = new PrismaClient();
 
+/**
+ * Compte admin (B0) : créé/mis à jour si ADMIN_EMAIL + ADMIN_PASSWORD sont
+ * définis dans l'environnement (jamais dans le repo — voir docs/SECRETS.md).
+ */
+import bcrypt from "bcryptjs";
+
+async function seedAdmin() {
+  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD;
+  if (!email || !password) {
+    console.log("Admin : ignoré (ADMIN_EMAIL / ADMIN_PASSWORD absents)");
+    return;
+  }
+  const passwordHash = await bcrypt.hash(password, 12);
+  const name = process.env.ADMIN_NAME?.trim() || "Bureau C&F";
+  await prisma.user.upsert({
+    where: { email },
+    create: { email, name, passwordHash, role: "admin" },
+    update: { name, passwordHash, role: "admin" },
+  });
+  console.log(`Admin : ${email} (${name})`);
+}
+
 async function loadCsv(name: string) {
   const file = path.join(process.cwd(), "data", "framer", name);
   return parseCsvAsObjects(await readFile(file, "utf-8"));
@@ -34,6 +57,9 @@ async function loadCsv(name: string) {
 
 async function main() {
   console.log("— Seed Chemins et Fontaines —");
+
+  // 0. Compte admin du back-office (si configuré)
+  await seedAdmin();
 
   // 1. Communes canoniques (Xaintrie, codes INSEE issus de XaintrieTownshipMap.tsx)
   for (const [key, c] of Object.entries(XAINTRIE_COMMUNES)) {
