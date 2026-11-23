@@ -214,8 +214,10 @@ img {
    .framer-1eo9evw, .framer-bwvhpp. */
 .about-columns {
   max-width: 1080px;
-  margin: 0 24px 0 72px;
-  padding: 48px 72px;
+  width: 100%;
+  /* Original : racine Framer align-items:center -> bloc centré sous le menu. */
+  margin: 0 auto;
+  padding: 25px 72px;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -253,11 +255,19 @@ img {
   gap: 18px;
 }
 
+/* Tablette Framer (810-1199px) : gap 40, padding 72/48. */
+@media (min-width: 810px) and (max-width: 1199.98px) {
+  .about-columns {
+    gap: 40px;
+    padding: 72px 48px;
+  }
+}
+
+/* Mobile Framer (<810px) : column, gap 28, padding 56/24. */
 @media (max-width: 809.98px) {
   .about-columns {
-    margin: 0 24px;
-    padding: 32px 24px;
-    gap: 24px;
+    padding: 56px 24px;
+    gap: 28px;
     flex-direction: column;
     align-items: stretch;
   }
@@ -383,4 +393,3 @@ img {
     grid-template-columns: repeat(3, 1fr);
   }
 }
-

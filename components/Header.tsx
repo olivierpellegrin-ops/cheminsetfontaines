@@ -16,9 +16,9 @@ export default function Header() {
   return (
     <header
       style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
+        /* Original Framer : position:relative (aucun sticky dans le CSS
+           HTTrack) — le menu défile avec la page. */
+        position: "relative",
         background: "var(--forest)",
       }}
     >
