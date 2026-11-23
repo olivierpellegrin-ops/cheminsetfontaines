@@ -1641,7 +1641,10 @@ img {
 }
 
 /* ---------- Page Contact (à l'identique Framer, copie HTTrack) -----
-   Conteneur .framer-w1pip : fond #163c32, max-width 1080, flex column
+   Fond de page body d'origine : #F4F1E8 parchemin — le conteneur vert
+   .framer-w1pip ci-dessous est centré (max-width 1080), le parchemin
+   reste visible sur les côtés des grands écrans. Conteneur : fond
+   #163c32, max-width 1080, flex column
    gap 24, padding 24px 72px (tablette : largeur 810px ; mobile :
    padding 56px 24px). Titre National Park 38px/700 hauteur 1.1em
    blanc ; sous-titre Fira Sans 17px hauteur 1.5em #F4F1E8. Carte
@@ -1654,7 +1657,11 @@ img {
    .framer-1hr20p : fond #587551, radius 14, padding 20, gap 14,
    icône épingle parchemin 28px, texte blanc semibold 16px. */
 .contact-page {
-  background: var(--forest);
+  /* Original : le body est #F4F1E8 (parchemin) et le conteneur vert
+     .framer-w1pip (max-width 1080) est CENTRÉ dessus — sur un écran
+     large, le parchemin reste visible de part et d'autre (mesuré sur
+     la capture d'origine : marges 244,241,232, colonne verte 1080px). */
+  background: var(--parchment);
   width: 100%;
   display: flex;
   justify-content: center;
