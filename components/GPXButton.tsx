@@ -6,11 +6,11 @@
  * /api/gpx/<slug>, puis on déclenche le téléchargement avec le nom
  * de fichier d'origine (l'API force le Content-Disposition ; le
  * fallback ouvre l'URL dans un nouvel onglet si le navigateur
- * bloque le Blob).
+ * bloque le Blob). Style Framer : bouton bg #e8eee4 radius 10.
  */
 export default function GPXButton({ slug }: { slug: string }) {
   async function handleClick() {
-    const url = `/api/gpx/${encodeURIComponent(slug)}`;
+    const url = "/api/gpx/" + encodeURIComponent(slug);
     try {
       const res = await fetch(url, { method: "GET" });
       if (!res.ok) throw new Error("gpx indisponible");
@@ -18,7 +18,7 @@ export default function GPXButton({ slug }: { slug: string }) {
       const match = disposition.match(/filename\*=UTF-8''([^;]+)/);
       const fileName = match
         ? decodeURIComponent(match[1])
-        : `${slug}.gpx`;
+        : slug + ".gpx";
 
       const blob = await res.blob();
       const objectUrl = URL.createObjectURL(blob);
@@ -36,7 +36,7 @@ export default function GPXButton({ slug }: { slug: string }) {
   }
 
   return (
-    <button type="button" onClick={handleClick} className="link-more">
+    <button type="button" onClick={handleClick} className="btn-gpx">
       Télécharger le GPX
     </button>
   );

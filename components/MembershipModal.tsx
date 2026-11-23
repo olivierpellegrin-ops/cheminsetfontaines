@@ -7,8 +7,8 @@ import { requestMembership, type FormState } from "@/app/actions";
  * Modale « Membership Registration » (Q3) reproduite à l'identique du
  * HTML Framer fourni : titre « Bienvenue parmi les marcheurs ! », 9 champs
  * + honeypots « website » et « company », bouton ochre pleine largeur.
- * Le composant est déclenché par le CTA « Adhérer à l'association » (prop
- * `label` paramétrable pour la home / la page dons).
+ * Le composant est déclenché par le CTA « Adhérer à l'association »
+ * (prop label paramétrable pour la home / la page dons).
  */
 export default function MembershipModal({ label }: { label: string }) {
   const [open, setOpen] = useState(false);
@@ -30,7 +30,7 @@ export default function MembershipModal({ label }: { label: string }) {
 
   return (
     <>
-      <button className="btn btn-ochre" onClick={() => setOpen(true)}>
+      <button className="btn btn-ochre btn-sm" onClick={() => setOpen(true)}>
         {label}
       </button>
 

@@ -68,18 +68,27 @@ img {
   display: block;
 }
 
-/* Sections Framer d'origine : pleine largeur, colonnes de contenu
-   max 1080px ancrées à GAUCHE (inset 72px, 24px sur mobile),
-   alignement reproduit du site d'origine (padding 72px des sections). */
+/* Sections Framer d'origine : la racine du site est en align-items:center
+   — les colonnes de contenu (max 1080px) sont CENTRÉES sous le menu,
+   avec le padding horizontal 72px des wrappers (48px tablette, 24px
+   mobile), comme sur le site Framer. */
 .container {
-  max-width: var(--container);
-  margin: 0 24px 0 72px;
-  padding: 0;
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 72px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 810px) and (max-width: 1199.98px) {
+  .container {
+    padding: 0 48px;
+  }
 }
 
 @media (max-width: 809.98px) {
   .container {
-    margin: 0 24px;
+    padding: 0 24px;
   }
 }
 
@@ -392,4 +401,318 @@ img {
   .gallery-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+
+/* ---------- Home : sections à l'identique Framer (wrappers centrés) ----------
+   Relevés HTTrack : .framer-14zj7ct « Events » (max 1080, flex column,
+   gap 24, padding 22/72, tablette 64/48), .framer-2jlug8 « Routes »
+   (padding 30/72), grille .framer-8tkhji/.framer-sitvrm (3 colonnes
+   gap 16, colonne gap 12 en mobile). */
+
+.home-wrap {
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 30px 72px;
+}
+
+.home-wrap--events {
+  padding-top: 22px;
+  padding-bottom: 22px;
+}
+
+@media (min-width: 810px) and (max-width: 1199.98px) {
+  .home-wrap {
+    padding: 64px 48px;
+  }
+}
+
+@media (max-width: 809.98px) {
+  .home-wrap {
+    padding: 48px 24px;
+    gap: 16px;
+  }
+}
+
+.home-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 809.98px) {
+  .home-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Hike Card (.framer-kd1vos) : blanche, bordure #d9ded5, radius 16,
+   padding 16, colonne gap 8, sans image ni lien. */
+.hike-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid var(--border-mid);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.hike-date {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--ochre);
+}
+
+.hike-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.1;
+  color: var(--forest);
+}
+
+.hike-desc {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+/* Route Download Card (.framer-8coc2z) : fond #e8eee4, bordure #d2dccb,
+   radius 14, padding 16, colonne gap 8 ; image .framer-qdtoyc height 150
+   radius 10 ; township 13px moss uppercase. */
+.route-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-tint);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.route-img {
+  display: block;
+  width: 100%;
+  height: 150px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex: none;
+}
+
+.route-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.15;
+  color: var(--forest);
+}
+
+.route-desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.route-town {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--moss);
+  text-transform: uppercase;
+}
+
+/* Funds & Membership (.framer-1wwb8ye) : bandeau MOSS #4d6b4b,
+   max 1080 centré, flex row align center, gap 48, padding 72
+   (28/48 tablette ; colonne gap 20, padding 32/24 mobile). */
+.funds-band {
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  background: var(--green-mid);
+  padding: 72px;
+  display: flex;
+  align-items: center;
+  gap: 48px;
+}
+
+@media (min-width: 810px) and (max-width: 1199.98px) {
+  .funds-band {
+    gap: 28px;
+    padding: 48px;
+  }
+}
+
+@media (max-width: 809.98px) {
+  .funds-band {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 32px 24px;
+  }
+}
+
+.funds-card,
+.member-card {
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+/* Carte dons (.framer-5cqewx) : photo en fond + voile #0c261c8f
+   (.framer-1irbqt6), contenu au-dessus (relative), padding 28. */
+.funds-card {
+  position: relative;
+  overflow: hidden;
+  padding: 28px;
+}
+
+.funds-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 38, 28, 0.56);
+}
+
+.funds-card > *:not(.funds-overlay) {
+  position: relative;
+}
+
+.funds-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+.funds-title a,
+.funds-title a:hover {
+  color: #fff;
+}
+
+.funds-text {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.5;
+  color: #f4f1e8;
+}
+
+/* Carte adhésion (.framer-khbiqw) : parchemin #f4f1e8, padding 26,
+   titre 24px #163c32, texte 15px #43534A. */
+.member-card {
+  background: #f4f1e8;
+  padding: 26px;
+}
+
+.member-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.1;
+  color: var(--forest);
+}
+
+.member-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* Newsletter (.framer-1srut8z) : bandeau FOREST #163c32, max 1080
+   centré, colonne align center, gap 18, padding 64/72 (56/24 mobile),
+   titre 34px blanc, texte 17px #F4F1E8. */
+.news-band {
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  background: var(--forest);
+  color: var(--parchment);
+  padding: 64px 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+@media (max-width: 809.98px) {
+  .news-band {
+    padding: 56px 24px;
+  }
+}
+
+.news-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1.1;
+  color: #fff;
+}
+
+.news-lead {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.5;
+  color: #f4f1e8;
+}
+
+/* Boutons pill ochre taille Framer (padding 10-11/16-18, 14px/600). */
+.btn-sm {
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
+/* Bouton GPX (.framer-1i8uyt4 inline) : bg #e8eee4, radius 10,
+   padding 10/8, 14px/600, lettres -0.01em. */
+.btn-gpx {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 8px;
+  background: #e8eee4;
+  color: var(--forest);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+.btn-gpx:hover {
+  opacity: 0.85;
 }
