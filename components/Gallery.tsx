@@ -6,10 +6,10 @@ import { useCallback, useEffect, useState } from "react";
 type Photo = { title: string; imageUrl: string; imageAlt: string | null };
 
 /**
- * Galerie photo des fiches — comportement du composant Framer
- * RoutePhotoGallery.tsx reproduit : grille responsive 3/2/1 colonnes,
- * ratio 4:3, rayon 14 px, lightbox clavier (Échap pour fermer, flèches
- * pour naviguer).
+ * Galerie photo des fiches — composant Framer RoutePhotoGallery
+ * reproduit : grid repeat(3, minmax(180px, 1fr)) gap 12, photos
+ * portrait aspect-ratio 0.75 (object-position top), radius 14,
+ * cursor zoom-in ; lightbox clavier (Échap ferme, flèches naviguent).
  */
 export default function Gallery({ photos }: { photos: Photo[] }) {
   const [index, setIndex] = useState<number | null>(null);
@@ -38,36 +38,21 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
   if (photos.length === 0) return null;
 
   return (
-    <section aria-label="Album photos" style={{ marginTop: 32 }}>
-      <div
-        style={{
-          display: "grid",
-          gap: 16,
-          gridTemplateColumns: "1fr",
-        }}
-        className="gallery-grid"
-        id="album"
-      >
+    <section aria-label="Album photos" id="album" className="album-wrap">
+      <div className="album-grid">
         {photos.map((p, i) => (
           <button
             key={p.imageUrl}
             onClick={() => setIndex(i)}
             aria-label={`Agrandir : ${p.title}`}
-            style={{
-              border: "none",
-              padding: 0,
-              cursor: "zoom-in",
-              borderRadius: 14,
-              overflow: "hidden",
-              background: "none",
-            }}
+            className="album-photo"
           >
             <Image
               src={p.imageUrl}
               alt={p.imageAlt || p.title}
               width={1200}
-              height={800}
-              style={{ width: "100%", height: "auto", aspectRatio: "4 / 3", objectFit: "cover" }}
+              height={1600}
+              className="album-photo-img"
             />
           </button>
         ))}
