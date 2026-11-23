@@ -6,13 +6,15 @@ import { createPortal } from "react-dom";
 
 /**
  * Photo cliquable + lightbox plein écran, à l'identique du site Framer
- * original : clic (curseur zoom-in) → ouverture plein écran, Échap ou
- * clic sur le fond pour fermer. L'overlay est rendu via un portail
- * document.body (comme le <div id="overlay"> racine de Framer) avec
- * zIndex 9999, pour ne pas être capturé par les ancêtres overflow
- * hidden des cartes. Specs de RoutePhotoGallery.tsx d'origine : image
- * max 96vw x 90vh en object-fit contain, radius 14, ombre
- * 0 12px 40px rgba(0, 0, 0, 0.35), sans bouton ni légende visibles
+ * original : clic (curseur zoom-in) -> image GRANDE et COMPLÈTE
+ * (hauteur 90vh, largeur plafonnée à 96vw pour les panoramiques,
+ * jamais recadrée, ratio réel respecté), Échap ou clic sur le fond
+ * pour fermer. L'overlay est rendu via un portail document.body
+ * (comme le <div id="overlay"> racine de Framer) avec zIndex 9999,
+ * sur un fond vert-noir semi-transparent rgba(9, 30, 23, 0.88)
+ * (teinte mesurée sur l'original à partir de l'écran publié).
+ * Radius 14 et ombre 0 12px 40px rgba(0, 0, 0, 0.35) (specs
+ * RoutePhotoGallery.tsx d'origine), sans bouton ni légende visibles
  * (caption sert uniquement au libellé d'accessibilité). Le bouton
  * trigger reprend le style de l'image via className (.route-img /
  * .card-image / .route-detail-image).
@@ -36,12 +38,16 @@ export default function ZoomImage({
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [natural, setNatural] = useState<{ w: number; h: number } | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const close = useCallback(() => setOpen(false), []);
+  const close = useCallback(() => {
+    setOpen(false);
+    setNatural(null);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -55,6 +61,23 @@ export default function ZoomImage({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, close]);
 
+  // Ajustement mesuré sur l'original : l'image agrandie remplit la
+  // hauteur d'écran (90vh), plafonnée à 96vw en largeur, en respectant
+  // le ratio réel de la photo (au chargement). Sans dimension
+  // explicite, l'image resterait à la taille du fichier servi et le
+  // zoom paraîtrait petit.
+  const fitted = natural
+    ? {
+        width: "min(96vw, calc(90vh * " + natural.w / natural.h + "))",
+        height: "auto",
+      }
+    : {
+        maxWidth: "96vw",
+        maxHeight: "90vh",
+        width: "auto",
+        height: "auto",
+      };
+
   const lightbox =
     open && mounted
       ? createPortal(
@@ -67,7 +90,7 @@ export default function ZoomImage({
               position: "fixed",
               inset: 0,
               zIndex: 9999,
-              backgroundColor: "rgba(22, 60, 50, 0.85)",
+              backgroundColor: "rgba(9, 30, 23, 0.88)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -79,12 +102,15 @@ export default function ZoomImage({
               alt={alt}
               width={1600}
               height={1067}
+              onLoad={(e) => {
+                const t = e.currentTarget;
+                if (t.naturalWidth > 0 && t.naturalHeight > 0) {
+                  setNatural({ w: t.naturalWidth, h: t.naturalHeight });
+                }
+              }}
               onClick={(e) => e.stopPropagation()}
               style={{
-                maxWidth: "96vw",
-                maxHeight: "90vh",
-                width: "auto",
-                height: "auto",
+                ...fitted,
                 objectFit: "contain",
                 borderRadius: 14,
                 boxShadow: "0 12px 40px rgba(0, 0, 0, 0.35)",

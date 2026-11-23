@@ -1615,10 +1615,13 @@ img {
    .framer-6meyew), comme la galerie RoutePhotoGallery (.framer-14t0x8l).
    ZoomImage / Gallery : overlay rendu via un portail document.body
    (comme le <div id="overlay"> racine de Framer), zIndex 9999 ; specs
-   de RoutePhotoGallery.tsx d'origine : image max 96vw x 90vh en
-   object-fit contain, radius 14, ombre 0 12px 40px rgba(0, 0, 0, 0.35),
-   sans flèches ni bouton ni légende visibles ; Échap ou clic sur le
-   fond pour fermer. Le bouton trigger reprend le style de l'image via
+   de RoutePhotoGallery.tsx d'origine, ajustées aux mesures pixels de
+   l'original publié : image agrandie GRANDE et COMPLÈTE (hauteur
+   90vh, largeur plafonnée à 96vw, ratio réel respecté), radius 14,
+   ombre 0 12px 40px rgba(0, 0, 0, 0.35), fond vert-noir semi-
+   transparent rgba(9, 30, 23, 0.88) mesuré sur l'original ; sans
+   flèches ni bouton ni légende visibles ; Échap ou clic sur le fond
+   pour fermer. Le bouton trigger reprend le style de l'image via
    className, l'image affichée est recadrée dedans, arrondis hérités. */
 .zoom-trigger {
   border: none;

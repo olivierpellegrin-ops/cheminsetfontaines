@@ -11,20 +11,26 @@ type Photo = { title: string; imageUrl: string; imageAlt: string | null };
  * RoutePhotoGallery.tsx : grille 3 colonnes (.album-grid CSS), photos
  * portrait aspect-ratio 0.75 (object-position top), radius 14, cursor
  * zoom-in ; lightbox plein écran au clic : overlay via un portail
- * document.body (zIndex 9999, comme le <div id="overlay"> racine),
- * image max 96vw x 90vh en object-fit contain, radius 14, ombre
+ * document.body (zIndex 9999, comme le <div id="overlay"> racine) sur
+ * un fond vert-noir rgba(9, 30, 23, 0.88) ; l'image agrandie est GRANDE
+ * et COMPLÈTE (hauteur 90vh, largeur plafonnée à 96vw, ratio réel
+ * respecté via naturalWidth/naturalHeight), radius 14, ombre
  * 0 12px 40px rgba(0, 0, 0, 0.35) (specs d'origine) ; Échap ou clic sur
  * le fond pour fermer, sans flèches ni bouton ni légende visibles.
  */
 export default function Gallery({ photos }: { photos: Photo[] }) {
   const [index, setIndex] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [natural, setNatural] = useState<{ w: number; h: number } | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const close = useCallback(() => setIndex(null), []);
+  const close = useCallback(() => {
+    setIndex(null);
+    setNatural(null);
+  }, []);
 
   useEffect(() => {
     if (index === null) return;
@@ -40,6 +46,18 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
 
   if (photos.length === 0) return null;
 
+  const fitted = natural
+    ? {
+        width: "min(96vw, calc(90vh * " + natural.w / natural.h + "))",
+        height: "auto",
+      }
+    : {
+        maxWidth: "96vw",
+        maxHeight: "90vh",
+        width: "auto",
+        height: "auto",
+      };
+
   const lightbox =
     index !== null && mounted
       ? createPortal(
@@ -52,7 +70,7 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
               position: "fixed",
               inset: 0,
               zIndex: 9999,
-              backgroundColor: "rgba(22, 60, 50, 0.85)",
+              backgroundColor: "rgba(9, 30, 23, 0.88)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -64,12 +82,15 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
               alt={photos[index].imageAlt || photos[index].title}
               width={1600}
               height={2133}
+              onLoad={(e) => {
+                const t = e.currentTarget;
+                if (t.naturalWidth > 0 && t.naturalHeight > 0) {
+                  setNatural({ w: t.naturalWidth, h: t.naturalHeight });
+                }
+              }}
               onClick={(e) => e.stopPropagation()}
               style={{
-                maxWidth: "96vw",
-                maxHeight: "90vh",
-                width: "auto",
-                height: "auto",
+                ...fitted,
                 objectFit: "contain",
                 borderRadius: 14,
                 boxShadow: "0 12px 40px rgba(0, 0, 0, 0.35)",
