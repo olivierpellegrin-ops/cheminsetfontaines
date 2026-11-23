@@ -742,3 +742,159 @@ img {
   border-color: var(--border-soft);
   border-radius: 14px;
 }
+
+/* ---------- Footer « Association Footer » (.framer-24m9fj) ----------
+   Relevé HTTrack 23/11/2026 : fond forest #163c32, colonne centrée,
+   gap 28, padding 48px 72px 24px (tablette 42px 48px 24px,
+   mobile gap 24 + padding 40px 24px 24px), contenu max 1080 en
+   space-between, colonne gauche 45% (gap 10, nom National Park
+   26px/700 blanc, baseline 15px parchemin max 420, localisation
+   14px/600 ochre, lien Facebook rangée gap 8 + icône 18px),
+   colonne droite Explorer (titre 14px/600 ochre, liens 15px
+   parchemin → hover ochre .2s), divider 1px #f4f1e833, légale
+   13px centrée. */
+.footer {
+  background: var(--forest);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  width: 100%;
+  padding: 48px 72px 24px;
+  box-sizing: border-box;
+}
+
+.footer__content {
+  max-width: 1080px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.footer__details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 45%;
+}
+
+.footer__name {
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1em;
+  color: #ffffff;
+}
+
+.footer__purpose {
+  width: 100%;
+  max-width: 420px;
+  font-size: 15px;
+  line-height: 1.5em;
+  color: var(--parchment);
+}
+
+.footer__location {
+  width: 100%;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3em;
+  color: var(--ochre);
+}
+
+.footer__facebook {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.footer__facebook-label {
+  font-size: 15px;
+  line-height: 1.3em;
+  color: var(--parchment);
+}
+
+.footer__facebook-icon {
+  height: 18px;
+  width: auto;
+  aspect-ratio: 1;
+  color: var(--parchment);
+  flex: none;
+}
+
+.footer__links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: min-content;
+}
+
+.footer__heading {
+  align-self: stretch;
+  width: auto;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3em;
+  color: var(--ochre);
+}
+
+.footer__link {
+  font-size: 15px;
+  line-height: 1.3em;
+  color: var(--parchment);
+  text-decoration: none;
+  transition: color 0.2s cubic-bezier(0.44, 0, 0.56, 1);
+}
+
+.footer__link:hover {
+  color: var(--ochre);
+}
+
+.footer__divider {
+  max-width: 1080px;
+  width: 100%;
+  height: 1px;
+  background: rgba(244, 241, 232, 0.2);
+}
+
+.footer__legal {
+  width: 100%;
+  font-size: 13px;
+  line-height: 1.3em;
+  text-align: center;
+  color: var(--parchment);
+}
+
+@media (min-width: 810px) and (max-width: 1199.98px) {
+  .footer {
+    padding: 42px 48px 24px;
+  }
+}
+
+@media (max-width: 809.98px) {
+  .footer {
+    gap: 24px;
+    padding: 40px 24px 24px;
+  }
+
+  .footer__content {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 28px;
+  }
+
+  .footer__details,
+  .footer__links {
+    width: 100%;
+  }
+
+  .footer__heading {
+    align-self: unset;
+    width: 100%;
+  }
+}
