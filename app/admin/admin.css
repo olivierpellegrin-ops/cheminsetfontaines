@@ -223,3 +223,63 @@ body:has(.cf-admin-login) {
 }
 .cf-admin__hint { margin-top: 16px; font-size: 12px; color: #6a7a70; }
 .cf-admin__allroutes { color: #4d6b4b; font-size: 14px; text-decoration: none; }
+
+/* B2 : formulaire de création d'itinéraire */
+.cf-admin__head-right { display: flex; align-items: baseline; gap: 16px; }
+.cf-admin__btn-primary {
+  background: #163c32;
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  border-radius: 8px;
+  padding: 9px 16px;
+}
+.cf-admin__btn-primary:hover { background: #0f2c24; }
+
+.cf-admin__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid #dde4e0;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 720px;
+}
+.cf-admin__form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #43534a; }
+.cf-admin__form input,
+.cf-admin__form select,
+.cf-admin__form textarea {
+  padding: 10px 12px;
+  border: 1px solid #c9d2cc;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  background: #fff;
+}
+.cf-admin__form textarea { resize: vertical; }
+.cf-admin__form-row { display: flex; gap: 16px; }
+.cf-admin__form-row label { flex: 1; }
+.cf-admin__form-preview {
+  font-size: 13px;
+  color: #6a7a70;
+  background: #eef6ef;
+  border: 1px dashed #9fc2a7;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.cf-admin__form-actions { display: flex; align-items: center; gap: 16px; }
+.cf-admin__form-actions button {
+  background: #163c32;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 22px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.cf-admin__form-actions button:disabled { opacity: 0.6; cursor: default; }
+
+@media (max-width: 640px) {
+  .cf-admin__form-row { flex-direction: column; gap: 14px; }
+}

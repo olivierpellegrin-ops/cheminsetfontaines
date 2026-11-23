@@ -38,10 +38,15 @@ export default async function AdminRoutesPage({
     <section>
       <div className="cf-admin__head">
         <h1>Itinéraires</h1>
-        <span className="cf-admin__count">
-          {routes.length} affiché{routes.length > 1 ? "s" : ""} · {publishedCount} publié
-          {publishedCount > 1 ? "s" : ""}
-        </span>
+        <div className="cf-admin__head-right">
+          <span className="cf-admin__count">
+            {routes.length} affiché{routes.length > 1 ? "s" : ""} · {publishedCount} publié
+            {publishedCount > 1 ? "s" : ""}
+          </span>
+          <Link href="/admin/routes/new" className="cf-admin__btn-primary">
+            + Nouvel itinéraire
+          </Link>
+        </div>
       </div>
 
       <form className="cf-admin__filters" method="get">
@@ -103,7 +108,7 @@ export default async function AdminRoutesPage({
         </table>
       )}
       <p className="cf-admin__hint">
-        Consultation seule (brique B1) — création et édition des itinéraires à partir de la brique B2.
+        Création disponible (B2) — édition, publication, suppression et uploads arrivent en B3/B4.
       </p>
     </section>
   );
