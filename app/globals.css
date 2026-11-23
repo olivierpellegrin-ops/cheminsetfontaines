@@ -1007,3 +1007,155 @@ img {
     padding: 72px 24px;
   }
 }
+
+/* ---------- Modale adhésion « Membership Registration » ----------
+   Capture d'écran Framer 23/11/2026 (modale absente de la copie
+   HTTrack) : blanche, large (~2/3 écran), 2 colonnes — texte à
+   gauche, formulaire à droite empilé (bordures fines, fond blanc),
+   croix de fermeture grise en haut à droite, arrière-plan site
+   flouté, bouton ochre aligné à droite, pas de bouton Fermer. */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(22, 60, 50, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.modal-member {
+  position: relative;
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 920px;
+  max-height: 88vh;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  text-align: left;
+}
+
+.modal-member__close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  z-index: 1;
+}
+
+.modal-member__close:hover {
+  color: var(--forest);
+}
+
+.modal-member__text {
+  padding: 48px 32px 48px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 14px;
+}
+
+.modal-member__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1.15;
+  color: var(--forest);
+}
+
+.modal-member__subtitle {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.modal-member__form {
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-member__field {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--forest);
+}
+
+.modal-member__field input,
+.modal-member__field select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-mid);
+  background: #fff;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--forest);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-member__field input:focus,
+.modal-member__field select:focus {
+  outline: 1px solid var(--ochre);
+}
+
+.modal-member__submit {
+  align-self: flex-end;
+  font-size: 15px;
+}
+
+.modal-member__submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.modal-member__error {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ochre);
+  text-align: right;
+}
+
+.modal-member__honeypot {
+  position: absolute;
+  left: -5000px;
+  opacity: 0;
+  height: 1px;
+  width: 1px;
+}
+
+@media (max-width: 809.98px) {
+  .modal-backdrop {
+    padding: 16px;
+  }
+
+  .modal-member {
+    grid-template-columns: 1fr;
+    max-height: 92vh;
+  }
+
+  .modal-member__text {
+    padding: 40px 24px 8px;
+  }
+
+  .modal-member__form {
+    padding: 16px 24px 32px;
+  }
+}
