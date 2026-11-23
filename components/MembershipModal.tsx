@@ -4,13 +4,15 @@ import { useActionState, useEffect, useState } from "react";
 import { requestMembership, type FormState } from "@/app/actions";
 
 /**
- * Modale « Membership Registration » reproduite à l'identique de la
- * modale Framer d'origine (capture 23/11/2026, le HTML de la modale
- * n'est pas dans la copie HTTrack) : blanche, large, 2 colonnes
- * (texte à gauche, formulaire à droite), croix de fermeture grise
- * en haut à droite, arrière-plan site flouté, champs empilés avec
- * bordures fines, bouton ochre « Envoyer la demande d'adhésion »
- * aligné à droite, select civilité « Choisir », honeypots conservés.
+ * Modale « Membership Registration » reproduite à l'identique du HTML
+ * original (enregistrement complet de la page live, 23/11/2026) :
+ * fond parchemin #f4f1e8, radius 18px, largeur 640px (mobile 342px),
+ * padding 32px (mobile 20px), gap 18px ; backdrop #0a1d17 quasi opaque ;
+ * champs 44px fond blanc, bordure #d2dccb, radius 8, Fira Sans 14px,
+ * PLACEHOLDERS sans libellés ; civilité sans placeholder (Madame par
+ * défaut) ; Code postal + Ville côte à côte ; bouton ochre pleine
+ * largeur radius 100px, texte 14px/600 vert ; bouton « Fermer » texte
+ * en bas ; honeypots originaux (website, company + 9 autres) conservés.
  * Déclenchée par le CTA « Adhérer à l'association » (prop label).
  */
 export default function MembershipModal({ label }: { label: string }) {
@@ -50,118 +52,136 @@ export default function MembershipModal({ label }: { label: string }) {
           onClick={(e) => e.target === e.currentTarget && setOpen(false)}
         >
           <div className="modal-member">
-            <button
-              type="button"
-              aria-label="Fermer"
-              className="modal-member__close"
-              onClick={() => setOpen(false)}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-                <path
-                  d="M2 2 L14 14 M14 2 L2 14"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-
-            <div className="modal-member__text">
-              <h3 className="modal-member__title">
-                Bienvenue parmi les marcheurs&nbsp;!
-              </h3>
-              <p className="modal-member__subtitle">
-                Quelques pas suffisent pour rejoindre l&apos;aventure : remplissez
-                ce formulaire et nous vous recontacterons avec plaisir.
-              </p>
-            </div>
+            <h3 className="modal-member__title">
+              Bienvenue parmi les marcheurs !
+            </h3>
+            <p className="modal-member__subtitle">
+              Quelques pas suffisent pour rejoindre l&apos;aventure : remplissez ce
+              formulaire et nous vous recontacterons avec plaisir.
+            </p>
 
             <form action={action} className="modal-member__form">
-              <label className="modal-member__field">
-                Civilité
-                <select name="civilite" defaultValue="" required>
-                  <option value="" disabled>
-                    Choisir
-                  </option>
-                  <option value="Madame">Madame</option>
-                  <option value="Monsieur">Monsieur</option>
-                  <option value="Autre">Autre</option>
-                </select>
-              </label>
-              <label className="modal-member__field">
-                Prénom
-                <input name="firstName" type="text" autoComplete="given-name" />
-              </label>
-              <label className="modal-member__field">
-                Nom
-                <input name="lastName" type="text" autoComplete="family-name" />
-              </label>
-              <label className="modal-member__field">
-                Adresse
-                <input name="address" type="text" autoComplete="street-address" />
-              </label>
-              <label className="modal-member__field">
-                Email*
-                <input name="email" type="email" required autoComplete="email" />
-              </label>
-              <label className="modal-member__field">
-                Téléphone
-                <input name="phone" type="tel" autoComplete="tel" />
-              </label>
-              <label className="modal-member__field">
-                Code postal
+              <select
+                name="civilite"
+                className="modal-member__input"
+                defaultValue="Madame"
+              >
+                <option value="Madame">Madame</option>
+                <option value="Monsieur">Monsieur</option>
+                <option value="Autre">Autre</option>
+              </select>
+              <input
+                name="firstName"
+                type="text"
+                placeholder="Prénom"
+                autoComplete="given-name"
+                className="modal-member__input"
+              />
+              <input
+                name="lastName"
+                type="text"
+                placeholder="Nom"
+                autoComplete="family-name"
+                className="modal-member__input"
+              />
+              <input
+                name="address"
+                type="text"
+                placeholder="Adresse"
+                autoComplete="street-address"
+                className="modal-member__input"
+              />
+              <input
+                name="email"
+                type="email"
+                required
+                placeholder="Adresse e-mail"
+                autoComplete="email"
+                className="modal-member__input"
+              />
+              <input
+                name="phone"
+                type="tel"
+                placeholder="Numéro de téléphone"
+                autoComplete="tel"
+                className="modal-member__input"
+              />
+              <div className="modal-member__city">
                 <input
                   name="postalCode"
+                  type="text"
+                  placeholder="Code postal"
                   inputMode="numeric"
                   autoComplete="postal-code"
+                  className="modal-member__input"
                 />
-              </label>
-              <label className="modal-member__field">
-                Ville
-                <input name="city" type="text" autoComplete="address-level2" />
-              </label>
-              <label className="modal-member__field">
-                Pays
-                <select name="country" defaultValue="France">
-                  <option>France</option>
-                  <option>Belgique</option>
-                  <option>Suisse</option>
-                  <option>Autre</option>
-                </select>
-              </label>
+                <input
+                  name="city"
+                  type="text"
+                  placeholder="Ville"
+                  autoComplete="address-level2"
+                  className="modal-member__input"
+                />
+              </div>
+              <select
+                name="country"
+                className="modal-member__input"
+                defaultValue="France"
+              >
+                <option value="France">France</option>
+                <option value="Belgique">Belgique</option>
+                <option value="Suisse">Suisse</option>
+                <option value="Autre">Autre</option>
+              </select>
 
-              {/* Honeypots repris à l'identique de la modale Framer */}
-              <input
-                type="text"
-                name="website"
-                tabIndex={-1}
-                autoComplete="off"
-                aria-hidden="true"
-                className="modal-member__honeypot"
-              />
-              <input
-                type="text"
-                name="company"
-                tabIndex={-1}
-                autoComplete="off"
-                aria-hidden="true"
-                className="modal-member__honeypot"
-              />
+              {/* Honeypots repris à l'identique de la modale Framer
+                  (website et company sont ceux vérifiés par l'action) */}
+              {[
+                "website",
+                "company",
+                "message",
+                "subject",
+                "title",
+                "description",
+                "feedback",
+                "notes",
+                "details",
+                "remarks",
+                "comments",
+              ].map((h) => (
+                <input
+                  key={h}
+                  type="text"
+                  name={h}
+                  tabIndex={-1}
+                  autoComplete="one-time-code"
+                  aria-hidden="true"
+                  className="modal-member__honeypot"
+                />
+              ))}
 
               <button
                 type="submit"
-                className="btn btn-ochre modal-member__submit"
+                className="modal-member__submit"
                 disabled={pending}
               >
-                {pending ? "Envoi…" : "Envoyer la demande d'adhésion"}
+                {pending ? "Envoi…" : "Envoyer la demande d’adhésion"}
               </button>
-
-              {state && !state.ok && (
-                <p role="alert" className="modal-member__error">
-                  {state.message}
-                </p>
-              )}
             </form>
+
+            {state && !state.ok && (
+              <p role="alert" className="modal-member__error">
+                {state.message}
+              </p>
+            )}
+
+            <button
+              type="button"
+              className="modal-member__close"
+              onClick={() => setOpen(false)}
+            >
+              Fermer
+            </button>
           </div>
         </div>
       )}
