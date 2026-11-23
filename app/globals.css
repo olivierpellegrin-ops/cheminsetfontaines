@@ -160,17 +160,29 @@ img {
 
 /* ---------- Cartes / sections ---------- */
 
+/* Cartes à l'identique Framer : vignette 180x120 à gauche du texte
+   (relevé copie HTTrack : .framer-kupkp9 cursor:zoom-in;height:120px;
+   width:180px;border-radius:10px — carte flex, align-items:center,
+   gap:20px, padding:20px). Mobile : empilement, image pleine largeur
+   (sizes d'origine calc(min(100vw, 1080px) - 80px)). */
 .card {
   background: #fff;
   border: 1px solid var(--border-mid);
-  border-radius: var(--radius);
+  border-radius: 10px;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .card-image {
-  aspect-ratio: 4 / 3;
-  width: 100%;
+  width: 180px;
+  height: 120px;
+  flex: none;
   object-fit: cover;
+  border-radius: 10px;
 }
 
 .section {
@@ -210,7 +222,21 @@ img {
 }
 
 .card-body {
-  padding: 18px 20px 22px;
+  flex: 1 0 0;
+  min-width: 0;
+  padding: 0;
+}
+
+@media (max-width: 640px) {
+  .card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .card-image {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 2;
+  }
 }
 
 .card-title {

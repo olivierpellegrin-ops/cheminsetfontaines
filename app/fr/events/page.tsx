@@ -1,4 +1,3 @@
-import Image from "next/image";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 
@@ -48,15 +47,6 @@ export default async function EventsPage() {
         <div className="section-grid">
           {events.map((e) => (
             <article key={e.slug} className="card">
-              {e.imageUrl && (
-                <Image
-                  src={e.imageUrl}
-                  alt={e.title}
-                  width={1200}
-                  height={800}
-                  className="card-image"
-                />
-              )}
               <div className="card-body">
                 <p className="card-meta" style={{ color: "var(--ochre)", fontWeight: 600 }}>
                   {e.dateLabel}
