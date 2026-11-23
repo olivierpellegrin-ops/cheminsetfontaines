@@ -13,19 +13,30 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError(null);
     setPending(true);
-    const form = new FormData(e.currentTarget);
-    const res = await signIn("credentials", {
-      email: form.get("email"),
-      password: form.get("password"),
-      redirect: false,
-    });
-    setPending(false);
-    if (res?.error) {
-      setError("Mauvais login et mot de passe. Réessayez avec de nouveaux identifiants.");
-      return;
+    console.log("[login][debug] soumission du formulaire");
+    try {
+      const form = new FormData(e.currentTarget);
+      const res = await signIn("credentials", {
+        email: form.get("email") ?? "",
+        password: form.get("password") ?? "",
+        redirect: false,
+      });
+      console.log("[login][debug] reponse signIn :", res);
+      setPending(false);
+      if (res?.error) {
+        setError("Mauvais login et mot de passe. Réessayez avec de nouveaux identifiants.");
+        return;
+      }
+      router.push("/admin");
+      router.refresh();
+    } catch (err) {
+      setPending(false);
+      console.error("[login][debug] exception :", err);
+      setError(
+        "Erreur technique : " +
+          (err instanceof Error ? err.message : String(err))
+      );
     }
-    router.push("/admin");
-    router.refresh();
   }
 
   return (
