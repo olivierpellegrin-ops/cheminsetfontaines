@@ -45,11 +45,6 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        // Traces GPX servies en téléchargement avec un nom de fichier lisible.
-        source: "/api/gpx/:slug",
-        headers: [],
-      },
     ];
   },
 };
