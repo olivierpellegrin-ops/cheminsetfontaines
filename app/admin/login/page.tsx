@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
     });
     setPending(false);
     if (res?.error) {
-      setError("Identifiants invalides.");
+      setError("Mauvais login et mot de passe. Réessayez avec de nouveaux identifiants.");
       return;
     }
     router.push("/admin");
