@@ -4,11 +4,14 @@ import { useActionState, useEffect, useState } from "react";
 import { requestMembership, type FormState } from "@/app/actions";
 
 /**
- * Modale « Membership Registration » (Q3) reproduite à l'identique du
- * HTML Framer fourni : titre « Bienvenue parmi les marcheurs ! », 9 champs
- * + honeypots « website » et « company », bouton ochre pleine largeur.
- * Le composant est déclenché par le CTA « Adhérer à l'association »
- * (prop label paramétrable pour la home / la page dons).
+ * Modale « Membership Registration » reproduite à l'identique de la
+ * modale Framer d'origine (capture 23/11/2026, le HTML de la modale
+ * n'est pas dans la copie HTTrack) : blanche, large, 2 colonnes
+ * (texte à gauche, formulaire à droite), croix de fermeture grise
+ * en haut à droite, arrière-plan site flouté, champs empilés avec
+ * bordures fines, bouton ochre « Envoyer la demande d'adhésion »
+ * aligné à droite, select civilité « Choisir », honeypots conservés.
+ * Déclenchée par le CTA « Adhérer à l'association » (prop label).
  */
 export default function MembershipModal({ label }: { label: string }) {
   const [open, setOpen] = useState(false);
@@ -23,9 +26,13 @@ export default function MembershipModal({ label }: { label: string }) {
 
   useEffect(() => {
     if (!open) return;
+    document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
   return (
@@ -39,86 +46,83 @@ export default function MembershipModal({ label }: { label: string }) {
           role="dialog"
           aria-modal="true"
           aria-label="Membership Registration"
+          className="modal-backdrop"
           onClick={(e) => e.target === e.currentTarget && setOpen(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 100,
-            background: "rgba(22, 60, 50, 0.55)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
-          }}
         >
-          <div
-            className="card"
-            style={{
-              maxWidth: 560,
-              width: "100%",
-              maxHeight: "90vh",
-              overflowY: "auto",
-              border: "none",
-            }}
-          >
-            <div style={{ padding: "28px 28px 8px" }}>
-              <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 30, color: "var(--forest)" }}>
-                Bienvenue parmi les marcheurs !
+          <div className="modal-member">
+            <button
+              type="button"
+              aria-label="Fermer"
+              className="modal-member__close"
+              onClick={() => setOpen(false)}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+                <path
+                  d="M2 2 L14 14 M14 2 L2 14"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+
+            <div className="modal-member__text">
+              <h3 className="modal-member__title">
+                Bienvenue parmi les marcheurs&nbsp;!
               </h3>
-              <p style={{ color: "var(--text-muted)", fontSize: 15, marginTop: 8 }}>
-                Quelques pas suffisent pour rejoindre l&apos;aventure : remplissez ce
-                formulaire et nous vous recontacterons avec plaisir.
+              <p className="modal-member__subtitle">
+                Quelques pas suffisent pour rejoindre l&apos;aventure : remplissez
+                ce formulaire et nous vous recontacterons avec plaisir.
               </p>
             </div>
 
-            <form action={action} style={{ padding: "16px 28px 28px", display: "grid", gap: 12 }}>
-              <div style={{ ...rowStyle }}>
-                <label style={labelStyle}>
-                  Civilité
-                  <select name="civilite" defaultValue="" style={inputStyle}>
-                    <option value="" disabled>
-                      Choisir
-                    </option>
-                    <option value="Madame">Madame</option>
-                    <option value="Monsieur">Monsieur</option>
-                    <option value="Autre">Autre</option>
-                  </select>
-                </label>
-                <label style={labelStyle}>
-                  Prénom
-                  <input name="firstName" type="text" autoComplete="given-name" style={inputStyle} />
-                </label>
-              </div>
-
-              <label style={labelStyle}>
+            <form action={action} className="modal-member__form">
+              <label className="modal-member__field">
+                Civilité
+                <select name="civilite" defaultValue="" required>
+                  <option value="" disabled>
+                    Choisir
+                  </option>
+                  <option value="Madame">Madame</option>
+                  <option value="Monsieur">Monsieur</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </label>
+              <label className="modal-member__field">
+                Prénom
+                <input name="firstName" type="text" autoComplete="given-name" />
+              </label>
+              <label className="modal-member__field">
                 Nom
-                <input name="lastName" type="text" autoComplete="family-name" style={inputStyle} />
+                <input name="lastName" type="text" autoComplete="family-name" />
               </label>
-              <label style={labelStyle}>
+              <label className="modal-member__field">
                 Adresse
-                <input name="address" type="text" autoComplete="street-address" style={inputStyle} />
+                <input name="address" type="text" autoComplete="street-address" />
               </label>
-              <label style={labelStyle}>
+              <label className="modal-member__field">
                 Email*
-                <input name="email" type="email" required autoComplete="email" style={inputStyle} />
+                <input name="email" type="email" required autoComplete="email" />
               </label>
-              <label style={labelStyle}>
+              <label className="modal-member__field">
                 Téléphone
-                <input name="phone" type="tel" autoComplete="tel" style={inputStyle} />
+                <input name="phone" type="tel" autoComplete="tel" />
               </label>
-              <div style={rowStyle}>
-                <label style={labelStyle}>
-                  Code postal
-                  <input name="postalCode" inputMode="numeric" autoComplete="postal-code" style={inputStyle} />
-                </label>
-                <label style={labelStyle}>
-                  Ville
-                  <input name="city" type="text" autoComplete="address-level2" style={inputStyle} />
-                </label>
-              </div>
-              <label style={labelStyle}>
+              <label className="modal-member__field">
+                Code postal
+                <input
+                  name="postalCode"
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                />
+              </label>
+              <label className="modal-member__field">
+                Ville
+                <input name="city" type="text" autoComplete="address-level2" />
+              </label>
+              <label className="modal-member__field">
                 Pays
-                <select name="country" defaultValue="France" style={inputStyle}>
+                <select name="country" defaultValue="France">
                   <option>France</option>
                   <option>Belgique</option>
                   <option>Suisse</option>
@@ -127,29 +131,33 @@ export default function MembershipModal({ label }: { label: string }) {
               </label>
 
               {/* Honeypots repris à l'identique de la modale Framer */}
-              <input type="text" name="website" tabIndex={-1} autoComplete="off" style={honeypotStyle} />
-              <input type="text" name="company" tabIndex={-1} autoComplete="off" style={honeypotStyle} />
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="modal-member__honeypot"
+              />
+              <input
+                type="text"
+                name="company"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="modal-member__honeypot"
+              />
 
               <button
                 type="submit"
-                className="btn btn-ochre"
+                className="btn btn-ochre modal-member__submit"
                 disabled={pending}
-                style={{ width: "100%", fontWeight: 600, fontSize: 14 }}
               >
                 {pending ? "Envoi…" : "Envoyer la demande d'adhésion"}
               </button>
 
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="btn-ghost btn"
-                style={{ fontSize: 14 }}
-              >
-                Fermer
-              </button>
-
               {state && !state.ok && (
-                <p role="alert" style={{ fontSize: 14, color: "var(--ochre)" }}>
+                <p role="alert" className="modal-member__error">
                   {state.message}
                 </p>
               )}
@@ -160,30 +168,3 @@ export default function MembershipModal({ label }: { label: string }) {
     </>
   );
 }
-
-const rowStyle: React.CSSProperties = {
-  display: "grid",
-  gap: 12,
-  gridTemplateColumns: "1fr",
-};
-const labelStyle: React.CSSProperties = {
-  fontSize: 14,
-  display: "grid",
-  gap: 4,
-  color: "var(--forest)",
-};
-const inputStyle: React.CSSProperties = {
-  padding: "10px 14px",
-  borderRadius: 10,
-  border: "1px solid var(--border-mid)",
-  background: "#fff",
-  fontSize: 15,
-  color: "var(--forest)",
-};
-const honeypotStyle: React.CSSProperties = {
-  position: "absolute",
-  left: -5000,
-  opacity: 0,
-  height: 1,
-  width: 1,
-};
