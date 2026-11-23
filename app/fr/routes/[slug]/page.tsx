@@ -71,7 +71,7 @@ export default async function RouteDetailPage({ params }: Props) {
         <div style={{ margin: "24px 0" }}>
           <p style={{ maxWidth: 720 }}>{route.description}</p>
           <p style={{ marginTop: 16 }}>
-            <GPXButton slug={route.slug} />
+            <GPXButton slug={route.slug} variant="detail" />
           </p>
         </div>
 

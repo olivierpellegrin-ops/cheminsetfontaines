@@ -86,7 +86,7 @@ export default async function RoutesPage() {
               }}
             >
               {items.map((r) => (
-                <article key={r.slug} className="card">
+                <article key={r.slug} className="card card--tint">
                   {r.imageUrl && (
                     <Link href={`/fr/routes/${r.slug}`} aria-label={r.title}>
                       <Image
@@ -104,7 +104,7 @@ export default async function RoutesPage() {
                     </h3>
                     <p className="card-meta">{r.description}</p>
                     <p style={{ marginTop: 12, display: "flex", gap: 18, alignItems: "center" }}>
-                      <GPXButton slug={r.slug} />
+                      <GPXButton slug={r.slug} variant="list" />
                       {r.hasAlbum && (
                         <Link href={`/fr/routes/${r.slug}#album`} className="link-more">
                           Album photos
