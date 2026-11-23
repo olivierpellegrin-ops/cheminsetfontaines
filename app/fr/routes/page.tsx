@@ -18,6 +18,7 @@ type RouteRow = {
   slug: string;
   title: string;
   description: string;
+  detailsRaw: string;
   townshipLabel: string;
   imageUrl: string | null;
   photos: { id: string }[];
@@ -34,6 +35,7 @@ export default async function RoutesPage() {
       slug: true,
       title: true,
       description: true,
+      detailsRaw: true,
       townshipLabel: true,
       imageUrl: true,
       photos: { select: { id: true } },
@@ -53,71 +55,52 @@ export default async function RoutesPage() {
   );
 
   return (
-    <section className="section">
-      <div className="container">
-        <p className="kicker">ITINÉRAIRES</p>
-        <h1 className="h2" style={{ fontSize: 44, margin: "12px 0 8px" }}>
-          Tous les itinéraires
-        </h1>
-        <p className="body-muted" style={{ marginBottom: 40 }}>
-          Téléchargez nos traces GPX et préparez votre prochaine marche en
-          Corrèze.
-        </p>
+    <section className="routes-arc">
+      <h2 className="routes-h2">Tous les itinéraires</h2>
+      <p className="routes-lead">
+        Téléchargez nos traces GPX et préparez votre prochaine marche en Corrèze.
+      </p>
 
-        {orderedGroups.map(([township, items]) => (
-          <div key={township} style={{ marginBottom: 48 }}>
-            <h2
-              id={normalizeSlug(township)}
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: 28,
-                borderBottom: "1px solid var(--border-soft)",
-                paddingBottom: 10,
-                marginBottom: 20,
-              }}
-            >
-              {township}
-            </h2>
-            <div
-              style={{
-                display: "grid",
-                gap: 20,
-                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-              }}
-            >
-              {items.map((r) => (
-                <article key={r.slug} className="card card--tint">
-                  {r.imageUrl && (
-                    <Link href={`/fr/routes/${r.slug}`} aria-label={r.title}>
-                      <Image
-                        src={r.imageUrl}
-                        alt={r.title}
-                        width={1200}
-                        height={800}
-                        className="card-image"
-                      />
-                    </Link>
-                  )}
-                  <div className="card-body">
-                    <h3 className="card-title">
-                      <Link href={`/fr/routes/${r.slug}`}>{r.title}</Link>
-                    </h3>
-                    <p className="card-meta">{r.description}</p>
-                    <p style={{ marginTop: 12, display: "flex", gap: 18, alignItems: "center" }}>
-                      <GPXButton slug={r.slug} variant="list" />
-                      {r.hasAlbum && (
-                        <Link href={`/fr/routes/${r.slug}#album`} className="link-more">
-                          Album photos
-                        </Link>
-                      )}
-                    </p>
-                  </div>
-                </article>
-              ))}
-            </div>
+      {orderedGroups.map(([township, items]) => (
+        <div key={township} className="routes-group">
+          <h3 id={normalizeSlug(township)} className="routes-group-title">
+            {township}
+          </h3>
+          <div className="routes-list">
+            {items.map((r) => (
+              <article key={r.slug} className="card card--tint">
+                {r.imageUrl && (
+                  <Image
+                    src={r.imageUrl}
+                    alt={r.title}
+                    width={1200}
+                    height={800}
+                    className="card-image"
+                  />
+                )}
+                <div className="routes-card-body">
+                  <h3 className="routes-card-title">
+                    <Link href={`/fr/routes/${r.slug}`}>{r.title}</Link>
+                  </h3>
+                  <p className="routes-meta">{r.detailsRaw}</p>
+                  <p className="routes-card-desc">{r.description}</p>
+                </div>
+                <div className="routes-gpx-wrap">
+                  <GPXButton slug={r.slug} variant="list" />
+                </div>
+                {r.hasAlbum && (
+                  <Link
+                    href={`/fr/routes/${r.slug}#album`}
+                    className="routes-album"
+                  >
+                    Album photos
+                  </Link>
+                )}
+              </article>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </section>
   );
 }
