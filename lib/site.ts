@@ -15,8 +15,8 @@ export const SITE = {
   postalAddress: "Chemins et Fontaines, 14 Le Sirieix, Bassignac-Le-Haut, 19220 France",
   notifyEmail: process.env.NOTIFY_EMAIL ?? "contact@cheminsetfontaines.fr",
   contactEmail: "contact@cheminsetfontaines.fr",
-  // Q3 résiduel : page Facebook réelle à remplacer dès qu'elle existe (lien générique actuel)
-  facebookUrl: "https://www.facebook.com/",
+  // Lien Facebook du footer original (relevé HTTrack, profil réel de l'association)
+  facebookUrl: "https://www.facebook.com/profile.php?id=61568993068777&locale=fr_FR",
   // Q17 : Stripe Payment Link (v1, aucun secret)
   stripeDonationUrl: "https://buy.stripe.com/5kQ8wR4X3bKNb8e5Z4bo402",
 } as const;

@@ -1,73 +1,51 @@
 import Link from "next/link";
 import { FOOTER_LINKS, SITE } from "@/lib/site";
 
-/** Footer « Association Footer » (data-framer-name) reproduit à l'identique. */
+/** Footer « Association Footer » (data-framer-name) reproduit à l'identique.
+ *  Relevés HTTrack 23/11/2026 : .framer-24m9fj (fond #163c32, colonne
+ *  centrée, gap 28, padding 48px 72px 24px), contenu max 1080 en
+ *  space-between, colonne gauche 45% (gap 10), colonne droite Explorer,
+ *  divider 1px #f4f1e833, ligne légale 13px centrée. */
 export default function Footer() {
   return (
-    <footer style={{ background: "var(--forest)", color: "var(--parchment)", marginTop: 64 }}>
-      <div
-        className="container"
-        style={{
-          display: "grid",
-          gap: 32,
-          padding: "56px 24px 32px",
-          gridTemplateColumns: "1fr",
-        }}
-      >
-        <div>
-          <p style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 24, marginBottom: 8 }}>
-            Chemins et Fontaines
-          </p>
-          <p style={{ fontSize: 15, opacity: 0.85 }}>{SITE.baseline}</p>
-          <p style={{ fontSize: 15, opacity: 0.85, marginTop: 4 }}>{SITE.location}</p>
-
-          <p style={{ marginTop: 24, fontSize: 14, opacity: 0.85 }}>Rejoignez-nous sur</p>
+    <footer className="footer">
+      <div className="footer__content">
+        <div className="footer__details">
+          <p className="footer__name">Chemins et Fontaines</p>
+          <p className="footer__purpose">{SITE.baseline}</p>
+          <p className="footer__location">{SITE.location}</p>
           <a
+            className="footer__facebook"
             href={SITE.facebookUrl}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Page Facebook de l'association"
-            style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 15, color: "var(--ochre)" }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-              <path d="M13.5 21v-7h2.4l.4-3h-2.8V9.1c0-.9.3-1.5 1.5-1.5h1.4V4.9c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8V11H8v3h2.5v7h3Z" />
+            <span className="footer__facebook-label">Rejoignez-nous sur</span>
+            <svg
+              className="footer__facebook-icon"
+              viewBox="0 0 16 16"
+              aria-hidden
+              fill="currentColor"
+            >
+              <path d="M 6.067 15.765 L 6.067 10.445 L 4.418 10.445 L 4.418 8 L 6.067 8 L 6.067 6.947 C 6.067 4.223 7.299 2.961 9.973 2.961 C 10.24 2.961 10.609 2.989 10.951 3.03 C 11.207 3.057 11.461 3.1 11.712 3.16 L 11.712 5.377 C 11.567 5.363 11.422 5.355 11.277 5.353 C 11.114 5.348 10.951 5.346 10.788 5.347 C 10.317 5.347 9.949 5.411 9.671 5.553 C 9.485 5.647 9.329 5.79 9.219 5.967 C 9.047 6.247 8.969 6.631 8.969 7.135 L 8.969 8 L 11.582 8 L 11.325 9.402 L 11.133 10.445 L 8.969 10.445 L 8.969 15.941 C 12.931 15.463 16 12.09 16 8 C 16 3.582 12.418 0 8 0 C 3.582 0 0 3.582 0 8 C 0 11.752 2.583 14.9 6.067 15.765 Z" />
             </svg>
-            Facebook
           </a>
         </div>
 
-        <div>
-          <p style={{ fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", opacity: 0.7, marginBottom: 12 }}>
-            Explorer
-          </p>
-          <ul style={{ listStyle: "none", display: "grid", gap: 8 }}>
-            {FOOTER_LINKS.map((l) => (
-              <li key={l.href}>
-                <Link href={l.href} style={{ fontSize: 15, opacity: 0.9 }}>
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <nav className="footer__links">
+          <p className="footer__heading">Explorer</p>
+          {FOOTER_LINKS.map((l) => (
+            <Link key={l.href} href={l.href} className="footer__link">
+              {l.label}
+            </Link>
+          ))}
+        </nav>
       </div>
 
-      <div
-        className="container"
-        style={{
-          borderTop: "1px solid rgba(244,241,232,0.18)",
-          padding: "20px 24px 28px",
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <p style={{ fontSize: 14, opacity: 0.7 }}>
-          © 2026 Chemins et Fontaines · Tous droits réservés
-        </p>
-        <p style={{ fontSize: 14, opacity: 0.7 }}>FR / EN</p>
-      </div>
+      <div className="footer__divider" aria-hidden />
+
+      <p className="footer__legal">© 2026 Chemins et Fontaines · Tous droits réservés</p>
     </footer>
   );
 }
