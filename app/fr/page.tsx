@@ -60,16 +60,22 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* HERO */}
+      {/* HERO — à l'identique Framer : photo de fond (composant « Introduction »,
+          image framerusercontent PgAwvDzKwsXpUrrYpHZyKfslAw 1344x1008, height 600px,
+          padding 120/72, kicker beige rgb(230,215,174)), texte blanc. */}
       <section
         style={{
-          background: "var(--forest)",
+          backgroundImage:
+            "url(https://framerusercontent.com/images/PgAwvDzKwsXpUrrYpHZyKfslAw.png?width=1344&height=1008)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
           color: "var(--parchment)",
-          padding: "88px 0",
+          minHeight: 600,
+          padding: "120px 0",
         }}
       >
         <div className="container">
-          <p className="kicker" style={{ color: "var(--ochre)" }}>
+          <p className="kicker" style={{ color: "rgb(230, 215, 174)", fontSize: 21, letterSpacing: "1.4px" }}>
             {SITE.kicker}
           </p>
           <h1 className="h1" style={{ margin: "16px 0 12px" }}>

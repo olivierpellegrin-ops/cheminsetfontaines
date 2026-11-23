@@ -19,8 +19,7 @@ export default function Header() {
         position: "sticky",
         top: 0,
         zIndex: 50,
-        background: "var(--parchment)",
-        borderBottom: "1px solid var(--border-mid)",
+        background: "var(--forest)",
       }}
     >
       <div
@@ -44,7 +43,7 @@ export default function Header() {
               display: "inline-block",
             }}
           />
-          <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20 }}>
+          <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20, color: "#fff" }}>
             {SITE.name.includes("&") ? "Chemins & Fontaines" : SITE.name}
           </span>
         </Link>
@@ -58,16 +57,16 @@ export default function Header() {
               style={{
                 fontSize: 15,
                 fontWeight: 500,
-                color: pathname === l.href ? "var(--ochre)" : "var(--forest)",
+                color: pathname === l.href ? "var(--parchment)" : "#fff",
               }}
             >
               {l.label}
             </Link>
           ))}
-          <Link href="/fr" style={{ fontSize: 15, fontWeight: 500, color: "var(--moss)" }}>
+          <Link href="/fr/newsletters" style={{ fontSize: 15, fontWeight: 500, color: "#fff" }}>
             Newsletters
           </Link>
-          <span style={{ fontSize: 15, color: "var(--text-muted)" }}>FR / EN</span>
+          <span style={{ fontSize: 15, color: "rgba(255, 255, 255, 0.85)" }}>FR / EN</span>
         </nav>
 
         {/* Bouton menu mobile */}
@@ -81,7 +80,7 @@ export default function Header() {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
             <path
               d="M4 5h16M4 12h16M4 19h16"
-              stroke="var(--forest)"
+              stroke="#fff"
               strokeWidth="2"
               strokeLinecap="round"
             />
@@ -93,7 +92,7 @@ export default function Header() {
       {open && (
         <nav
           aria-label="Navigation mobile"
-          style={{ borderTop: "1px solid var(--border-mid)", background: "var(--parchment)" }}
+          style={{ borderTop: "1px solid rgba(255, 255, 255, 0.15)", background: "var(--forest)" }}
         >
           <div className="container" style={{ display: "flex", flexDirection: "column", padding: "12px 24px" }}>
             {[...NAV_LINKS, { href: "/fr/newsletters", label: "Newsletters" }].map((l) => (
@@ -101,7 +100,7 @@ export default function Header() {
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                style={{ padding: "12px 0", fontSize: 16, fontWeight: 500 }}
+                style={{ padding: "12px 0", fontSize: 16, fontWeight: 500, color: "#fff" }}
               >
                 {l.label}
               </Link>
