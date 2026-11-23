@@ -5,9 +5,13 @@ import type { NextAuthConfig } from "next-auth";
  * middleware.ts — brique B0 du back-office (conception du 23/11/2026).
  */
 export const authConfig = {
+  // providers obligatoire même vide : le bundle edge du middleware fait
+  // providers.map(...) au demarrage (sinon "reading 'map'" en runtime).
+  providers: [],
   pages: {
     signIn: "/admin/login",
   },
+  trustHost: true,
   session: { strategy: "jwt" },
   callbacks: {
     jwt({ token, user }) {
