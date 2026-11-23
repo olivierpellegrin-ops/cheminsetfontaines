@@ -26,11 +26,6 @@ enum ContentStatus {
   draft
 }
 
-enum UserRole {
-  admin
-  bureau
-}
-
 enum SubscriberStatus {
   pending
   subscribed
