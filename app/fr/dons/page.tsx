@@ -8,50 +8,44 @@ export const metadata: Metadata = {
   alternates: { canonical: "/fr/dons" },
 };
 
+/** Page Dons « Donation Content » (.framer-c5b806) reproduite à l'identique.
+ *  Relevés HTTrack 23/11/2026 : colonne max 780 centrée, gap 28,
+ *  padding 112px 72px (mobile 72px 24px), kicker 13px/600 ls 1.2px
+ *  ochre, titre National Park 46px/700 lh 1.08em, lead 17px ls
+ *  -0.02em lh 1.55 #43534A, carte impact #4d6b4b radius 16 padding 28
+ *  gap 12 (titre 24px blanc, puces 16px lh 1.55 parchemin), bouton
+ *  Stripe #c18a21 radius 100px padding 15/24 (texte #163C32 600),
+ *  note « Paiement sécurisé par Stripe » 13px centrée. */
 export default function DonationsPage() {
   return (
-    <section className="section">
-      <div className="container" style={{ maxWidth: 820 }}>
-        <p className="kicker">SOUTENIR L&apos;ASSOCIATION</p>
-        <h1 className="h2" style={{ fontSize: 44, margin: "12px 0 12px" }}>
-          Votre don fait vivre les chemins.
-        </h1>
-        <p className="body-muted" style={{ maxWidth: 640 }}>
-          Chaque contribution finance le balisage, l&apos;entretien de nos
-          sentiers et nos actions locales pour préserver la biodiversité.
+    <section className="dons-wrap">
+      <p className="dons-kicker">SOUTENIR L&apos;ASSOCIATION</p>
+      <h1 className="dons-title">Votre don fait vivre les chemins.</h1>
+      <p className="dons-lead">
+        Chaque contribution finance le balisage, l&apos;entretien de nos sentiers
+        et nos actions locales pour préserver la biodiversité.
+      </p>
+
+      <div className="dons-impact">
+        <h2 className="dons-impact-title">Votre soutien en action</h2>
+        <p className="dons-impact-list">
+          • Balisage et entretien des itinéraires
+          <br />
+          • Protection des sources et des paysages
+          <br />
+          • Sorties nature ouvertes à tous
         </p>
-
-        <div
-          className="section-tint"
-          style={{ borderRadius: "var(--radius)", padding: 28, margin: "36px 0" }}
-        >
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: 26, marginBottom: 14 }}>
-            Votre soutien en action
-          </h2>
-          <ul style={{ listStyle: "none", display: "grid", gap: 10 }}>
-            <li>• Balisage et entretien des itinéraires</li>
-            <li>• Protection des sources et des paysages</li>
-            <li>• Sorties nature ouvertes à tous</li>
-          </ul>
-        </div>
-
-        <div>
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: 26, marginBottom: 10 }}>
-            Faire un don par carte bancaire
-          </h2>
-          <p className="body-muted" style={{ marginBottom: 18 }}>
-            Paiement sécurisé par Stripe
-          </p>
-          <a
-            className="btn btn-ochre"
-            href={SITE.stripeDonationUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Faire un don
-          </a>
-        </div>
       </div>
+
+      <a
+        className="dons-btn"
+        href={SITE.stripeDonationUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Faire un don par carte bancaire
+      </a>
+      <p className="dons-note">Paiement sécurisé par Stripe</p>
     </section>
   );
 }
