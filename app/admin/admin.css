@@ -133,21 +133,6 @@
   padding: 8px 10px;
 }
 
-/* Zone de debug diagnostic (B0) */
-.cf-admin-login__debug {
-  margin: 16px 0 0;
-  padding: 10px 12px;
-  list-style: none;
-  background: #eef6ef;
-  border: 1px dashed #9fc2a7;
-  border-radius: 8px;
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 12px;
-  color: #2c4a33;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
 
 /* Neutralisation de la charte publique (parchemin, Fira Sans 17px, vert #163c32)
    sur les pages admin uniquement — :has est supporté par tous les navigateurs cibles. html/admin/body */
@@ -163,3 +148,78 @@ body:has(.cf-admin-login) {
   font-size: 15px;
   line-height: 1.5;
 }
+
+/* B1 : navigation, filtres et badges */
+.cf-admin__nav {
+  background: #0f2c24;
+  padding: 0 24px;
+  display: flex;
+  gap: 4px;
+}
+.cf-admin__nav a {
+  color: #cfe0d6;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 10px 14px;
+  border-bottom: 2px solid transparent;
+}
+.cf-admin__nav a:hover { color: #fff; }
+.cf-admin__nav a.is-active { color: #fff; border-bottom-color: #c18a21; }
+
+.cf-admin__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+.cf-admin__count { font-size: 14px; color: #43534a; }
+
+.cf-admin__filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin: 0 0 20px;
+  font-size: 13px;
+  color: #43534a;
+}
+.cf-admin__filters label { display: flex; flex-direction: column; gap: 4px; }
+.cf-admin__filters select {
+  padding: 8px 10px;
+  border: 1px solid #c9d2cc;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  min-width: 160px;
+}
+.cf-admin__filters button {
+  padding: 9px 18px;
+  background: #163c32;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.cf-admin__filters a { font-size: 13px; color: #4d6b4b; }
+
+.cf-admin__badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.cf-admin__badge--published { background: #e2efe4; color: #2c5a33; }
+.cf-admin__badge--draft { background: #f3ead6; color: #8a6414; }
+
+.cf-admin__cell-title { font-weight: 600; }
+.cf-admin__empty {
+  background: #fff;
+  border: 1px solid #dde4e0;
+  border-radius: 10px;
+  padding: 24px;
+  font-size: 14px;
+  color: #43534a;
+}
+.cf-admin__hint { margin-top: 16px; font-size: 12px; color: #6a7a70; }
+.cf-admin__allroutes { color: #4d6b4b; font-size: 14px; text-decoration: none; }

@@ -30,6 +30,7 @@ export default async function AdminHome() {
         <li><strong>{newsletterCount}</strong> newsletters</li>
       </ul>
       <h2>Derniers itinéraires modifiés</h2>
+      <p><a href="/admin/routes" className="cf-admin__allroutes">Voir tous les itinéraires →</a></p>
       <table className="cf-admin__table">
         <thead><tr><th>Titre</th><th>Commune</th><th>Statut</th><th>Maj</th></tr></thead>
         <tbody>
