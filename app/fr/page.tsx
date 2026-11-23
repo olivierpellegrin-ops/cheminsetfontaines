@@ -91,7 +91,7 @@ export default async function HomePage() {
         <div className="about-columns">
           <div className="about-logo-card">
             <Image
-              src="https://framerusercontent.com/images/08OWyE53wBlq7B9DrXOKRkUsnE.png?width=1800&height=1200"
+              src="https://framerusercontent.com/images/08OWyE53wBlq7B9DrXOKRkUsnE.png"
               alt="Logo de l'association Chemins et Fontaines, Bassignac-le-Haut"
               width={1800}
               height={1200}
