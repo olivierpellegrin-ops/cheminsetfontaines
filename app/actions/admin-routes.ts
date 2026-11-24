@@ -101,7 +101,7 @@ function gpxCheck(v: FormDataEntryValue | null): v is File {
 }
 
 /** true si l'URL d'image est un fichier local (uploads), false si externe. */
-const isLocalImage = (url: string | null) => !!url && url.startsWith("/images/routes/");
+const isLocalImage = (url: string | null | undefined): url is string => !!url && url.startsWith("/images/routes/");
 
 /** Décode une data URL JPEG (capture 1200×800 du viewer) -> Buffer+extension. */
 async function decodeCapture(capture: string): Promise<{ buf: Buffer; ext: string } | { error: string }> {
