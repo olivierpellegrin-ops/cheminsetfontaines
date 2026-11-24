@@ -193,7 +193,10 @@ export default function GpxPreview({
         }
       })
       .catch(() => {
-        /* pas de trace locale : pas de viewer */
+        /* pas de trace locale disponible */
+        if (!cancelled) {
+          setError("GPX local introuvable — sélectionnez le fichier GPX pour afficher le tracé.");
+        }
       });
     return () => {
       cancelled = true;
@@ -416,7 +419,9 @@ export default function GpxPreview({
     );
   }
 
-  if (!file) return null;
+  // Creation : visible des qu'un fichier est choisi.
+  // Edition : visible aussi sans re-selection grace au GPX local enregistre.
+  if (!file && !fallbackGpxUrl) return null;
 
   return (
     <div className="cf-admin__gpx">
