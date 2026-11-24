@@ -46,9 +46,12 @@ export default async function HomePage() {
     },
   });
 
+  // Décision Olivier 24/11 : la home met en avant les 3 itinéraires
+  // les plus recemment publies (updatedAt desc) — editing une fiche
+  // la remonte en home. Auparavant : createdAt asc (parite Framer figee).
   const routes: Rt[] = await prisma.route.findMany({
     where: { status: "published" },
-    orderBy: [{ createdAt: "asc" }],
+    orderBy: [{ updatedAt: "desc" }],
     take: 3,
     select: {
       slug: true,
