@@ -453,3 +453,12 @@ body:has(.cf-admin-login) {
   border-radius: 6px;
   border: 1px solid #c9d2cc;
 }
+.cf-admin__btn-cancel {
+  color: #6a7a70;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 10px 14px;
+  border: 1px solid #c9d2cc;
+  border-radius: 8px;
+}
+.cf-admin__btn-cancel:hover { background: #eef6ef; color: #163c32; }

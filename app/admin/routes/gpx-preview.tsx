@@ -332,7 +332,9 @@ export default function GpxPreview({
       ctx.font = "12px sans-serif";
       ctx.textAlign = "center";
       ctx.fillText("© MapTiler · © OpenStreetMap contributors", CAPTURE_W - 164, CAPTURE_H - 9);
-      return out.toDataURL("image/png");
+      // JPEG qualité 0.9 : une vue satellite 1200×800 en PNG dépasse 4 Mo,
+      // en JPEG compressé elle fait ~300-500 Ko (limite app. de 4 Mo respectée)
+      return out.toDataURL("image/jpeg", 0.9);
     } finally {
       cap.remove();
       off.remove();

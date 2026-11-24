@@ -300,8 +300,11 @@ export default function RouteForm({
         <button type="submit" disabled={pending}>
           {pending ? "Enregistrement…" : submitLabel}
         </button>
+        <a href="/admin/routes" className="cf-admin__btn-cancel">
+          Annuler
+        </a>
         <span className="cf-admin__hint">
-          {published ? "Sera visible publiquement dès l'enregistrement." : "Créé en brouillon — publication possible ensuite."}
+          Après création, retour automatique à la liste des itinéraires.
         </span>
       </div>
     </form>
