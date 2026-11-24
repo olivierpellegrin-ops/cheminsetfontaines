@@ -94,6 +94,11 @@ async function saveFile(
 const gpxDir = () => path.join(process.cwd(), "public", "gpx");
 const imgDir = () => path.join(process.cwd(), "public", "images", "routes");
 
+/** true si le champ FormData est un fichier GPX à traiter. */
+function gpxCheck(v: FormDataEntryValue | null): v is File {
+  return v instanceof File && v.size > 0;
+}
+
 /** true si l'URL d'image est un fichier local (uploads), false si externe. */
 const isLocalImage = (url: string | null) => !!url && url.startsWith("/images/routes/");
 
@@ -166,6 +171,30 @@ export async function createRoute(
     detailsOverride ||
     composeDetailsRaw(data.distanceKm, data.elevationGainM, data.difficulty) ||
     "";
+
+  // --- Pre-check tailles : AUCUNE écriture disque tant qu'un fichier
+  // dépasse sa limite (sinon un échec tardif laisse des orphelins, vécu 24/11)
+  {
+    const sizes: { name: string; size: number; max: number }[] = [];
+    if (gpxCheck(fd.get("gpxFile"))) {
+      sizes.push({ name: (fd.get("gpxFile") as File).name, size: (fd.get("gpxFile") as File).size, max: MAX_GPX_BYTES });
+    }
+    const imgF = fd.get("imageFile");
+    if (imgF instanceof File && imgF.size > 0) {
+      sizes.push({ name: imgF.name, size: imgF.size, max: MAX_IMG_BYTES });
+    }
+    for (let i = 0; ; i++) {
+      const f = fd.get(`photo.file-${i}`);
+      if (!(f instanceof File)) break;
+      if (f.size > 0) sizes.push({ name: f.name, size: f.size, max: MAX_IMG_BYTES });
+    }
+    const tooBig = sizes.find((x) => x.size > x.max);
+    if (tooBig) {
+      return {
+        error: `« ${tooBig.name} » dépasse la limite (${(tooBig.max / 1048576).toFixed(0)} Mo). Aucun fichier n'a été écrit.`,
+      };
+    }
+  }
 
   // --- Uploads ---
   let gpxFileName: string | null = null;
@@ -293,6 +322,29 @@ export async function updateRoute(
     detailsOverride ||
     composeDetailsRaw(data.distanceKm, data.elevationGainM, data.difficulty) ||
     "";
+
+  // --- Pre-check tailles avant toute écriture disque (anti-orphelin) ---
+  {
+    const sizes: { name: string; size: number; max: number }[] = [];
+    if (gpxCheck(fd.get("gpxFile"))) {
+      sizes.push({ name: (fd.get("gpxFile") as File).name, size: (fd.get("gpxFile") as File).size, max: MAX_GPX_BYTES });
+    }
+    const imgF = fd.get("imageFile");
+    if (imgF instanceof File && imgF.size > 0) {
+      sizes.push({ name: imgF.name, size: imgF.size, max: MAX_IMG_BYTES });
+    }
+    for (let i = 0; ; i++) {
+      const f = fd.get(`photo.file-${i}`);
+      if (!(f instanceof File)) break;
+      if (f.size > 0) sizes.push({ name: f.name, size: f.size, max: MAX_IMG_BYTES });
+    }
+    const tooBig = sizes.find((x) => x.size > x.max);
+    if (tooBig) {
+      return {
+        error: `« ${tooBig.name} » dépasse la limite (${(tooBig.max / 1048576).toFixed(0)} Mo). Aucun fichier n'a été écrit.`,
+      };
+    }
+  }
 
   // --- Slug modifié : déplacer GPX, photo principale et photos locales ---
   if (slug !== existing.slug) {

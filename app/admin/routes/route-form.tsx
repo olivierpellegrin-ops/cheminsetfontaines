@@ -207,7 +207,7 @@ export default function RouteForm({
         Description *
         <textarea
           name="description"
-          rows={8}
+          rows={2}
           required
           defaultValue={initial?.description ?? ""}
           placeholder="Texte de présentation de l'itinéraire (page publique)."
