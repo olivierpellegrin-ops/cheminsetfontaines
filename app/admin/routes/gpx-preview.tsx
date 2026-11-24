@@ -355,7 +355,8 @@ export default function GpxPreview({
       pitch,
       interactive: false,
       attributionControl: false,
-      preserveDrawingBuffer: true,
+      // MapLibre v5 : preserveDrawingBuffer est passe dans canvasContextAttributes
+      canvasContextAttributes: { preserveDrawingBuffer: true },
     });
     try {
       await new Promise<void>((resolve) => cap.on("load", () => resolve()));
