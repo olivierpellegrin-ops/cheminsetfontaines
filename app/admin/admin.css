@@ -468,3 +468,29 @@ body:has(.cf-admin-login) {
   border-radius: 8px;
 }
 .cf-admin__btn-cancel:hover { background: #eef6ef; color: #163c32; }
+
+/* B4 : actions par ligne de la liste */
+.cf-admin__row-actions { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
+.cf-admin__row-actions form { margin: 0; display: inline; }
+.cf-admin__row-edit,
+.cf-admin__row-toggle,
+.cf-admin__row-delete {
+  font-size: 13px;
+  border-radius: 6px;
+  padding: 6px 10px;
+  border: 1px solid #c9d2cc;
+  background: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+.cf-admin__row-edit { color: #163c32; background: #e2efe4; border-color: #9db3a4; }
+.cf-admin__row-edit:hover { background: #d3e7d6; }
+.cf-admin__row-toggle { color: #43534a; }
+.cf-admin__row-toggle:hover { background: #eef6ef; }
+.cf-admin__row-delete { color: #a3252c; background: #fbeaea; border-color: #dcb6b8; }
+.cf-admin__row-delete:hover { background: #f6dcdc; }
+@media (max-width: 720px) {
+  .cf-admin__table { font-size: 12px; }
+  .cf-admin__row-actions { flex-direction: column; align-items: flex-start; }
+}

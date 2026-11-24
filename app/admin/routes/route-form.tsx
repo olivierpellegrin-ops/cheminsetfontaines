@@ -11,39 +11,69 @@ type Difficulty = "facile" | "moyen" | "difficile" | null;
 type PhotoRow = { key: number };
 
 /**
+ * Valeurs initiales en mode édition (B4) : hydratent le formulaire depuis
+ * l'itinéraire existant. Absentes = mode création.
+ */
+export type RouteFormInitial = {
+  id: string;
+  title: string;
+  slug: string;
+  communeId: string;
+  townshipLabel: string;
+  distanceKm: number | null;
+  elevationGainM: number | null;
+  difficulty: Difficulty;
+  detailsRaw: string;
+  description: string;
+  published: boolean;
+  hasPhotoAlbum: boolean;
+  imageUrl: string | null;
+  gpxFileName: string | null;
+  imageAlt: string | null;
+  photoCount: number;
+};
+
+/**
  * Formulaire itinéraire complet (B3) — champs à l'identique du CMS Framer :
  * Title, Status (toggle Publié), Slug (auto-éditable), Details (composée,
  * surchargable), GPX Upload, Description, Route Image, Township,
  * Photo Gallery (+), Has Photo Album (toggle).
- * Réutilisable tel quel pour l'édition (B4).
+ * Réutilisé tel quel en B4 pour l'édition (prop initial).
  */
 export default function RouteForm({
   communes,
   action,
   maptilerKey,
-  submitLabel = "Créer l'itinéraire",
+  initial,
+  submitLabel,
 }: {
   communes: Commune[];
   action: (prev: RouteFormState, fd: FormData) => Promise<RouteFormState>;
   maptilerKey: string;
+  initial?: RouteFormInitial;
   submitLabel?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, {} as RouteFormState);
-  const [communeId, setCommuneId] = useState("");
-  const [townshipLabel, setTownshipLabel] = useState("");
-  const [title, setTitle] = useState("");
-  const [slugInput, setSlugInput] = useState("");
-  const [slugTouched, setSlugTouched] = useState(false);
-  const [distance, setDistance] = useState("");
-  const [elevation, setElevation] = useState("");
-  const [difficulty, setDifficulty] = useState("");
-  const [detailsOverride, setDetailsOverride] = useState("");
-  const [published, setPublished] = useState(false);
-  const [hasAlbum, setHasAlbum] = useState(false);
+  const [communeId, setCommuneId] = useState(initial?.communeId ?? "");
+  const [townshipLabel, setTownshipLabel] = useState(initial?.townshipLabel ?? "");
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [slugInput, setSlugInput] = useState(initial?.slug ?? "");
+  const [slugTouched, setSlugTouched] = useState(Boolean(initial?.slug));
+  const [distance, setDistance] = useState(
+    initial?.distanceKm != null ? String(initial.distanceKm) : ""
+  );
+  const [elevation, setElevation] = useState(
+    initial?.elevationGainM != null ? String(initial.elevationGainM) : ""
+  );
+  const [difficulty, setDifficulty] = useState(initial?.difficulty ?? "");
+  const [detailsOverride, setDetailsOverride] = useState(initial?.detailsRaw ?? "");
+  const [published, setPublished] = useState(initial?.published ?? false);
+  const [hasAlbum, setHasAlbum] = useState(initial?.hasPhotoAlbum ?? false);
   const [photoRows, setPhotoRows] = useState<PhotoRow[]>([]);
   const [gpxFile, setGpxFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(initial?.imageUrl ?? null);
   const [captureDataUrl, setCaptureDataUrl] = useState<string | null>(null);
+  const [imageAlt, setImageAlt] = useState(initial?.imageAlt ?? "");
 
   const communeName = communes.find((c) => c.id === communeId)?.name ?? "";
   const autoSlug = normalizeSlug(title);
@@ -56,6 +86,7 @@ export default function RouteForm({
 
   return (
     <form action={formAction} className="cf-admin__form">
+      {initial ? <input type="hidden" name="routeId" value={initial.id} /> : null}
       {state?.error ? (
         <p className="cf-admin-login__error" role="alert">{state.error}</p>
       ) : null}
@@ -189,6 +220,11 @@ export default function RouteForm({
             accept=".gpx,.xml"
             onChange={(e) => setGpxFile(e.target.files?.[0] ?? null)}
           />
+          {initial?.gpxFileName ? (
+            <span className="cf-admin__hint">
+              GPX actuel : « {initial.gpxFileName} » — laissez vide pour le conserver, un nouveau fichier le remplace.
+            </span>
+          ) : null}
         </label>
         <label>
           Photo principale (JPG/PNG/WebP, max 4 Mo)
@@ -218,7 +254,13 @@ export default function RouteForm({
       </div>
       <label>
         Texte alternatif de la photo principale
-        <input name="imageAlt" type="text" placeholder="Ex. Le tracé vu depuis le village" />
+        <input
+          name="imageAlt"
+          type="text"
+          value={imageAlt}
+          onChange={(e) => setImageAlt(e.target.value)}
+          placeholder="Ex. Le tracé vu depuis le village"
+        />
       </label>
       {/* Capture GPX 1200×800 transportée en data URL (photo principale) */}
       <input type="hidden" name="captureDataUrl" value={captureDataUrl ?? ""} />
@@ -263,7 +305,12 @@ export default function RouteForm({
           </label>
         </div>
 
-        <p className="cf-admin__form-legend">Album photos</p>
+        <p className="cf-admin__form-legend">
+          Album photos
+          {initial?.photoCount
+            ? ` — ${initial.photoCount} photo${initial.photoCount > 1 ? "s" : ""} existante${initial.photoCount > 1 ? "s" : ""} conservée${initial.photoCount > 1 ? "s" : ""} ; les nouvelles s'ajoutent à la suite`
+            : ""}
+        </p>
         {photoRows.map((row, i) => (
           <div className="cf-admin__photo-row" key={row.key}>
             <label>
@@ -298,7 +345,9 @@ export default function RouteForm({
 
       <div className="cf-admin__form-actions">
         <button type="submit" disabled={pending}>
-          {pending ? "Enregistrement…" : submitLabel}
+          {pending
+            ? "Enregistrement…"
+            : (submitLabel ?? (initial ? "Enregistrer" : "Créer l'itinéraire"))}
         </button>
         <a href="/admin/routes" className="cf-admin__btn-cancel">
           Annuler

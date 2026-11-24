@@ -2,10 +2,11 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import RouteRowActions from "./route-row-actions";
 
 /**
- * B1 : liste des itinéraires (lecture seule) — filtres statut et commune,
- * tri par dernière modification. Le CRUD arrive en B2.
+ * B1 : liste des itinéraires — filtres statut et commune, tri par dernière
+ * modification. B4 : actions Modifier / Publier-Dépublier / Supprimer.
  */
 export default async function AdminRoutesPage({
   searchParams,
@@ -86,6 +87,7 @@ export default async function AdminRoutesPage({
               <th>Niveau</th>
               <th>Statut</th>
               <th>Maj</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -102,13 +104,17 @@ export default async function AdminRoutesPage({
                   </span>
                 </td>
                 <td>{r.updatedAt.toLocaleDateString("fr-FR")}</td>
+                <td>
+                  <RouteRowActions routeId={r.id} status={r.status} />
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
       <p className="cf-admin__hint">
-        Création disponible (B2) — édition, publication, suppression et uploads arrivent en B3/B4.
+        Édition, publication et suppression actives (B4). La suppression efface aussi
+        les fichiers disque (GPX, image principale, album).
       </p>
     </section>
   );
