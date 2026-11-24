@@ -155,6 +155,12 @@ export default function GpxPreview({
     setError(null);
     setHoverIdx(null);
     if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setError(
+        `« ${file.name} » dépasse la limite de 10 Mo (${(file.size / 1048576).toFixed(1)} Mo). Exportez un GPX allégé (sans extensions fréquence cardiaque/cadence) pour alléger le tracé.`
+      );
+      return;
+    }
     let cancelled = false;
     file
       .text()

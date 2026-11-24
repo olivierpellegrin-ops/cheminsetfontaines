@@ -197,6 +197,12 @@ export default function RouteForm({
             accept=".jpg,.jpeg,.png,.webp"
             onChange={(e) => {
               const f = e.target.files?.[0] ?? null;
+              if (f && f.size > 4 * 1024 * 1024) {
+                e.target.value = "";
+                setImagePreview(null);
+                window.alert(`« ${f.name} » dépasse 4 Mo. Choisissez une image plus légère.`);
+                return;
+              }
               setImagePreview(f ? URL.createObjectURL(f) : null);
             }}
           />

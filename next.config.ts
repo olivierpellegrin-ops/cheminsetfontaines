@@ -17,11 +17,11 @@ const LEGACY_SLUGS: Array<{ from: string; to: string }> = [
 ];
 
 const nextConfig: NextConfig = {
-  // Back-office : les Server Actions transportent le GPX (max 10 Mo) et la
-  // capture 1200×800 ; la limite par défaut de 1 Mo suffit au site public.
+  // Back-office : les Server Actions transportent le GPX (max 10 Mo), la
+  // capture 1200×800 et l'album photos (4 Mo/photo). Limite par défaut : 1 Mo.
   experimental: {
     serverActions: {
-      bodySizeLimit: "12mb",
+      bodySizeLimit: "32mb",
     },
   },
   images: {
