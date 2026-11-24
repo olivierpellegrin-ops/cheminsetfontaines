@@ -1,2 +1,92 @@
-successfully downloaded text file (SHA: 9e14bdfbb3e2f3a9144129ff131f8d1e6409b8db)
-[object Object]
+name: Production (base Neon)
+
+# Rappel : le DEPLOIEMENT DU SITE lui-meme est assure par Vercel
+# (import du repo -> build + deploy automatique a chaque push sur main,
+# previews automatiques sur chaque PR). Ce workflow ne gere que la BASE :
+# - push sur main qui touche prisma/schema.prisma -> prisma db push sur Neon
+# - declenchement manuel, avec ou sans seed initial (derniere etape du runbook,
+#   voir docs/DEPLOIEMENT.md)
+
+on:
+  push:
+    branches: [main]
+    paths: ["prisma/**"]
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: "Seed initial de la base de production (a cocher uniquement pour la mise en prod)"
+        type: boolean
+        required: true
+        default: false
+
+concurrency:
+  group: prod-db
+  cancel-in-progress: false
+
+permissions:
+  issues: write
+
+jobs:
+  db-push:
+    name: prisma db push (Neon)
+    # Ne tourner qu'en prod : dispatch manuel ou push reellement fusionne dans main
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: set -o pipefail; npx prisma db push 2>&1 | tee step-db.log
+      # Meme garde-fou que la CI : publier la fin des logs dans une issue
+      # pour diagnostiquer sans acces authentifie aux logs Actions.
+      - name: Journal d'echec vers issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for f in step-*.log; do echo "--- $f (fin) ---" >> tutti.log; tail -n 80 "$f" >> tutti.log; done
+          gh issue create -R olivierpellegrin-ops/cheminsetfontaines \
+            -t "Prod DB : journal d'echec (${GITHUB_SHA::7})" \
+            -F tutti.log || true
+      - name: Fermer les issues Prod DB si succes
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue list -R olivierpellegrin-ops/cheminsetfontaines --state open --limit 5 \
+            --json number,title --jq '.[] | select(.title | startswith("Prod DB : journal")) | .number' \
+            | while read n; do gh issue close "$n" -R olivierpellegrin-ops/cheminsetfontaines || true; done
+
+  db-seed:
+    name: seed initial (optionnel)
+    needs: db-push
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.seed == true }}
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+      ADMIN_EMAIL: ${{ secrets.PROD_ADMIN_EMAIL }}
+      ADMIN_PASSWORD: ${{ secrets.PROD_ADMIN_PASSWORD }}
+      ADMIN_NAME: ${{ secrets.PROD_ADMIN_NAME }}
+      NOTIFY_EMAIL: contact@cheminsetfontaines.fr
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: set -o pipefail; npm run db:seed 2>&1 | tee step-seed.log
+      - name: Journal d'echec vers issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for f in step-*.log; do echo "--- $f (fin) ---" >> tutti.log; tail -n 80 "$f" >> tutti.log; done
+          gh issue create -R olivierpellegrin-ops/cheminsetfontaines \
+            -t "Prod SEED : journal d'echec (${GITHUB_SHA::7})" \
+            -F tutti.log || true
