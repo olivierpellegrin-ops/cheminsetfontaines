@@ -59,7 +59,7 @@ export default async function EditRoutePage({
     id: route.id,
     title: route.title,
     slug: route.slug,
-    communeId: route.communeId,
+    communeId: route.communeId ?? "",
     townshipLabel: route.townshipLabel,
     distanceKm: route.distanceKm,
     elevationGainM: route.elevationGainM,

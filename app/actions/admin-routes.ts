@@ -48,8 +48,7 @@ function parseForm(fd: FormData) {
     title: String(fd.get("title") ?? ""),
     communeId: String(fd.get("communeId") ?? ""),
     townshipLabel: String(fd.get("townshipLabel") ?? ""),
-    description: String(fd.get("d
-escription") ?? ""),
+    description: String(fd.get("description") ?? ""),
     distanceKm: num(fd.get("distanceKm")),
     elevationGainM: num(fd.get("elevationGainM")),
     difficulty: diff === "" ? null : (diff as "facile" | "moyen" | "difficile"),
@@ -102,8 +101,7 @@ function gpxCheck(v: FormDataEntryValue | null): v is File {
 }
 
 /** true si l'URL d'image est un fichier local (uploads), false si externe. */
-
-const isLocalImage = (url: string | null) => !!url && url.startsWith("/images/routes/");
+const isLocalImage = (url: string | null | undefined): url is string => !!url && url.startsWith("/images/routes/");
 
 /** Décode une data URL JPEG (capture 1200×800 du viewer) -> Buffer+extension. */
 async function decodeCapture(capture: string): Promise<{ buf: Buffer; ext: string } | { error: string }> {
@@ -158,8 +156,7 @@ function parseViewerCamera(v: FormDataEntryValue | null): {
   } catch {
     /* JSON invalide : ignore */
   }
-  return nul
-l;
+  return null;
 }
 
 export async function createRoute(
@@ -210,8 +207,7 @@ export async function createRoute(
     }
     for (let i = 0; ; i++) {
       const f = fd.get(`photo.file-${i}`);
-      if (!(f inst
-anceof File)) break;
+      if (!(f instanceof File)) break;
       if (f.size > 0) sizes.push({ name: f.name, size: f.size, max: MAX_IMG_BYTES });
     }
     const tooBig = sizes.find((x) => x.size > x.max);
@@ -258,8 +254,7 @@ anceof File)) break;
   }
 
   // Album photos : lignes photo.file-N / photo.title-N / photo.alt-N
-  const photoRows: { title: string; imageUrl
-: string; imageAlt: string | null }[] = [];
+  const photoRows: { title: string; imageUrl: string; imageAlt: string | null }[] = [];
   const dir = imgDir();
   for (let i = 0; ; i++) {
     const f = fd.get(`photo.file-${i}`);
@@ -322,8 +317,7 @@ export async function updateRoute(
   const existing = await prisma.route.findUnique({
     where: { id: routeId },
     include: { photos: true },
- 
- });
+  });
   if (!existing) return { error: "Itinéraire introuvable." };
 
   const parsed = parseForm(fd);
@@ -371,8 +365,7 @@ export async function updateRoute(
     }
     const tooBig = sizes.find((x) => x.size > x.max);
     if (tooBig) {
-      return 
-{
+      return {
         error: `« ${tooBig.name} » dépasse la limite (${(tooBig.max / 1048576).toFixed(0)} Mo). Aucun fichier n'a été écrit.`,
       };
     }
@@ -425,8 +418,7 @@ export async function updateRoute(
   let imageUrl = existing.imageUrl;
   let viewerCamera: { lng: number; lat: number; zoom: number; bearing: number; pitch: number } | null =
     existing.viewerCamera as { lng: number; lat: number; zoom: number; bearing: number; pitch: number } | null;
-  
-const img = fd.get("imageFile");
+  const img = fd.get("imageFile");
   if (img instanceof File && img.size > 0) {
     const r = await saveFile(img, imgDir(), `${slug}-main`, "image");
     if (r.error) return { error: r.error };
@@ -468,8 +460,7 @@ const img = fd.get("imageFile");
     });
   }
   if (newPhotos.length > 0) {
-    await prisma.routePhoto.createMany({ dat
-a: newPhotos });
+    await prisma.routePhoto.createMany({ data: newPhotos });
   }
 
   await prisma.route.update({
@@ -534,8 +525,7 @@ export async function deleteRoute(fd: FormData): Promise<void> {
 
   // Fichiers (les anciennes routes Framer ont des images distantes : on ne
   // touche qu'aux fichiers locaux sous /public)
-  await unlinkIfExists(pa
-th.join(gpxDir(), `${route.slug}.gpx`));
+  await unlinkIfExists(path.join(gpxDir(), `${route.slug}.gpx`));
   if (isLocalImage(route.imageUrl)) {
     await unlinkIfExists(path.join(imgDir(), path.basename(route.imageUrl)));
   }

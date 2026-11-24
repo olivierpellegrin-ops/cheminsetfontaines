@@ -17,7 +17,7 @@ export default async function AdminRoutesPage({
   if (!session?.user) redirect("/admin/login");
 
   const sp = await searchParams;
-  const status = sp.status === "published" || sp.status === "draft" ? sp.status : undefined;
+  const status: "published" | "draft" | undefined = sp.status === "published" || sp.status === "draft" ? sp.status : undefined;
   const communeId = sp.commune && sp.commune !== "all" ? sp.commune : undefined;
   const where = {
     ...(status ? { status } : {}),

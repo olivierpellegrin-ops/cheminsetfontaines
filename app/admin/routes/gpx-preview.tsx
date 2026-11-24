@@ -211,7 +211,7 @@ export default function GpxPreview({
     if (!effectiveFile) return;
     if (effectiveFile.size > 10 * 1024 * 1024) {
       setError(
-        `« ${file.name} » dépasse la limite de 10 Mo (${(file.size / 1048576).toFixed(1)} Mo). Exportez un GPX allégé (sans extensions fréquence cardiaque/cadence) pour alléger le tracé.`
+        `« ${effectiveFile.name} » dépasse la limite de 10 Mo (${(effectiveFile.size / 1048576).toFixed(1)} Mo). Exportez un GPX allégé (sans extensions fréquence cardiaque/cadence) pour alléger le tracé.`
       );
       return;
     }
@@ -355,7 +355,8 @@ export default function GpxPreview({
       pitch,
       interactive: false,
       attributionControl: false,
-      preserveDrawingBuffer: true,
+      // MapLibre v5 : preserveDrawingBuffer est passe dans canvasContextAttributes
+      canvasContextAttributes: { preserveDrawingBuffer: true },
     });
     try {
       await new Promise<void>((resolve) => cap.on("load", () => resolve()));
