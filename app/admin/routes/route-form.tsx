@@ -29,6 +29,7 @@ export type RouteFormInitial = {
   hasPhotoAlbum: boolean;
   imageUrl: string | null;
   gpxFileName: string | null;
+  gpxUrl: string | null;
   imageAlt: string | null;
   photoCount: number;
 };
@@ -207,6 +208,7 @@ export default function RouteForm({
           name="description"
           rows={8}
           required
+          defaultValue={initial?.description ?? ""}
           placeholder="Texte de présentation de l'itinéraire (page publique)."
         />
       </label>
@@ -222,7 +224,13 @@ export default function RouteForm({
           />
           {initial?.gpxFileName ? (
             <span className="cf-admin__hint">
-              GPX actuel : « {initial.gpxFileName} » — laissez vide pour le conserver, un nouveau fichier le remplace.
+              GPX actuel : « {initial.gpxFileName} » (fichier local servi au téléchargement public) —
+              laissez vide pour le conserver, un nouveau fichier le remplace.
+            </span>
+          ) : initial?.gpxUrl ? (
+            <span className="cf-admin__hint">
+              GPX actuel : fichier Framer distant (téléchargé par redirection) —
+              laissez vide pour le conserver, un upload local le remplace.
             </span>
           ) : null}
         </label>

@@ -44,6 +44,7 @@ export default async function EditRoutePage({
     hasPhotoAlbum: route.hasPhotoAlbum,
     imageUrl: route.imageUrl,
     gpxFileName: route.gpxFileName,
+    gpxUrl: route.gpxUrl,
     imageAlt: route.imageAlt,
     photoCount: route._count.photos,
   };
