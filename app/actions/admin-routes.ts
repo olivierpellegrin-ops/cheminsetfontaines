@@ -145,6 +145,24 @@ export async function createRoute(
     const r = await saveFile(img, imgDir, `${slug}-main`, "image");
     if (r.error) return { error: r.error };
     imageUrl = `/images/routes/${r.saved}`;
+  } else {
+    // Capture 1200×800 du viewer (data URL PNG) -> photo principale
+    const capture = String(fd.get("captureDataUrl") ?? "");
+    const DATAURL_PREFIX = "data:image/png;base64,";
+    if (capture.startsWith(DATAURL_PREFIX)) {
+      const buf = Buffer.from(capture.slice(DATAURL_PREFIX.length), "base64");
+      if (buf.length > MAX_IMG_BYTES) {
+        return { error: `La capture dépasse 4 Mo (${(buf.length / 1048576).toFixed(1)} Mo).` };
+      }
+      await mkdir(imgDir, { recursive: true });
+      const filename = `${slug}-main.png`;
+      await writeFile(path.join(imgDir, filename), buf);
+      const wrote = await (await import("node:fs/promises")).readFile(path.join(imgDir, filename));
+      if (wrote.length !== buf.length) {
+        return { error: `Écriture incomplète de ${filename} sur le disque. Réessayez.` };
+      }
+      imageUrl = `/images/routes/${filename}`;
+    }
   }
 
   // Album photos : lignes photo.file-N / photo.title-N / photo.alt-N

@@ -43,6 +43,7 @@ export default function RouteForm({
   const [photoRows, setPhotoRows] = useState<PhotoRow[]>([]);
   const [gpxFile, setGpxFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [captureDataUrl, setCaptureDataUrl] = useState<string | null>(null);
 
   const communeName = communes.find((c) => c.id === communeId)?.name ?? "";
   const autoSlug = normalizeSlug(title);
@@ -203,6 +204,7 @@ export default function RouteForm({
                 window.alert(`« ${f.name} » dépasse 4 Mo. Choisissez une image plus légère.`);
                 return;
               }
+              setCaptureDataUrl(null); // une photo manuelle remplace la capture
               setImagePreview(f ? URL.createObjectURL(f) : null);
             }}
           />
@@ -218,6 +220,8 @@ export default function RouteForm({
         Texte alternatif de la photo principale
         <input name="imageAlt" type="text" placeholder="Ex. Le tracé vu depuis le village" />
       </label>
+      {/* Capture GPX 1200×800 transportée en data URL (photo principale) */}
+      <input type="hidden" name="captureDataUrl" value={captureDataUrl ?? ""} />
 
       <GpxPreview
         file={gpxFile}
@@ -225,16 +229,14 @@ export default function RouteForm({
         onUseMetrics={async (m, capturePng) => {
           setDistance(m.distanceKm > 0 ? String(Math.round(m.distanceKm * 10) / 10) : "");
           setElevation(m.elevationGainM > 0 ? String(m.elevationGainM) : "");
-          // Capture 1200×800 du viseur -> photo principale du formulaire
+          // Capture 1200×800 du viseur -> photo principale, transportée en
+          // data URL via champ caché (pas d'injection DOM dans l'input file,
+          // qui produisait un multipart malformé « Unexpected end of form »).
           if (capturePng) {
-            const fileName = `${slug || normalizeSlug(title) || "itineraire"}-main.png`;
-            const blob = await (await fetch(capturePng)).blob();
-            const file = new File([blob], fileName, { type: "image/png" });
-            const dt = new DataTransfer();
-            dt.items.add(file);
             const input = document.querySelector<HTMLInputElement>('input[name="imageFile"]');
-            if (input) input.files = dt.files;
-            setImagePreview(URL.createObjectURL(file));
+            if (input) input.value = "";
+            setCaptureDataUrl(capturePng);
+            setImagePreview(capturePng);
           }
         }}
       />
