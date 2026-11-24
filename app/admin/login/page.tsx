@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -24,8 +22,9 @@ export default function AdminLoginPage() {
       setError("Mauvais login et mot de passe. Réessayez avec de nouveaux identifiants.");
       return;
     }
-    router.push("/admin");
-    router.refresh();
+    // Navigation complete : evite le cache client du routeur (page /admin memorisee
+    // comme redirection vers /login avant connexion)
+    window.location.assign("/admin");
   }
 
   return (
