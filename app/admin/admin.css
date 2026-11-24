@@ -419,7 +419,7 @@ body:has(.cf-admin-login) {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 66%;
+  width: 92%;
   aspect-ratio: 3 / 2;
   border: 5px dashed #ffd500;
   border-radius: 6px;
