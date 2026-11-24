@@ -96,6 +96,8 @@ export const XAINTRIE_COMMUNES: Record<string, { name: string; insee: string }> 
   // Communes-lien hors SVG Xaintrie mais présentes dans le CMS (itinéraires réels)
   "gros-chastang": { name: "Gros-Chastang", insee: "19092" },
   "marcillac-la-croisille": { name: "Marcillac-la-Croisille", insee: "19126" },
+  // Ajout 24/11/2026 (Olivier) : itinéraires hors Xaintrie
+  "saint-merd-de-lapleau": { name: "Saint-Merd-de-Lapleau", insee: "19225" },
 };
 
 export function canonicalCommune(

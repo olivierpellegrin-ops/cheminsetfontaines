@@ -28,6 +28,9 @@ jobs:
     env:
       DATABASE_URL: "postgresql://cf:cf@localhost:5432/cheminsetfontaines_test?schema=public"
       NOTIFY_EMAIL: "contact@cheminsetfontaines.fr"
+      # Dummy de build (Back-office B0) : ce n'est PAS un vrai secret, la vraie
+      # AUTH_SECRET vit dans le .env local de chaque machine.
+      AUTH_SECRET: "ci-build-dummy-not-a-real-secret"
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5

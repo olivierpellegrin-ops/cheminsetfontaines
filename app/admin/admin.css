@@ -1,0 +1,470 @@
+/* Styles du back-office — neutres, découplés de la charte publique (B0). */
+
+.cf-admin {
+  min-height: 100vh;
+  background: #f4f6f5;
+  color: #1c2b24;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.cf-admin__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: #163c32;
+  color: #fff;
+}
+.cf-admin__brand {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 15px;
+}
+.cf-admin__me {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+.cf-admin__me em {
+  opacity: 0.8;
+  font-style: normal;
+}
+.cf-admin__logout {
+  background: #fff;
+  color: #163c32;
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cf-admin__main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+.cf-admin h1 { font-size: 26px; margin: 0 0 20px; }
+.cf-admin h2 { font-size: 18px; margin: 28px 0 12px; }
+
+.cf-admin__stats {
+  display: flex;
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+}
+.cf-admin__stats li {
+  background: #fff;
+  border: 1px solid #dde4e0;
+  border-radius: 10px;
+  padding: 14px 20px;
+  font-size: 14px;
+}
+.cf-admin__stats strong { display: block; font-size: 22px; }
+
+.cf-admin__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #dde4e0;
+  border-radius: 10px;
+  font-size: 14px;
+}
+.cf-admin__table th,
+.cf-admin__table td {
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid #eef2f0;
+}
+.cf-admin__table th { font-weight: 600; color: #43534a; }
+
+/* Page de connexion */
+.cf-admin-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #163c32;
+  padding: 24px;
+}
+.cf-admin-login__card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cf-admin-login__kicker {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6a7a70;
+}
+.cf-admin-login__title { margin: 0 0 16px; font-size: 22px; color: #163c32; }
+.cf-admin-login label { font-size: 13px; color: #43534a; margin-top: 8px; }
+.cf-admin-login input {
+  padding: 10px 12px;
+  border: 1px solid #c9d2cc;
+  border-radius: 8px;
+  font-size: 15px;
+}
+.cf-admin-login button {
+  margin-top: 16px;
+  padding: 11px;
+  background: #163c32;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.cf-admin-login button:disabled { opacity: 0.6; cursor: default; }
+.cf-admin-login__error {
+  margin: 0;
+  color: #a3252c;
+  font-size: 14px;
+  background: #fbeaea;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+
+/* Neutralisation de la charte publique (parchemin, Fira Sans 17px, vert #163c32)
+   sur les pages admin uniquement — :has est supporté par tous les navigateurs cibles. html/admin/body */
+html:has(.cf-admin),
+html:has(.cf-admin-login) {
+  scroll-behavior: auto;
+}
+body:has(.cf-admin),
+body:has(.cf-admin-login) {
+  background: #f4f6f5;
+  color: #1c2b24;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* B1 : navigation, filtres et badges */
+.cf-admin__nav {
+  background: #0f2c24;
+  padding: 0 24px;
+  display: flex;
+  gap: 4px;
+}
+.cf-admin__nav a {
+  color: #cfe0d6;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 10px 14px;
+  border-bottom: 2px solid transparent;
+}
+.cf-admin__nav a:hover { color: #fff; }
+.cf-admin__nav a.is-active { color: #fff; border-bottom-color: #c18a21; }
+
+.cf-admin__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+.cf-admin__count { font-size: 14px; color: #43534a; }
+
+.cf-admin__filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin: 0 0 20px;
+  font-size: 13px;
+  color: #43534a;
+}
+.cf-admin__filters label { display: flex; flex-direction: column; gap: 4px; }
+.cf-admin__filters select {
+  padding: 8px 10px;
+  border: 1px solid #c9d2cc;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  min-width: 160px;
+}
+.cf-admin__filters button {
+  padding: 9px 18px;
+  background: #163c32;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.cf-admin__filters a { font-size: 13px; color: #4d6b4b; }
+
+.cf-admin__badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.cf-admin__badge--published { background: #e2efe4; color: #2c5a33; }
+.cf-admin__badge--draft { background: #f3ead6; color: #8a6414; }
+
+.cf-admin__cell-title { font-weight: 600; }
+.cf-admin__empty {
+  background: #fff;
+  border: 1px solid #dde4e0;
+  border-radius: 10px;
+  padding: 24px;
+  font-size: 14px;
+  color: #43534a;
+}
+.cf-admin__hint { margin-top: 16px; font-size: 12px; color: #6a7a70; }
+.cf-admin__allroutes { color: #4d6b4b; font-size: 14px; text-decoration: none; }
+
+/* B2 : formulaire de création d'itinéraire */
+.cf-admin__head-right { display: flex; align-items: baseline; gap: 16px; }
+.cf-admin__btn-primary {
+  background: #163c32;
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  border-radius: 8px;
+  padding: 9px 16px;
+}
+.cf-admin__btn-primary:hover { background: #0f2c24; }
+
+.cf-admin__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid #dde4e0;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 720px;
+}
+.cf-admin__form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #43534a; }
+.cf-admin__form input,
+.cf-admin__form select,
+.cf-admin__form textarea {
+  padding: 10px 12px;
+  border: 1px solid #c9d2cc;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  background: #fff;
+}
+.cf-admin__form textarea { resize: vertical; }
+.cf-admin__form-row { display: flex; gap: 16px; }
+.cf-admin__form-row label { flex: 1; }
+.cf-admin__form-preview {
+  font-size: 13px;
+  color: #6a7a70;
+  background: #eef6ef;
+  border: 1px dashed #9fc2a7;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.cf-admin__form-actions { display: flex; align-items: center; gap: 16px; }
+.cf-admin__form-actions button {
+  background: #163c32;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 22px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.cf-admin__form-actions button:disabled { opacity: 0.6; cursor: default; }
+
+@media (max-width: 640px) {
+  .cf-admin__form-row { flex-direction: column; gap: 14px; }
+}
+
+/* B3 : champs d'upload, toggles et album photos */
+.cf-admin__form input[type="file"] {
+  padding: 8px 10px;
+  border: 1px dashed #9db3a4;
+  border-radius: 8px;
+  background: #fbfdfc;
+}
+.cf-admin__form-toggles { display: flex; gap: 24px; }
+.cf-admin__toggle {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+  font-size: 14px;
+  cursor: pointer;
+}
+.cf-admin__toggle input { width: 16px; height: 16px; accent-color: #163c32; }
+
+.cf-admin__album {
+  border: 1px solid #dde4e0;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fbfdfc;
+}
+.cf-admin__form-legend {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #43534a;
+}
+.cf-admin__photo-row {
+  display: grid;
+  /* Retour Olivier 24/11 : texte alternatif SOUS les 2 autres champs,
+     pleine largeur du cartouche ; bouton Retirer aligne en haut a droite. */
+  grid-template-columns: 1.2fr 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 12px;
+  align-items: end;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #e4ebe6;
+  border-radius: 8px;
+}
+.cf-admin__photo-row > label:nth-child(3) {
+  grid-column: 1 / -1;
+}
+.cf-admin__photo-remove {
+  background: #fbeaea;
+  color: #a3252c;
+  border: 0;
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cf-admin__photo-add {
+  align-self: flex-start;
+  background: #e2efe4;
+  color: #2c5a33;
+  border: 1px dashed #2c5a33;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .cf-admin__photo-row { grid-template-columns: 1fr; }
+}
+
+/* Viewer GPX V1 : aperçu satellite + métriques + profil */
+.cf-admin__gpx {
+  border: 1px solid #dde4e0;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fbfdfc;
+}
+.cf-admin__gpx-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 16px; }
+.cf-admin__gpx-map {
+  min-height: 420px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #c9d2cc;
+}
+.cf-admin__gpx-side { display: flex; flex-direction: column; gap: 10px; }
+.cf-admin__gpx-side h3 { margin: 0; font-size: 15px; color: #43534a; }
+.cf-admin__gpx-stats {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.cf-admin__gpx-stats li {
+  background: #fff;
+  border: 1px solid #e4ebe6;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: #6a7a70;
+}
+.cf-admin__gpx-stats strong { font-size: 16px; color: #163c32; }
+.cf-admin__gpx-use {
+  background: #587551;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.cf-admin__gpx-use:hover { background: #4d6b4b; }
+.cf-admin__gpx-profile { display: flex; flex-direction: column; gap: 6px; }
+.cf-admin__gpx-profile svg {
+  width: 100%;
+  height: 120px;
+  background: #fff;
+  border: 1px solid #e4ebe6;
+  border-radius: 8px;
+  cursor: crosshair;
+}
+
+@media (max-width: 720px) {
+  .cf-admin__gpx-layout { grid-template-columns: 1fr; }
+}
+
+/* Viewer GPX : viseur 1200×800 + aperçu photo */
+.cf-admin__gpx-mapwrap { position: relative; }
+.cf-admin__gpx-crosshair {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 92%;
+  aspect-ratio: 3 / 2;
+  border: 5px dashed #ffd500;
+  border-radius: 6px;
+  box-shadow: 0 0 0 20000px rgba(9, 30, 23, 0.12);
+  pointer-events: none;
+  z-index: 5;
+}
+.cf-admin__gpx-crosshair-label {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  background: #163c32;
+  color: #ffd500;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 100px;
+}
+.cf-admin__img-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #43534a;
+}
+.cf-admin__img-preview img {
+  width: 150px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #c9d2cc;
+}
+.cf-admin__btn-cancel {
+  color: #6a7a70;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 10px 14px;
+  border: 1px solid #c9d2cc;
+  border-radius: 8px;
+}
+.cf-admin__btn-cancel:hover { background: #eef6ef; color: #163c32; }

@@ -39,6 +39,23 @@ enum SubscriptionSource {
   adhesion
 }
 
+enum UserRole {
+  admin
+  bureau
+}
+
+// Comptes du back-office (B0) : Auth.js Credentials, hash bcryptjs.
+// Le premier compte admin est créé par le seed (ADMIN_EMAIL/ADMIN_PASSWORD).
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         UserRole  @default(bureau)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
 model Commune {
   id            String   @id @default(cuid())
   name          String   @unique // nom canonique INSEE (ex. "Saint-Chamant")
@@ -71,6 +88,7 @@ model Route {
   commune        Commune?   @relation(fields: [communeId], references: [id])
   communeId      String?
   status         ContentStatus @default(published)
+  hasPhotoAlbum  Boolean    @default(false) // badge « Album photos » de la page publique (toggle Framer Has Photo Album)
   source         String     @default("saisie_manuelle") // saisie_manuelle | strava
   sourceStravaId String?
   photos         RoutePhoto[]
