@@ -468,3 +468,89 @@ body:has(.cf-admin-login) {
   border-radius: 8px;
 }
 .cf-admin__btn-cancel:hover { background: #eef6ef; color: #163c32; }
+
+/* B4 : actions par ligne de la liste */
+.cf-admin__row-actions { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
+.cf-admin__row-actions form { margin: 0; display: inline; }
+.cf-admin__row-edit,
+.cf-admin__row-toggle,
+.cf-admin__row-delete {
+  font-size: 13px;
+  border-radius: 6px;
+  padding: 6px 10px;
+  border: 1px solid #c9d2cc;
+  background: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+.cf-admin__row-edit { color: #163c32; background: #e2efe4; border-color: #9db3a4; }
+.cf-admin__row-edit:hover { background: #d3e7d6; }
+.cf-admin__row-toggle { color: #43534a; }
+.cf-admin__row-toggle:hover { background: #eef6ef; }
+.cf-admin__row-delete { color: #a3252c; background: #fbeaea; border-color: #dcb6b8; }
+.cf-admin__row-delete:hover { background: #f6dcdc; }
+@media (max-width: 720px) {
+  .cf-admin__table { font-size: 12px; }
+  .cf-admin__row-actions { flex-direction: column; align-items: flex-start; }
+}
+
+/* B4 : liste allégée — titre dominant, boutons d'action de largeur fixe
+   (Publier/Dépublier n'alignaient pas les colonnes entre lignes) */
+.cf-admin__table .cf-admin__cell-title { width: 34%; }
+.cf-admin__row-actions { display: grid; grid-template-columns: 82px 96px 96px; gap: 8px; }
+.cf-admin__row-edit,
+.cf-admin__row-toggle,
+.cf-admin__row-delete {
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+.cf-admin__row-actions form { display: contents; }
+
+/* B4 : affichage de l'existant en édition (GPX + album) */
+.cf-admin__file-current {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #163c32;
+  background: #e2efe4;
+  border: 1px solid #9db3a4;
+  border-radius: 6px;
+  padding: 5px 10px;
+}
+.cf-admin__album-existing {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.cf-admin__album-thumb {
+  margin: 0;
+  width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cf-admin__album-thumb img {
+  width: 130px;
+  height: 95px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #c9d2cc;
+}
+.cf-admin__album-thumb figcaption {
+  font-size: 12px;
+  color: #43534a;
+  line-height: 1.3;
+}
+.cf-admin__gpx-refit {
+  background: #fff;
+  color: #43534a;
+  border: 1px solid #c9d2cc;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cf-admin__gpx-refit:hover { background: #eef6ef; }

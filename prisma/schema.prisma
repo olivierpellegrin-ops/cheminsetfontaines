@@ -91,6 +91,10 @@ model Route {
   hasPhotoAlbum  Boolean    @default(false) // badge « Album photos » de la page publique (toggle Framer Has Photo Album)
   source         String     @default("saisie_manuelle") // saisie_manuelle | strava
   sourceStravaId String?
+  // Etat camera du viewer GPX au moment de la capture 1200x800 :
+  // { lng, lat, zoom, bearing, pitch } — permet de re-ouvrir le viewer
+  // dans la meme position pour recadrer la photo principale.
+  viewerCamera   Json?
   photos         RoutePhoto[]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt

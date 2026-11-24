@@ -2,10 +2,11 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import RouteRowActions from "./route-row-actions";
 
 /**
- * B1 : liste des itinéraires (lecture seule) — filtres statut et commune,
- * tri par dernière modification. Le CRUD arrive en B2.
+ * B1 : liste des itinéraires — filtres statut et commune, tri par dernière
+ * modification. B4 : actions Modifier / Publier-Dépublier / Supprimer.
  */
 export default async function AdminRoutesPage({
   searchParams,
@@ -81,11 +82,9 @@ export default async function AdminRoutesPage({
             <tr>
               <th>Titre</th>
               <th>Commune</th>
-              <th>Distance</th>
-              <th>D+</th>
-              <th>Niveau</th>
               <th>Statut</th>
               <th>Maj</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -93,22 +92,23 @@ export default async function AdminRoutesPage({
               <tr key={r.id}>
                 <td className="cf-admin__cell-title">{r.title}</td>
                 <td>{r.townshipLabel}</td>
-                <td>{r.distanceKm != null ? `${r.distanceKm} km` : "—"}</td>
-                <td>{r.elevationGainM != null ? `${r.elevationGainM} m` : "—"}</td>
-                <td>{r.difficulty ?? "—"}</td>
                 <td>
                   <span className={`cf-admin__badge cf-admin__badge--${r.status}`}>
                     {r.status === "published" ? "publié" : "brouillon"}
                   </span>
                 </td>
                 <td>{r.updatedAt.toLocaleDateString("fr-FR")}</td>
+                <td>
+                  <RouteRowActions routeId={r.id} status={r.status} />
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
       <p className="cf-admin__hint">
-        Création disponible (B2) — édition, publication, suppression et uploads arrivent en B3/B4.
+        Édition, publication et suppression actives (B4). La suppression efface aussi
+        les fichiers disque (GPX, image principale, album).
       </p>
     </section>
   );

@@ -117,6 +117,18 @@ function addTrace(map: maplibregl.Map, line: [number, number][]) {
   });
 }
 
+/** Cadrage automatique sur l'emprise du trace, marge 15 %. */
+function fitToTraceBounds(map: maplibregl.Map, metrics: GpxMetrics) {
+  const lons = metrics.points.map((p) => p.lng);
+  const lats = metrics.points.map((p) => p.lat);
+  const padX = (Math.max(...lons) - Math.min(...lons)) * 0.25 + 0.005;
+  const padY = (Math.max(...lats) - Math.min(...lats)) * 0.25 + 0.003;
+  map.fitBounds([
+    [Math.min(...lons) - padX, Math.min(...lats) - padY],
+    [Math.max(...lons) + padX, Math.max(...lats) + padY],
+  ]);
+}
+
 /** Active le relief 3D (DEM MapTiler terrain-rgb) sur une carte. */
 function addTerrain(map: maplibregl.Map, key: string) {
   map.addSource("maptiler-terrain", {
@@ -128,17 +140,32 @@ function addTerrain(map: maplibregl.Map, key: string) {
   map.setTerrain({ source: "maptiler-terrain", exaggeration: 1 });
 }
 
+export type ViewerCamera = {
+  lng: number;
+  lat: number;
+  zoom: number;
+  bearing: number;
+  pitch: number;
+};
+
 export default function GpxPreview({
   file,
   maptilerKey,
   onUseMetrics,
+  fallbackGpxUrl,
+  presetCamera,
 }: {
   file: File | null;
   maptilerKey: string;
   onUseMetrics: (
     m: { distanceKm: number; elevationGainM: number },
-    capturePng: string | null
+    capturePng: string | null,
+    cameraJson: string | null
   ) => void;
+  /** Edition : GPX local deja enregistree, recharge comme trace initiale */
+  fallbackGpxUrl?: string | null;
+  /** Edition : etat camera sauvegarde avec la capture precedente */
+  presetCamera?: ViewerCamera | null;
 }) {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -148,21 +175,48 @@ export default function GpxPreview({
   const [error, setError] = useState<string | null>(null);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const [capturePending, setCapturePending] = useState(false);
+  // Edition : le viewer se nourrit du fichier choisi OU de la trace locale
+  const [fallbackFile, setFallbackFile] = useState<File | null>(null);
+  const effectiveFile = file ?? fallbackFile;
+  const presetRef = useRef<ViewerCamera | null>(presetCamera ?? null);
 
-  // Parsing local du GPX
+  // Edition sans re-selection : charger la trace locale enregistree
+  useEffect(() => {
+    setFallbackFile(null);
+    if (file || !fallbackGpxUrl) return;
+    let cancelled = false;
+    fetch(fallbackGpxUrl)
+      .then((r) => (r.ok ? r.text() : Promise.reject(new Error("absent"))))
+      .then((text) => {
+        if (!cancelled) {
+          setFallbackFile(new File([text], "trace-enregistree.gpx", { type: "application/gpx+xml" }));
+        }
+      })
+      .catch(() => {
+        /* pas de trace locale disponible */
+        if (!cancelled) {
+          setError("GPX local introuvable — sélectionnez le fichier GPX pour afficher le tracé.");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [file, fallbackGpxUrl]);
+
+  // Parsing local du GPX (fichier choisi ou trace locale)
   useEffect(() => {
     setMetrics(null);
     setError(null);
     setHoverIdx(null);
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
+    if (!effectiveFile) return;
+    if (effectiveFile.size > 10 * 1024 * 1024) {
       setError(
         `« ${file.name} » dépasse la limite de 10 Mo (${(file.size / 1048576).toFixed(1)} Mo). Exportez un GPX allégé (sans extensions fréquence cardiaque/cadence) pour alléger le tracé.`
       );
       return;
     }
     let cancelled = false;
-    file
+    effectiveFile
       .text()
       .then((text) => {
         const doc = new DOMParser().parseFromString(text, "application/xml");
@@ -195,7 +249,7 @@ export default function GpxPreview({
     return () => {
       cancelled = true;
     };
-  }, [file]);
+  }, [effectiveFile]);
 
   // Carte satellite MapLibre (2D/3D) + viseur
   useEffect(() => {
@@ -221,16 +275,17 @@ export default function GpxPreview({
         metrics.points.map((p) => [p.lng, p.lat])
       );
       addTerrain(map, maptilerKey);
-      const lons = metrics.points.map((p) => p.lng);
-      const lats = metrics.points.map((p) => p.lat);
-      const padX = (Math.max(...lons) - Math.min(...lons)) * 0.25 + 0.005;
-      const padY = (Math.max(...lats) - Math.min(...lats)) * 0.25 + 0.003;
-      map.fitBounds(
-        [
-          [Math.min(...lons) - padX, Math.min(...lats) - padY],
-          [Math.max(...lons) + padX, Math.max(...lats) + padY],
-        ]
-      );
+      if (presetRef.current) {
+        // Re-ouvrir dans la position de la derniere capture (recadrage)
+        map.jumpTo({
+          center: [presetRef.current.lng, presetRef.current.lat],
+          zoom: presetRef.current.zoom,
+          bearing: presetRef.current.bearing,
+          pitch: presetRef.current.pitch,
+        });
+      } else {
+        fitToTraceBounds(map, metrics);
+      }
       const first = metrics.points[0];
       const last = metrics.points[metrics.points.length - 1];
       new maplibregl.Marker({ color: "#1c6b3a" })
@@ -273,7 +328,7 @@ export default function GpxPreview({
    * bearing/pitch que la vue courante cadrée sur le viseur, tracé jaune,
    * attribution légale incrustée via canvas 2D.
    */
-  async function captureViseur(): Promise<string | null> {
+  async function captureViseur(): Promise<{ dataUrl: string; camera: ViewerCamera } | null> {
     const map = mapRef.current;
     const container = mapContainer.current;
     const crosshair = crosshairRef.current;
@@ -334,7 +389,23 @@ export default function GpxPreview({
       ctx.fillText("© MapTiler · © OpenStreetMap contributors", CAPTURE_W - 164, CAPTURE_H - 9);
       // JPEG qualité 0.9 : une vue satellite 1200×800 en PNG dépasse 4 Mo,
       // en JPEG compressé elle fait ~300-500 Ko (limite app. de 4 Mo respectée)
-      return out.toDataURL("image/jpeg", 0.9);
+      // On sauvegarde l'etat camera REEL de l'apercu, sans aucun recalcul
+      // de projection : restaurer ces valeurs reproduit le meme rendu au
+      // pixel pres, relief 3D et inclinaison compris. (Interdire le
+      // unproject du centre viseur : avec le relief actif et une vue
+      // inclinee, le rayon visuel touche le terrain avant le plan de
+      // reference -> derive verticale systematique a la restitution.)
+      const c = map.getCenter();
+      return {
+        dataUrl: out.toDataURL("image/jpeg", 0.9),
+        camera: {
+          lng: c.lng,
+          lat: c.lat,
+          zoom: map.getZoom(),
+          bearing: map.getBearing(),
+          pitch: map.getPitch(),
+        },
+      };
     } finally {
       cap.remove();
       off.remove();
@@ -344,11 +415,11 @@ export default function GpxPreview({
   async function handleUse() {
     if (!metrics) return;
     setCapturePending(true);
-    let capturePng: string | null = null;
+    let res: { dataUrl: string; camera: ViewerCamera } | null = null;
     try {
-      capturePng = await captureViseur();
+      res = await captureViseur();
     } catch {
-      capturePng = null;
+      res = null;
     }
     setCapturePending(false);
     onUseMetrics(
@@ -356,11 +427,14 @@ export default function GpxPreview({
         distanceKm: Math.round(metrics.distanceKm * 100) / 100,
         elevationGainM: Math.round(metrics.gainM),
       },
-      capturePng
+      res ? res.dataUrl : null,
+      res ? JSON.stringify(res.camera) : null
     );
   }
 
-  if (!file) return null;
+  // Creation : visible des qu'un fichier est choisi.
+  // Edition : visible aussi sans re-selection grace au GPX local enregistre.
+  if (!file && !fallbackGpxUrl) return null;
 
   return (
     <div className="cf-admin__gpx">
@@ -406,6 +480,16 @@ export default function GpxPreview({
               </ul>
               <button type="button" className="cf-admin__gpx-use" onClick={handleUse} disabled={capturePending}>
                 {capturePending ? "Capture en cours…" : "Utiliser dans le formulaire"}
+              </button>
+              <button
+                type="button"
+                className="cf-admin__gpx-refit"
+                onClick={() => {
+                  const map = mapRef.current;
+                  if (map && metrics) fitToTraceBounds(map, metrics);
+                }}
+              >
+                Recadrer sur le tracé
               </button>
               <p className="cf-admin__hint">
                 La capture prend le contenu du viseur (1200×800) comme photo principale et
