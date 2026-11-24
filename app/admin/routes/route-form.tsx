@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import type { RouteFormState } from "@/app/actions/admin-routes";
 import { composeDetailsRaw } from "@/lib/details";
 import { normalizeSlug } from "@/lib/slug";
+import GpxPreview from "./gpx-preview";
 
 type Commune = { id: string; name: string };
 type Difficulty = "facile" | "moyen" | "difficile" | null;
@@ -19,10 +20,12 @@ type PhotoRow = { key: number };
 export default function RouteForm({
   communes,
   action,
+  maptilerKey,
   submitLabel = "Créer l'itinéraire",
 }: {
   communes: Commune[];
   action: (prev: RouteFormState, fd: FormData) => Promise<RouteFormState>;
+  maptilerKey: string;
   submitLabel?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, {} as RouteFormState);
@@ -38,6 +41,7 @@ export default function RouteForm({
   const [published, setPublished] = useState(false);
   const [hasAlbum, setHasAlbum] = useState(false);
   const [photoRows, setPhotoRows] = useState<PhotoRow[]>([]);
+  const [gpxFile, setGpxFile] = useState<File | null>(null);
 
   const communeName = communes.find((c) => c.id === communeId)?.name ?? "";
   const autoSlug = normalizeSlug(title);
@@ -177,7 +181,12 @@ export default function RouteForm({
       <div className="cf-admin__form-row">
         <label>
           Fichier GPX (.gpx, max 10 Mo)
-          <input name="gpxFile" type="file" accept=".gpx,.xml" />
+          <input
+            name="gpxFile"
+            type="file"
+            accept=".gpx,.xml"
+            onChange={(e) => setGpxFile(e.target.files?.[0] ?? null)}
+          />
         </label>
         <label>
           Photo principale (JPG/PNG/WebP, max 4 Mo)
@@ -188,6 +197,15 @@ export default function RouteForm({
         Texte alternatif de la photo principale
         <input name="imageAlt" type="text" placeholder="Ex. Le tracé vu depuis le village" />
       </label>
+
+      <GpxPreview
+        file={gpxFile}
+        maptilerKey={maptilerKey}
+        onUseMetrics={(m) => {
+          setDistance(m.distanceKm > 0 ? String(Math.round(m.distanceKm * 10) / 10) : "");
+          setElevation(m.elevationGainM > 0 ? String(m.elevationGainM) : "");
+        }}
+      />
 
       <div className="cf-admin__album">
         <div className="cf-admin__form-toggles">
