@@ -17,6 +17,13 @@ const LEGACY_SLUGS: Array<{ from: string; to: string }> = [
 ];
 
 const nextConfig: NextConfig = {
+  // Back-office : les Server Actions transportent le GPX (max 10 Mo) et la
+  // capture 1200×800 ; la limite par défaut de 1 Mo suffit au site public.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "12mb",
+    },
+  },
   images: {
     // v0.1 : les images restent servies par framerusercontent (copie à l'identique).
     // v0.2 : files locaux sous /public/photos (voir docs/MEDIA.md).
