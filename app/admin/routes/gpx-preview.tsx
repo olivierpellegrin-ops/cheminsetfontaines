@@ -6,11 +6,16 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 /**
- * Viewer GPX intégré au back-office (Spec « viewer GPX 3D satellite », V1).
- * V1 = 2D satellite + métriques + profil d'altitude + pré-remplissage du
- * formulaire. La vue 3D et la capture 1200×800 arrivent en V2.
- * Le GPX est parsé en local dans le navigateur : rien n'est envoyé
- * ailleurs que les requêtes de tuiles MapTiler (RGPD).
+ * Viewer GPX intégré au back-office (Spec « viewer GPX 3D satellite »).
+ * V1.1 :
+ * - tracé jaune avec liseré sombre (lisibilité satellite),
+ * - viseur 1200×800 (ratio 3:2) en pointillé épais, FIXE au centre :
+ *   c'est le tracé qu'on déplace (pan/zoom) pour le cadrer dans le viseur,
+ * - relief 3D (DEM MapTiler) + inclinaison (clic droit) + rotation,
+ * - « Utiliser dans le formulaire » : capture exacte du viseur en 1200×800
+ *   (instance MapLibre cachée, mêmes centre/zoom/bearing/pitch), PNG avec
+ *   attribution légale, qui alimente la photo principale du formulaire.
+ * Le GPX est parsé en local : rien n'est envoyé ailleurs que les tuiles.
  */
 
 export type GpxMetrics = {
@@ -24,7 +29,10 @@ export type GpxMetrics = {
   points: { lng: number; lat: number; ele: number; t: number | null }[];
 };
 
+const CAPTURE_W = 1200;
+const CAPTURE_H = 800;
 const ELEV_NOISE_THRESHOLD = 3; // seuil anti-bruit (m)
+const TRACE_COLOR = "#ffd500";
 
 function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
   const R = 6371;
@@ -83,6 +91,43 @@ function fmtDuration(s: number): string {
   return [h, m, sec].map((n) => String(n).padStart(2, "0")).join(":");
 }
 
+/** Ajoute le tracé (liseré sombre + jaune) sur une carte MapLibre. */
+function addTrace(map: maplibregl.Map, line: [number, number][]) {
+  map.addSource("gpx", {
+    type: "geojson",
+    data: {
+      type: "Feature",
+      properties: {},
+      geometry: { type: "LineString", coordinates: line },
+    },
+  });
+  map.addLayer({
+    id: "gpx-casing",
+    type: "line",
+    source: "gpx",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": "rgba(20,20,20,0.85)", "line-width": 7 },
+  });
+  map.addLayer({
+    id: "gpx-line",
+    type: "line",
+    source: "gpx",
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": TRACE_COLOR, "line-width": 4 },
+  });
+}
+
+/** Active le relief 3D (DEM MapTiler terrain-rgb) sur une carte. */
+function addTerrain(map: maplibregl.Map, key: string) {
+  map.addSource("maptiler-terrain", {
+    type: "raster-dem",
+    tiles: [`https://api.maptiler.com/tiles/terrain-rgb-v2/{z}/{x}/{y}.png?key=${key}`],
+    tileSize: 256,
+    maxzoom: 12,
+  });
+  map.setTerrain({ source: "maptiler-terrain", exaggeration: 1 });
+}
+
 export default function GpxPreview({
   file,
   maptilerKey,
@@ -90,14 +135,19 @@ export default function GpxPreview({
 }: {
   file: File | null;
   maptilerKey: string;
-  onUseMetrics: (m: { distanceKm: number; elevationGainM: number }) => void;
+  onUseMetrics: (
+    m: { distanceKm: number; elevationGainM: number },
+    capturePng: string | null
+  ) => void;
 }) {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const crosshairRef = useRef<HTMLDivElement | null>(null);
   const hoverMarker = useRef<maplibregl.Marker | null>(null);
   const [metrics, setMetrics] = useState<GpxMetrics | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const [capturePending, setCapturePending] = useState(false);
 
   // Parsing local du GPX
   useEffect(() => {
@@ -115,7 +165,9 @@ export default function GpxPreview({
         }
         const fc = gpx(doc);
         const feature = fc.features.find(
-          (f) => f.geometry && (f.geometry.type === "LineString" || f.geometry.type === "MultiLineString")
+          (f) =>
+            f.geometry &&
+            (f.geometry.type === "LineString" || f.geometry.type === "MultiLineString")
         );
         if (!feature || !feature.geometry) {
           throw new Error("Aucune trace (<trk>) trouvée dans ce GPX.");
@@ -123,11 +175,12 @@ export default function GpxPreview({
         const coords: [number, number, number?][] =
           feature.geometry.type === "LineString"
             ? (feature.geometry.coordinates as [number, number, number?][])
-            : (feature.geometry.coordinates.flat() as [number, number, number?][]);
+            : ((feature.geometry.coordinates as [number, number, number?][][]) ).flat();
         if (coords.length < 2) throw new Error("Trace trop courte (moins de 2 points).");
         const times: (string | null)[] =
-          ((feature.properties as Record<string, unknown> | null)?.coordTimes as (string | null)[] | undefined) ??
-          [];
+          ((feature.properties as Record<string, unknown> | null)?.coordTimes as
+            | (string | null)[]
+            | undefined) ?? [];
         if (!cancelled) setMetrics(computeMetrics(coords, times));
       })
       .catch((e: unknown) => {
@@ -138,7 +191,7 @@ export default function GpxPreview({
     };
   }, [file]);
 
-  // Carte satellite MapLibre
+  // Carte satellite MapLibre (2D/3D) + viseur
   useEffect(() => {
     if (!metrics || !mapContainer.current || !maptilerKey) return;
     const map = new maplibregl.Map({
@@ -150,29 +203,20 @@ export default function GpxPreview({
     });
     mapRef.current = map;
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
+    map.addControl(
+      new maplibregl.ScaleControl({ unit: "metric" }),
+      "bottom-left"
+    );
+    map.dragRotate.enable();
+    map.touchZoomRotate.enableRotation();
     map.on("load", () => {
-      const line = metrics.points.map((p) => [p.lng, p.lat]);
-      map.addSource("gpx", {
-        type: "geojson",
-        data: {
-          type: "Feature",
-          properties: {},
-          geometry: { type: "LineString", coordinates: line },
-        },
-      });
-      map.addLayer({
-        id: "gpx-line",
-        type: "line",
-        source: "gpx",
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": "#163c32",
-          "line-width": 4,
-        },
-      });
-      // Cadrage automatique, marge 15 %
-      const lons = line.map((c) => c[0]);
-      const lats = line.map((c) => c[1]);
+      addTrace(
+        map,
+        metrics.points.map((p) => [p.lng, p.lat])
+      );
+      addTerrain(map, maptilerKey);
+      const lons = metrics.points.map((p) => p.lng);
+      const lats = metrics.points.map((p) => p.lat);
       const padX = (Math.max(...lons) - Math.min(...lons)) * 0.25 + 0.005;
       const padY = (Math.max(...lats) - Math.min(...lats)) * 0.25 + 0.003;
       map.fitBounds(
@@ -217,6 +261,97 @@ export default function GpxPreview({
     }
   }, [hoverIdx, metrics]);
 
+  /**
+   * Capture du viseur en PNG 1200×800 :
+   * instance MapLibre cachée (preserveDrawingBuffer), même centre/zoom/
+   * bearing/pitch que la vue courante cadrée sur le viseur, tracé jaune,
+   * attribution légale incrustée via canvas 2D.
+   */
+  async function captureViseur(): Promise<string | null> {
+    const map = mapRef.current;
+    const container = mapContainer.current;
+    const crosshair = crosshairRef.current;
+    if (!map || !container || !crosshair || !metrics) return null;
+
+    const cRect = container.getBoundingClientRect();
+    const vRect = crosshair.getBoundingClientRect();
+    const centerX = (vRect.left + vRect.right) / 2 - cRect.left;
+    const centerY = (vRect.top + vRect.bottom) / 2 - cRect.top;
+    const center = map.unproject([centerX, centerY]);
+    const zoom = map.getZoom() + Math.log2(CAPTURE_W / vRect.width);
+    const bearing = map.getBearing();
+    const pitch = map.getPitch();
+
+    const off = document.createElement("div");
+    off.style.cssText = `position:fixed;left:-${CAPTURE_W * 2}px;top:0;width:${CAPTURE_W}px;height:${CAPTURE_H}px;`;
+    document.body.appendChild(off);
+    const cap = new maplibregl.Map({
+      container: off,
+      style: `https://api.maptiler.com/maps/satellite/style.json?key=${maptilerKey}`,
+      center,
+      zoom,
+      bearing,
+      pitch,
+      interactive: false,
+      attributionControl: false,
+      preserveDrawingBuffer: true,
+    });
+    try {
+      await new Promise<void>((resolve) => cap.on("load", () => resolve()));
+      addTrace(
+        cap,
+        metrics.points.map((p) => [p.lng, p.lat])
+      );
+      addTerrain(cap, maptilerKey);
+      // attendre que toutes les tuiles visibles soient rendues (5 s max)
+      await new Promise<void>((resolve) => {
+        const t = setTimeout(resolve, 5000);
+        cap.once("idle", () => {
+          clearTimeout(t);
+          resolve();
+        });
+      });
+
+      const src = cap.getCanvas();
+      const out = document.createElement("canvas");
+      out.width = CAPTURE_W;
+      out.height = CAPTURE_H;
+      const ctx = out.getContext("2d");
+      if (!ctx) return null;
+      ctx.drawImage(src, 0, 0, CAPTURE_W, CAPTURE_H);
+      // Attribution légale incrustée (obligation de licence MapTiler/OSM)
+      ctx.fillStyle = "rgba(255,255,255,0.78)";
+      ctx.fillRect(CAPTURE_W - 320, CAPTURE_H - 22, 312, 18);
+      ctx.fillStyle = "#333";
+      ctx.font = "12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("© MapTiler · © OpenStreetMap contributors", CAPTURE_W - 164, CAPTURE_H - 9);
+      return out.toDataURL("image/png");
+    } finally {
+      cap.remove();
+      off.remove();
+    }
+  }
+
+  async function handleUse() {
+    if (!metrics) return;
+    setCapturePending(true);
+    let capturePng: string | null = null;
+    try {
+      capturePng = await captureViseur();
+    } catch {
+      capturePng = null;
+    }
+    setCapturePending(false);
+    onUseMetrics(
+      {
+        distanceKm: Math.round(metrics.distanceKm * 100) / 100,
+        elevationGainM: Math.round(metrics.gainM),
+      },
+      capturePng
+    );
+  }
+
   if (!file) return null;
 
   return (
@@ -233,7 +368,13 @@ export default function GpxPreview({
       {metrics ? (
         <>
           <div className="cf-admin__gpx-layout">
-            <div ref={mapContainer} className="cf-admin__gpx-map" />
+            <div className="cf-admin__gpx-mapwrap">
+              <div ref={mapContainer} className="cf-admin__gpx-map" />
+              {/* Viseur 1200×800 (ratio 3:2), fixe : cadrer le tracé dedans */}
+              <div ref={crosshairRef} className="cf-admin__gpx-crosshair">
+                <span className="cf-admin__gpx-crosshair-label">1200 × 800</span>
+              </div>
+            </div>
             <div className="cf-admin__gpx-side">
               <h3>Métriques</h3>
               <ul className="cf-admin__gpx-stats">
@@ -255,20 +396,13 @@ export default function GpxPreview({
                   </>
                 ) : null}
               </ul>
-              <button
-                type="button"
-                className="cf-admin__gpx-use"
-                onClick={() =>
-                  onUseMetrics({
-                    distanceKm: Math.round(metrics.distanceKm * 100) / 100,
-                    elevationGainM: Math.round(metrics.gainM),
-                  })
-                }
-              >
-                Utiliser dans le formulaire
+              <button type="button" className="cf-admin__gpx-use" onClick={handleUse} disabled={capturePending}>
+                {capturePending ? "Capture en cours…" : "Utiliser dans le formulaire"}
               </button>
               <p className="cf-admin__hint">
-                La distance et le D+ seront reportés dans les champs du formulaire ; le niveau reste à qualifier par vous.
+                La capture prend le contenu du viseur (1200×800) comme photo principale et
+                reporte distance et D+. Niveau à votre main. Incliner la vue : clic droit (ou
+                Ctrl+clic glisser) ; le relief 3D est actif.
               </p>
             </div>
           </div>

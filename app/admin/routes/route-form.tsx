@@ -42,6 +42,7 @@ export default function RouteForm({
   const [hasAlbum, setHasAlbum] = useState(false);
   const [photoRows, setPhotoRows] = useState<PhotoRow[]>([]);
   const [gpxFile, setGpxFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const communeName = communes.find((c) => c.id === communeId)?.name ?? "";
   const autoSlug = normalizeSlug(title);
@@ -190,7 +191,21 @@ export default function RouteForm({
         </label>
         <label>
           Photo principale (JPG/PNG/WebP, max 4 Mo)
-          <input name="imageFile" type="file" accept=".jpg,.jpeg,.png,.webp" />
+          <input
+            name="imageFile"
+            type="file"
+            accept=".jpg,.jpeg,.png,.webp"
+            onChange={(e) => {
+              const f = e.target.files?.[0] ?? null;
+              setImagePreview(f ? URL.createObjectURL(f) : null);
+            }}
+          />
+          {imagePreview ? (
+            <span className="cf-admin__img-preview">
+              <img src={imagePreview} alt="Aperçu photo principale" />
+              <em>Photo définie — envoyée avec le formulaire</em>
+            </span>
+          ) : null}
         </label>
       </div>
       <label>
@@ -201,9 +216,20 @@ export default function RouteForm({
       <GpxPreview
         file={gpxFile}
         maptilerKey={maptilerKey}
-        onUseMetrics={(m) => {
+        onUseMetrics={async (m, capturePng) => {
           setDistance(m.distanceKm > 0 ? String(Math.round(m.distanceKm * 10) / 10) : "");
           setElevation(m.elevationGainM > 0 ? String(m.elevationGainM) : "");
+          // Capture 1200×800 du viseur -> photo principale du formulaire
+          if (capturePng) {
+            const fileName = `${slug || normalizeSlug(title) || "itineraire"}-main.png`;
+            const blob = await (await fetch(capturePng)).blob();
+            const file = new File([blob], fileName, { type: "image/png" });
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            const input = document.querySelector<HTMLInputElement>('input[name="imageFile"]');
+            if (input) input.files = dt.files;
+            setImagePreview(URL.createObjectURL(file));
+          }
         }}
       />
 
