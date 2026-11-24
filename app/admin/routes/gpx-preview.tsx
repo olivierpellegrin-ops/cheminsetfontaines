@@ -389,9 +389,19 @@ export default function GpxPreview({
       ctx.fillText("© MapTiler · © OpenStreetMap contributors", CAPTURE_W - 164, CAPTURE_H - 9);
       // JPEG qualité 0.9 : une vue satellite 1200×800 en PNG dépasse 4 Mo,
       // en JPEG compressé elle fait ~300-500 Ko (limite app. de 4 Mo respectée)
+      // ATTENTION semantique : on sauvegarde le zoom de l'APERCU (carte
+      // manipulee), pas celui de la capture (`zoom` ci-dessus = zoom
+      // capture + log2(1200/largeur viseur), ~1,5 niveau plus profond).
+      // Restaurer le zoom capture rendait le viewer trop zoome au retour.
       return {
         dataUrl: out.toDataURL("image/jpeg", 0.9),
-        camera: { lng: center.lng, lat: center.lat, zoom, bearing, pitch },
+        camera: {
+          lng: center.lng,
+          lat: center.lat,
+          zoom: map.getZoom(),
+          bearing,
+          pitch,
+        },
       };
     } finally {
       cap.remove();
