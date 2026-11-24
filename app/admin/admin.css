@@ -494,3 +494,17 @@ body:has(.cf-admin-login) {
   .cf-admin__table { font-size: 12px; }
   .cf-admin__row-actions { flex-direction: column; align-items: flex-start; }
 }
+
+/* B4 : liste allégée — titre dominant, boutons d'action de largeur fixe
+   (Publier/Dépublier n'alignaient pas les colonnes entre lignes) */
+.cf-admin__table .cf-admin__cell-title { width: 34%; }
+.cf-admin__row-actions { display: grid; grid-template-columns: 82px 96px 96px; gap: 8px; }
+.cf-admin__row-edit,
+.cf-admin__row-toggle,
+.cf-admin__row-delete {
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+.cf-admin__row-actions form { display: contents; }

@@ -82,9 +82,6 @@ export default async function AdminRoutesPage({
             <tr>
               <th>Titre</th>
               <th>Commune</th>
-              <th>Distance</th>
-              <th>D+</th>
-              <th>Niveau</th>
               <th>Statut</th>
               <th>Maj</th>
               <th>Actions</th>
@@ -95,9 +92,6 @@ export default async function AdminRoutesPage({
               <tr key={r.id}>
                 <td className="cf-admin__cell-title">{r.title}</td>
                 <td>{r.townshipLabel}</td>
-                <td>{r.distanceKm != null ? `${r.distanceKm} km` : "—"}</td>
-                <td>{r.elevationGainM != null ? `${r.elevationGainM} m` : "—"}</td>
-                <td>{r.difficulty ?? "—"}</td>
                 <td>
                   <span className={`cf-admin__badge cf-admin__badge--${r.status}`}>
                     {r.status === "published" ? "publié" : "brouillon"}
