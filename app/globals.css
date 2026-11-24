@@ -126,6 +126,7 @@ img {
   font-weight: 700;
   font-size: 30px;
   line-height: 1.1;
+  letter-spacing: -0.5px; /* preset Framer h2 (1fycize) relevé 23/11 */
 }
 
 @media (min-width: 900px) {
