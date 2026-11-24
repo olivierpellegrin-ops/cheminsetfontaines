@@ -1828,3 +1828,169 @@ img {
     padding: 56px 24px;
   }
 }
+
+/* ---------- Page Newsletters (archive) — à l'identique Framer,
+   relevé HTTrack + page live du 24/11 (Newsletter Archive) ---------- */
+
+.nl-arc {
+  max-width: 980px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 88px 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 34px;
+}
+
+.nl-kicker {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #587551;
+}
+
+.nl-h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 1.08em;
+  color: var(--forest);
+}
+
+.nl-lead {
+  margin: 0;
+  max-width: 650px;
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.55em;
+  color: #43534a;
+}
+
+.nl-editions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.nl-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: #e8efe4;
+  border: 1px solid #d2dccb;
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+}
+
+.nl-cover {
+  width: 180px;
+  height: 128px;
+  flex: none;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.nl-details {
+  flex: 1 0 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.nl-date {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: #43534a;
+}
+
+.nl-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.1em;
+  color: #163c32;
+}
+
+.nl-desc {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.45em;
+  color: #43534a;
+}
+
+.nl-featured {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: #587551;
+}
+
+.nl-read-row {
+  margin: 10px 0 0;
+}
+
+.nl-read {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #c18a21; /* ochre Framer, pas la variable --ochre */
+  border-radius: 100px;
+  padding: 11px 18px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: #163c32;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+@media (max-width: 809.98px) {
+  .nl-arc {
+    padding: 56px 24px;
+    gap: 26px;
+  }
+
+  .nl-h1 {
+    font-size: 38px;
+  }
+
+  .nl-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .nl-cover {
+    width: 100%;
+    height: 210px;
+  }
+
+  .nl-details {
+    width: 100%;
+  }
+
+  .nl-read-row {
+    width: 100%;
+  }
+
+  .nl-read {
+    width: 100%;
+  }
+}
