@@ -20,7 +20,13 @@ export default async function EditRoutePage({
   const [route, communes] = await Promise.all([
     prisma.route.findUnique({
       where: { id },
-      include: { _count: { select: { photos: true } } },
+      include: {
+        _count: { select: { photos: true } },
+        photos: {
+          orderBy: { createdAt: "asc" },
+          select: { id: true, title: true, imageUrl: true, imageAlt: true },
+        },
+      },
     }),
     prisma.commune.findMany({
       orderBy: { name: "asc" },
@@ -47,6 +53,7 @@ export default async function EditRoutePage({
     gpxUrl: route.gpxUrl,
     imageAlt: route.imageAlt,
     photoCount: route._count.photos,
+    photos: route.photos,
   };
 
   return (

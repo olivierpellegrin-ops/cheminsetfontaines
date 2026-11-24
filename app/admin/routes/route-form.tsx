@@ -32,6 +32,7 @@ export type RouteFormInitial = {
   gpxUrl: string | null;
   imageAlt: string | null;
   photoCount: number;
+  photos: { id: string; title: string; imageUrl: string; imageAlt: string | null }[];
 };
 
 /**
@@ -222,15 +223,15 @@ export default function RouteForm({
             accept=".gpx,.xml"
             onChange={(e) => setGpxFile(e.target.files?.[0] ?? null)}
           />
-          {initial?.gpxFileName ? (
-            <span className="cf-admin__hint">
-              GPX actuel : « {initial.gpxFileName} » (fichier local servi au téléchargement public) —
-              laissez vide pour le conserver, un nouveau fichier le remplace.
-            </span>
-          ) : initial?.gpxUrl ? (
-            <span className="cf-admin__hint">
-              GPX actuel : fichier Framer distant (téléchargé par redirection) —
-              laissez vide pour le conserver, un upload local le remplace.
+          {initial ? (
+            <span className="cf-admin__file-current">
+              {initial.gpxFileName ? (
+                <>GPX actuel : <strong>{initial.gpxFileName}</strong> (téléchargé par le site public)</>
+              ) : initial.gpxUrl ? (
+                <>GPX actuel : <strong>fichier Framer distant</strong> (téléchargé par redirection)</>
+              ) : (
+                <>Aucun GPX enregistré pour cet itinéraire.</>
+              )}
             </span>
           ) : null}
         </label>
@@ -319,6 +320,18 @@ export default function RouteForm({
             ? ` — ${initial.photoCount} photo${initial.photoCount > 1 ? "s" : ""} existante${initial.photoCount > 1 ? "s" : ""} conservée${initial.photoCount > 1 ? "s" : ""} ; les nouvelles s'ajoutent à la suite`
             : ""}
         </p>
+        {initial?.photos?.length ? (
+          <div className="cf-admin__album-existing">
+            {initial.photos.map((p, i) => (
+              <figure key={p.id} className="cf-admin__album-thumb">
+                <img src={p.imageUrl} alt={p.imageAlt ?? p.title} />
+                <figcaption>
+                  {i + 1}. {p.title}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        ) : null}
         {photoRows.map((row, i) => (
           <div className="cf-admin__photo-row" key={row.key}>
             <label>
