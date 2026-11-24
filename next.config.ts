@@ -23,11 +23,12 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "32mb",
     },
+    // Les Server Actions POSTent vers la page du formulaire (/admin/*), qui
+    // traverse le middleware : sans cette limite alignée (10 Mo par défaut,
+    // indépendante de bodySizeLimit), Next tronque le corps ->
+    // « Unexpected end of form » (vécu 24/11).
+    middlewareClientMaxBodySize: "32mb",
   },
-  // Les Server Actions POSTent vers la page du formulaire (/admin/*), qui
-  // traverse le middleware : sans cette limite alignée, Next tronque le
-  // corps à 10 Mo côté middleware -> « Unexpected end of form » (vécu 24/11).
-  middlewareClientMaxBodySize: "32mb",
   images: {
     // v0.1 : les images restent servies par framerusercontent (copie à l'identique).
     // v0.2 : files locaux sous /public/photos (voir docs/MEDIA.md).
