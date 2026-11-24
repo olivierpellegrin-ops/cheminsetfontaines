@@ -33,6 +33,7 @@ export type RouteFormInitial = {
   imageAlt: string | null;
   photoCount: number;
   photos: { id: string; title: string; imageUrl: string; imageAlt: string | null }[];
+  viewerCamera: { lng: number; lat: number; zoom: number; bearing: number; pitch: number } | null;
 };
 
 /**
@@ -75,6 +76,7 @@ export default function RouteForm({
   const [gpxFile, setGpxFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(initial?.imageUrl ?? null);
   const [captureDataUrl, setCaptureDataUrl] = useState<string | null>(null);
+  const [captureCamera, setCaptureCamera] = useState<string | null>(null);
   const [imageAlt, setImageAlt] = useState(initial?.imageAlt ?? "");
 
   const communeName = communes.find((c) => c.id === communeId)?.name ?? "";
@@ -249,7 +251,8 @@ export default function RouteForm({
                 window.alert(`« ${f.name} » dépasse 4 Mo. Choisissez une image plus légère.`);
                 return;
               }
-              setCaptureDataUrl(null); // une photo manuelle remplace la capture
+              setCaptureDataUrl(null); // une photo manuelle remplace la capture...
+              setCaptureCamera(null); // ...et invalide le cadrage sauvegarde
               setImagePreview(f ? URL.createObjectURL(f) : null);
             }}
           />
@@ -274,20 +277,24 @@ export default function RouteForm({
       {/* Capture GPX 1200×800 transportée en data URL (photo principale) */}
       <input type="hidden" name="captureDataUrl" value={captureDataUrl ?? ""} />
 
+      {/* Capture 1200×800 du viseur -> photo principale, transportée en data URL
+          via champ caché ; l'état caméra 3D (cadrage) est sauvegardé pour
+          permettre le recadrage en édition. */}
+      <input type="hidden" name="captureCamera" value={captureCamera ?? ""} />
       <GpxPreview
         file={gpxFile}
         maptilerKey={maptilerKey}
-        onUseMetrics={async (m, capturePng) => {
+        fallbackGpxUrl={initial?.gpxFileName ? `/gpx/${initial.slug}.gpx` : null}
+        presetCamera={initial?.viewerCamera ?? null}
+        onUseMetrics={(m, capturePng, cameraJson) => {
           setDistance(m.distanceKm > 0 ? String(Math.round(m.distanceKm * 10) / 10) : "");
           setElevation(m.elevationGainM > 0 ? String(m.elevationGainM) : "");
-          // Capture 1200×800 du viseur -> photo principale, transportée en
-          // data URL via champ caché (pas d'injection DOM dans l'input file,
-          // qui produisait un multipart malformé « Unexpected end of form »).
           if (capturePng) {
             const input = document.querySelector<HTMLInputElement>('input[name="imageFile"]');
             if (input) input.value = "";
             setCaptureDataUrl(capturePng);
             setImagePreview(capturePng);
+            setCaptureCamera(cameraJson);
           }
         }}
       />

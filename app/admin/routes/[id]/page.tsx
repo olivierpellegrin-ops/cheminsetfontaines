@@ -8,6 +8,26 @@ import RouteForm, { type RouteFormInitial } from "../route-form";
  * B4 : édition d'un itinéraire existant. Le même formulaire que la création,
  * hydraté depuis la base ; fichiers laissés vides = inchangés.
  */
+
+/** viewerCamera (Json) -> objet caméra typé ou null si incomplet. */
+function normalizeCamera(
+  vc: unknown
+): { lng: number; lat: number; zoom: number; bearing: number; pitch: number } | null {
+  if (typeof vc !== "object" || vc === null) return null;
+  const o = vc as Record<string, unknown>;
+  const nums = [o.lng, o.lat, o.zoom, o.bearing, o.pitch];
+  if (nums.every((n) => typeof n === "number" && Number.isFinite(n))) {
+    return {
+      lng: o.lng as number,
+      lat: o.lat as number,
+      zoom: o.zoom as number,
+      bearing: o.bearing as number,
+      pitch: o.pitch as number,
+    };
+  }
+  return null;
+}
+
 export default async function EditRoutePage({
   params,
 }: {
@@ -54,6 +74,7 @@ export default async function EditRoutePage({
     imageAlt: route.imageAlt,
     photoCount: route._count.photos,
     photos: route.photos,
+    viewerCamera: normalizeCamera(route.viewerCamera),
   };
 
   return (

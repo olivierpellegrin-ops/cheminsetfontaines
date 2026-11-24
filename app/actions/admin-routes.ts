@@ -137,6 +137,27 @@ async function unlinkIfExists(p: string) {
   }
 }
 
+/** Camera du viewer (capture 1200x800) depuis le champ cache JSON. */
+function parseViewerCamera(v: FormDataEntryValue | null): {
+  lng: number;
+  lat: number;
+  zoom: number;
+  bearing: number;
+  pitch: number;
+} | null {
+  if (typeof v !== "string" || v === "") return null;
+  try {
+    const o = JSON.parse(v) as Record<string, unknown>;
+    const nums = [o.lng, o.lat, o.zoom, o.bearing, o.pitch];
+    if (nums.every((n) => typeof n === "number" && Number.isFinite(n))) {
+      return { lng: o.lng as number, lat: o.lat as number, zoom: o.zoom as number, bearing: o.bearing as number, pitch: o.pitch as number };
+    }
+  } catch {
+    /* JSON invalide : ignore */
+  }
+  return null;
+}
+
 export async function createRoute(
   _prev: RouteFormState,
   fd: FormData
@@ -197,6 +218,7 @@ export async function createRoute(
   }
 
   // --- Uploads ---
+  let viewerCamera: { lng: number; lat: number; zoom: number; bearing: number; pitch: number } | null = null;
   let gpxFileName: string | null = null;
   const gpx = fd.get("gpxFile");
   if (gpx instanceof File && gpx.size > 0) {
@@ -226,6 +248,7 @@ export async function createRoute(
         return { error: `Écriture incomplète de ${filename} sur le disque. Réessayez.` };
       }
       imageUrl = `/images/routes/${filename}`;
+      viewerCamera = parseViewerCamera(fd.get("captureCamera"));
     }
   }
 
@@ -261,6 +284,7 @@ export async function createRoute(
       communeId: data.communeId,
       status: published ? "published" : "draft",
       hasPhotoAlbum: hasAlbumToggle || photoRows.length > 0,
+      viewerCamera,
       source: "saisie_manuelle",
     },
   });
@@ -391,6 +415,8 @@ export async function updateRoute(
 
   // --- Photo principale : fichier manuel OU capture, sinon inchangée ---
   let imageUrl = existing.imageUrl;
+  let viewerCamera: { lng: number; lat: number; zoom: number; bearing: number; pitch: number } | null =
+    existing.viewerCamera as { lng: number; lat: number; zoom: number; bearing: number; pitch: number } | null;
   const img = fd.get("imageFile");
   if (img instanceof File && img.size > 0) {
     const r = await saveFile(img, imgDir(), `${slug}-main`, "image");
@@ -411,6 +437,7 @@ export async function updateRoute(
       await mkdir(imgDir(), { recursive: true });
       await writeFile(path.join(imgDir(), filename), dec.buf);
       imageUrl = `/images/routes/${filename}`;
+      viewerCamera = parseViewerCamera(fd.get("captureCamera"));
     }
   }
   const imageAlt = String(fd.get("imageAlt") ?? "").trim() || null;
@@ -451,6 +478,7 @@ export async function updateRoute(
       townshipLabel: data.townshipLabel,
       communeId: data.communeId,
       status: published ? "published" : "draft",
+      viewerCamera,
       hasPhotoAlbum: hasAlbumToggle || existing.hasPhotoAlbum || newPhotos.length > 0,
     },
   });
