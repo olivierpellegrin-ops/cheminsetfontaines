@@ -37,6 +37,11 @@ import BlocFields from "./bloc-fields";
  * immédiatement), survol = barre d'actions par bloc, clic = réglages du
  * bloc dans la colonne de droite. Enregistrer garde l'empreinte à jour
  * pour la garde anti-perte.
+ * N3.9 (2/2) : glisser-déposer par la poignée ⠿ de la barre d'actions
+ * (déposer avant/après le bloc visé, trait ochre de repère) et édition
+ * des textes EN PLACE dans le canvas (paragraphes, titres, colonnes
+ * d'itinéraire — commit au changement de focus, Entrée désactivée : la
+ * structure des paragraphes reste dans la colonne de droite).
  *
  * Toute modification des blocs invalide le test d'envoi de la version
  * précédente (empreinte calculée côté serveur) ; le numéro repasse
@@ -157,6 +162,27 @@ export default function NewsletterEditor({
     });
     // La sélection suit le bloc déplacé.
     setSelection((s) => (s === i ? i + dir : s));
+  };
+
+  // N3.9 (2/2) : glisser-déposer du canvas — le bloc tenu par sa poignée
+  // ⠿ est déposé avant (moitié haute) ou après (moitié basse) le bloc
+  // visé. Le déplacement travaille sur le tableau COMPLET (les blocs
+  // masqués comptent dans les index), exactement comme ↑/↓.
+  const deplacer = (from: number, to: number, pos: "avant" | "apres") => {
+    if (from === to) return;
+    setBlocks((bs) => {
+      if (from < 0 || from >= bs.length || to < 0 || to >= bs.length) return bs;
+      const copy = [...bs];
+      const [deplace] = copy.splice(from, 1);
+      let at = pos === "apres" ? to + 1 : to;
+      if (from < at) at -= 1;
+      copy.splice(at, 0, deplace);
+      return copy;
+    });
+    // Position d'arrivée du bloc déplacé, pour que la sélection le suive.
+    const arrivee =
+      pos === "apres" ? (from <= to ? to : to + 1) : from < to ? to - 1 : to;
+    setSelection((s) => (s === from ? arrivee : s));
   };
 
   const dupliquerBloc = (i: number) => {
@@ -371,8 +397,10 @@ export default function NewsletterEditor({
           <h2>Aperçu éditable</h2>
           <p className="cf-nl__hint">
             Rendu vivant, identique à l&apos;e-mail : chaque modification
-            se voit immédiatement. Survolez un bloc pour agir, cliquez-le
-            pour ouvrir ses réglages à droite.
+            se voit immédiatement. Survolez un bloc pour agir, attrapez
+            la poignée ⠿ pour le déplacer, cliquez-le pour ouvrir ses
+            réglages à droite, et éditez ses textes directement à leur
+            place.
           </p>
           <NewsletterCanvas
             title={titre}
@@ -384,9 +412,11 @@ export default function NewsletterEditor({
             dernierVisible={dernierVisible}
             onSelect={setSelection}
             onMove={move}
+            onReorder={deplacer}
             onDuplicate={dupliquerBloc}
             onToggleHidden={masquerBloc}
             onRemove={supprimerBloc}
+            onPatch={patchBlock}
           />
           <div className="cf-nl__add">
             <button type="button" onClick={addText}>

@@ -353,3 +353,50 @@
   border-color: #b3402e;
   color: #b3402e;
 }
+
+/* ---------- Canvas WYSIWYG, suite (N3.9 2/2) : glisser-déposer + édition en place ---------- */
+
+/* Poignée de déplacement (bouton ⠿ de la barre d'actions) : c'est ELLE
+   qui est draggable, jamais le bloc entier — les textes du bloc restent
+   sélectionnables et éditables à la souris. */
+.cf-wys__grip {
+  cursor: grab;
+}
+
+.cf-wys__grip:active {
+  cursor: grabbing;
+}
+
+/* Bloc tenu par la poignée (atténué) + repère de dépôt : trait ochre
+   au-dessus (déposer AVANT) ou en dessous (déposer APRÈS) du bloc visé. */
+.cf-wys__bloc.is-dragging {
+  opacity: 0.45;
+}
+
+.cf-wys__bloc.is-drop-avant {
+  box-shadow: 0 -3px 0 0 #c08a21;
+}
+
+.cf-wys__bloc.is-drop-apres {
+  box-shadow: 0 3px 0 0 #c08a21;
+}
+
+/* Texte édité en place (contentEditable posé par le moteur en mode
+   canvas) : affiché comme un paragraphe du modèle, signalé au survol
+   puis surligné à la prise de focus. Une saisie = une ligne. */
+.cf-wys__edite {
+  display: block;
+  outline: none;
+  white-space: pre-wrap;
+  cursor: text;
+}
+
+.cf-wys__edite:hover {
+  background: rgba(193, 138, 33, 0.12);
+}
+
+.cf-wys__edite:focus {
+  background: #fffbe6;
+  box-shadow: inset 0 0 0 2px #c08a21;
+  border-radius: 2px;
+}
