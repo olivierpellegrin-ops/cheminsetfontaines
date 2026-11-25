@@ -128,7 +128,7 @@ export default function NewsletterEditor({
       ? { label: "brouillon", cls: "cf-admin__badge--draft" }
       : initialStatus === "pret"
         ? { label: "prêt", cls: "" }
-        : { label: initialStatus === "valide_envoyee" ? "envoyée" : "archivée"?????, cls: "cf-admin__badge--published" };
+        : { label: initialStatus === "valide_envoyee" ? "envoyée" : "archivée", cls: "cf-admin__badge--published" };
 
   return (
     <section className="cf-admin__nl-editor">
