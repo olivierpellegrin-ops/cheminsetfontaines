@@ -23,7 +23,7 @@ export function AdhesionRenouvellement({
   const hello = firstName ? `Bonjour ${firstName},` : "Bonjour,";
   return (
     <BaseEmail
-      preview={`Votre adhésion pour la saison ${season} : un petit pas pour续 renouveler`}
+      preview={`Votre adhésion pour la saison ${season} : un petit rappel pour renouveler`}
       footerNote={`Vous recevez cet e-mail car vous avez été membre de l'association et que le renouvellement de la saison ${season} n'a pas encore été enregistré. Si vous ne souhaitez plus recevoir ces rappels, répondez simplement à cet e-mail : le bureau vous retirera de la liste.`}
     >
       <Heading
