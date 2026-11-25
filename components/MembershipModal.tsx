@@ -14,6 +14,10 @@ import { requestMembership, type FormState } from "@/app/actions";
  * largeur radius 100px, texte 14px/600 vert ; bouton « Fermer » texte
  * en bas ; honeypots originaux (website, company + 9 autres) conservés.
  * Déclenchée par le CTA « Adhérer à l'association » (prop label).
+ * Brique N2 (spec §4.2/§5.1, validée par Olivier le 25/11/2026) : deux
+ * cases ajoutées SOUS le formulaire, jamais cochées par défaut (RGPD) :
+ * « nouvelles du sentier » (double opt-in, source adhesion) et droit à
+ * l'image. Styles inline : aucun ajout dans globals.css.
  */
 export default function MembershipModal({ label }: { label: string }) {
   const [open, setOpen] = useState(false);
@@ -36,6 +40,23 @@ export default function MembershipModal({ label }: { label: string }) {
       document.body.style.overflow = "";
     };
   }, [open]);
+
+  const checkStyle = {
+    marginTop: 3,
+    width: 16,
+    height: 16,
+    accentColor: "#163c32",
+    flexShrink: 0,
+  } as const;
+  const checkLabelStyle = {
+    display: "flex",
+    gap: 10,
+    alignItems: "flex-start",
+    fontSize: 13,
+    lineHeight: "18px",
+    color: "#43534a",
+    cursor: "pointer",
+  } as const;
 
   return (
     <>
@@ -133,6 +154,22 @@ export default function MembershipModal({ label }: { label: string }) {
                 <option value="Suisse">Suisse</option>
                 <option value="Autre">Autre</option>
               </select>
+
+              {/* Brique N2 : deux consentements jamais cochés par défaut. */}
+              <label style={checkLabelStyle}>
+                <input type="checkbox" name="newsletter" style={checkStyle} />
+                <span>
+                  Je souhaite recevoir les nouvelles du sentier (1 e-mail par
+                  mois, désinscription en 1 clic)
+                </span>
+              </label>
+              <label style={checkLabelStyle}>
+                <input type="checkbox" name="photoConsent" style={checkStyle} />
+                <span>
+                  J&apos;autorise l&apos;association à publier des photos de
+                  sorties où j&apos;apparaît (site et réseaux sociaux)
+                </span>
+              </label>
 
               {/* Honeypots repris à l'identique de la modale Framer
                   (website et company sont ceux vérifiés par l'action) */}
