@@ -7,37 +7,43 @@ import {
 } from "@/app/actions/admin-members";
 
 /**
- * Actions par ligne de la liste des demandes d'adhésion (brique N2).
- * Renvoyer : demandes non confirmées uniquement (garde 1 h + nouveau
- * jeton dans l'action). Cotisation reçue : demandes confirmées non
- * traitées. Supprimer : effacement RGPD confirmé.
+ * Actions par ligne de la liste des demandes d'adhésion (brique N2),
+ * libellés courts (retouche recette Olivier du 25/11) :
+ * « En attente » (état, demande non confirmée) + Renvoyer ;
+ * Cotisation reçue : demandes confirmées non traitées ;
+ * Supprimer : effacement RGPD confirmé.
  */
 export default function RequestRowActions({
   requestId,
   confirmed,
   handled,
-  season,
 }: {
   requestId: string;
   confirmed: boolean;
   handled: boolean;
-  season: number;
 }) {
   return (
     <div className="cf-admin__row-actions">
       {!confirmed && !handled && (
-        <form action={resendMembershipConfirmation}>
-          <input type="hidden" name="id" value={requestId} />
-          <button type="submit" className="cf-admin__row-toggle">
-            Renvoyer
-          </button>
-        </form>
+        <>
+          <span className="cf-admin__badge cf-admin__badge--draft">En attente</span>
+          <form action={resendMembershipConfirmation}>
+            <input type="hidden" name="id" value={requestId} />
+            <button type="submit" className="cf-admin__row-toggle">
+              Renvoyer
+            </button>
+          </form>
+        </>
       )}
       {confirmed && !handled && (
         <form action={markCotisationReceived}>
           <input type="hidden" name="id" value={requestId} />
-          <button type="submit" className="cf-admin__row-edit">
-            Cotisation reçue (saison {season})
+          <button
+            type="submit"
+            className="cf-admin__row-edit"
+            title="Enregistre la cotisation et crée ou met à jour le membre"
+          >
+            Cotisation reçue
           </button>
         </form>
       )}

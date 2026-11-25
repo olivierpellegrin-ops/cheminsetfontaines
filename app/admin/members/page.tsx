@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  RENEWAL_REMINDER_GUARD_MS,
+  RENEWAL_REMINDER_MIN_AGE_MS,
+} from "@/lib/renewal";
 import MemberRowActions from "./member-row-actions";
 import RequestRowActions from "./request-row-actions";
 import RenewalBanner from "./renewal-banner";
@@ -10,10 +14,14 @@ import "./members.css";
  * Brique N2 (spec §5.1/§4.2/§10) : pilotage des adhérents — demandes
  * d'adhésion (filtres en attente / confirmées / traitées, renvoi de la
  * confirmation, validation de la cotisation, suppression RGPD) et
- * membres (statut, saisons payées, droit à l'image, rappels de
- * renouvellement, export CSV).
+ * membres (statut, historique complet des saisons payées, droit à
+ * l'image, relances de cotisation, export CSV).
  * Le statut « à renouveler » est DÉRIVÉ (membre actif sans cotisation
  * de la saison en cours) : jamais stocké, recalculé ici.
+ * La relance suit la règle « anniversaire » (lib/renewal.ts) : jamais
+ * avant ~11 mois après le dernier règlement, jamais deux fois à moins
+ * de 30 jours. Une cotisation de novembre/décembre n'est donc pas
+ * ressassée au 1er janvier suivant.
  */
 export default async function AdminMembersPage({
   searchParams,
@@ -56,20 +64,25 @@ export default async function AdminMembersPage({
   ]);
 
   const currentSeason = new Date().getFullYear();
-  const REMINDER_GUARD_MS = 30 * 24 * 60 * 60 * 1000;
+  const nowMs = Date.now();
 
   const hasCurrentSeason = (m: (typeof members)[number]) =>
     m.years.some((y) => y.season === currentSeason);
 
-  // Cohorte « à renouveler » éligible au rappel : actifs sans cotisation
-  // de la saison, sans rappel depuis 30 jours (l'action porte la garde).
-  const reminderEligible = members.filter(
-    (m) =>
-      m.status === "actif" &&
-      !hasCurrentSeason(m) &&
-      (!m.lastReminderAt ||
-        Date.now() - m.lastReminderAt.getTime() > REMINDER_GUARD_MS)
-  ).length;
+  // Éligibilité à la relance (même règle que l'action, lib/renewal.ts) :
+  // actif, sans cotisation de la saison, dernier règlement de plus de
+  // ~11 mois, pas de relance depuis 30 jours.
+  const canRelance = (m: (typeof members)[number]) => {
+    if (m.status !== "actif" || hasCurrentSeason(m)) return false;
+    if (m.years.length === 0) return true; // jamais eu de saison : relançable
+    const lastPaid = Math.max(...m.years.map((y) => y.paidAt.getTime()));
+    if (nowMs - lastPaid < RENEWAL_REMINDER_MIN_AGE_MS) return false; // grâce
+    if (m.lastReminderAt && nowMs - m.lastReminderAt.getTime() < RENEWAL_REMINDER_GUARD_MS)
+      return false;
+    return true;
+  };
+
+  const reminderEligible = members.filter((m) => canRelance(m)).length;
 
   // Filtres d'affichage des membres (dérivés, jamais stockés).
   const mstatut =
@@ -155,7 +168,7 @@ export default async function AdminMembersPage({
               const statut = r.handledAt
                 ? "traitée"
                 : r.confirmedAt
-                  ? "à traiter (cotisation)"
+                  ? "à traiter"
                   : "en attente de confirmation";
               const badge = r.handledAt
                 ? ""
@@ -179,7 +192,6 @@ export default async function AdminMembersPage({
                       requestId={r.id}
                       confirmed={Boolean(r.confirmedAt)}
                       handled={Boolean(r.handledAt)}
-                      season={currentSeason}
                     />
                   </td>
                 </tr>
@@ -192,7 +204,8 @@ export default async function AdminMembersPage({
       <h2>Membres</h2>
       <p className="cf-admin__count">
         {members.length} membre{members.length > 1 ? "s" : ""} · {toRenewCount} à renouveler
-        pour la saison {currentSeason}
+        pour la saison {currentSeason} · {reminderEligible} éligible
+        {reminderEligible > 1 ? "s" : ""} à la relance
       </p>
       <RenewalBanner count={reminderEligible} season={currentSeason} />
       <form className="cf-admin__filters" method="get">
@@ -236,7 +249,7 @@ export default async function AdminMembersPage({
               <th>Nom</th>
               <th>E-mail</th>
               <th>Statut</th>
-              <th>Dernière saison</th>
+              <th>Saisons payées</th>
               <th>Droit à l&apos;image</th>
               <th>Dernier rappel</th>
               <th>Actions</th>
@@ -263,14 +276,14 @@ export default async function AdminMembersPage({
                       </span>
                     )}
                   </td>
-                  <td>{m.years[0]?.season ?? "—"}</td>
+                  <td>{m.years.map((y) => y.season).join(" · ") || "—"}</td>
                   <td>{m.photoConsent ? "oui" : "non"}</td>
                   <td>{frDate(m.lastReminderAt)}</td>
                   <td>
                     <MemberRowActions
                       memberId={m.id}
                       needsRenewal={renouveler}
-                      season={currentSeason}
+                      canRelance={canRelance(m)}
                     />
                   </td>
                 </tr>
