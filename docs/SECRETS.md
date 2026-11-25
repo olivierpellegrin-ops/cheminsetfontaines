@@ -8,7 +8,7 @@ le magasin de l'hébergeur au déploiement.
 |---|---|---|---|
 | PostgreSQL | `docker compose up -d` | `DATABASE_URL` | requis |
 | Notifications bureau | — | `NOTIFY_EMAIL` (`contact@cheminsetfontaines.fr`) | requis |
-| Brevo (relay newsletters + adhésion) | brevo.com -> Transactionnel > SMTP & API | `BREVO_API_KEY`, `BREVO_LIST_ID` | v0.2 |
+| Envoi d'e-mails (brique N0 « Remplacement Mailchimp », SMTP interne) | prod : fiche Gandi de la mailbox `contact@cheminsetfontaines.fr` · local : Mailpit du docker-compose (`localhost:1025`) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (prod uniquement), `MAIL_FROM` | requis N0 |
 | Stripe (dons v2 : reçus, totaux) | dashboard.stripe.com > Developers > API keys + Webhooks | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | v0.3 |
 | Strava (agent, suivi incrémental) | strava.com/settings/api | `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REFRESH_TOKEN` | v0.4 |
 | Modèle de texte de l'agent | console.mistral.ai | `MISTRAL_API_KEY` | v0.4 |
@@ -19,8 +19,10 @@ le magasin de l'hébergeur au déploiement.
 Le lien de don Stripe utilisé en v1 est public par nature (Payment Link) :
 `https://buy.stripe.com/5kQ8wR4X3bKNb8e5Z4bo402` — ce n'est pas un secret.
 
-Audience Mailchimp historique (remplacée par Brevo) :
+Audience Mailchimp historique (remplacée par la gestion interne du chantier
+« Remplacement Mailchimp », spec du 25/11/2026) :
 `cheminsetfontaines.us19.list-manage.com` (`u=d8ca3d7b03b51b0bc6b05e561`,
 liste `1782fcea85`). Export de 39 abonnés actifs + 5 `cleaned` reçu le
 22/11/2026 dans OneDrive `05_Newsletters/audience_export/` : à importer en
-base uniquement (jamais dans le repo).
+base uniquement (jamais dans le repo), décision D4 actée (les 39 en
+`subscribed`, les 5 `cleaned` exclues).

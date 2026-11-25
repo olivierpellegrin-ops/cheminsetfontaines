@@ -17,6 +17,9 @@ const LEGACY_SLUGS: Array<{ from: string; to: string }> = [
 ];
 
 const nextConfig: NextConfig = {
+  // N0 « Remplacement Mailchimp » : nodemailer reste un module natif
+  // externe au bundle serveur (aucun besoin de bundling côté Next).
+  serverExternalPackages: ["nodemailer"],
   // Back-office : les Server Actions transportent le GPX (max 10 Mo), la
   // capture 1200×800 et l'album photos (4 Mo/photo). Limite par défaut : 1 Mo.
   experimental: {

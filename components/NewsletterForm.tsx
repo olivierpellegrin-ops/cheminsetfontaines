@@ -7,7 +7,7 @@ import { subscribe, type FormState } from "@/app/actions";
 /**
  * Bloc « Les nouvelles du sentier » (home) — champs identiques au
  * formulaire Mailchimp intégré (EMAIL + Prénom + Nom de famille),
- * rebranché en local (Brevo en v0.2), honeypot conservé.
+ * rebranché en local (double opt-in interne brique N1), honeypot conservé.
  * Variante dark : rendu dans le bandeau vert forêt (.funds-news Framer),
  * labels #F4F1E8, boutons ochre « S'inscrire » / « Voir les archives ».
  */

@@ -25,11 +25,13 @@
 - [ ] Carte SVG interactive (portage de `XaintrieTownshipMap.tsx`,
       30 communes + codes INSEE + 16 interactives) — module non essentiel
       acté le 22/11 (la carte n'est pas accessible aux visiteurs actuellement)
-- [ ] Brevo : double opt-in, e-mail de bienvenue unique (§9.8), notification
-      adhésion à contact@cheminsetfontaines.fr ; pages
-      `/fr/newsletters/preferences` et `/fr/newsletters/desinscription`
-- [ ] Import abonnés Mailchimp (39 actifs, marquage `import`,
-      5 `cleaned` -> statut invalid) — hors repo, procédure bureau
+- [ ] Chantier « Remplacement Mailchimp » (spec du 25/11/2026, dev interne,
+      D1-D6 actées) : [x] N0 socle MailService (SMTP Gandi + Mailpit local +
+      notification contact) ; [ ] N1 double opt-in souscripteurs ; [ ] N2
+      parcours e-mails adhérents ; [ ] N3 éditeur de newsletters ; [ ] N4
+      envoi de masse + DNS SPF/DKIM/DMARC ; [ ] N5 réseaux sociaux assistés
+- [ ] Import abonnés Mailchimp (39 actifs en `subscribed`, marquage `import` ;
+      5 `cleaned` exclues — décision D4) — hors repo, procédure bureau
 - [ ] Mentions légales/RGPD (n° RNA manquant), politique de confidentialité
 
 ## v0.3 — Back office
