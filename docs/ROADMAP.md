@@ -32,8 +32,9 @@
       Mailchimp — l'import réel est une procédure bureau, hors repo) ; [x] N2 parcours e-mails
       adhérents (confirmation à jeton 30 j, fiche au bureau, admin membres +
       export CSV, bienvenue à la création, rappels de renouvellement,
-      suppression RGPD) ; [ ] N3
-      éditeur de newsletters ; [ ] N4
+      suppression RGPD) ; [x] N3
+      éditeur de newsletters (génération mensuelle, éditeur par blocs,
+      aperçu et test d'envoi) ; [ ] N4
       envoi de masse + DNS SPF/DKIM/DMARC ; [ ] N5 réseaux sociaux assistés
 - [ ] Import abonnés Mailchimp (39 actifs en `subscribed`, marquage `import` ;
       5 `cleaned` exclues — décision D4) — hors repo, procédure bureau

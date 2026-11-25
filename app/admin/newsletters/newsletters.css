@@ -1,0 +1,151 @@
+/* Brique N3 : concepteur de newsletters — boutons d'action à la taille du
+   contenu (même correctif que members : la grille fixe 82/96/96 px de
+   admin.css est dédiée à la liste itinéraires). */
+.cf-admin__newsletters .cf-admin__row-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.cf-admin__newsletters .cf-admin__row-actions form {
+  margin: 0;
+  display: inline;
+}
+
+.cf-admin__newsletters .cf-admin__row-edit,
+.cf-admin__newsletters .cf-admin__row-toggle,
+.cf-admin__newsletters .cf-admin__row-delete {
+  width: auto;
+}
+
+.cf-admin__newsletters .cf-admin__table th,
+.cf-admin__newsletters .cf-admin__table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Éditeur large : formulaire/blocs à gauche, test + aperçu à droite. */
+.cf-admin__main:has(.cf-admin__nl-editor) {
+  max-width: 1400px;
+}
+
+.cf-nl__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 430px;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .cf-nl__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cf-nl__save {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 24px;
+}
+
+.cf-nl__save label,
+.cf-nl__block label,
+.cf-nl__side label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: #333;
+}
+
+.cf-nl__block input[type="text"],
+.cf-nl__block textarea,
+.cf-nl__save input,
+.cf-nl__save textarea,
+.cf-nl__side input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  padding: 8px;
+  border: 1px solid #c9cec7;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.cf-nl__side button,
+.cf-nl__block-head button,
+.cf-nl__add button,
+.cf-nl__photo button {
+  font: inherit;
+  padding: 6px 12px;
+  border: 1px solid #c9cec7;
+  border-radius: 6px;
+  background: #f4f6f3;
+  cursor: pointer;
+}
+
+.cf-nl__block {
+  border: 1px solid #d8dcd6;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: #fff;
+  display: grid;
+  gap: 10px;
+}
+
+.cf-nl__ghost {
+  opacity: 0.5;
+}
+
+.cf-nl__block-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cf-nl__block-head h3 {
+  margin: 0;
+  font-size: 14px;
+  flex: 1 1 auto;
+}
+
+.cf-nl__photo {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .cf-nl__photo {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cf-nl__add {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 24px;
+}
+
+.cf-nl__side form {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 20px;
+}
+
+.cf-nl__hint {
+  font-size: 13px;
+  color: #555;
+  margin: 0;
+}
+
+.cf-nl__preview {
+  width: 100%;
+  height: 640px;
+  border: 1px solid #c9cec7;
+  border-radius: 10px;
+  background: #fff;
+}
