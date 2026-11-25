@@ -3,7 +3,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { blocksHash, parseBlocks } from "@/lib/newsletters";
-import { generateNewsletterOfMonth, createBlankNewsletter } from "@/app/actions/admin-newsletters";
+import { generateNewsletterOfMonth, createBlankNewsletter, createNewsletterModele } from "@/app/actions/admin-newsletters";
 import NewsletterRowActions from "./newsletter-row-actions";
 import "./newsletters.css";
 
@@ -12,7 +12,8 @@ import "./newsletters.css";
  * (statuts brouillon / prêt / envoyée / archivée, test d'envoi valide ou
  * obsolète par version des blocs) + bouton « Générer la newsletter du
  * mois » (rouvre le numéro courant s'il existe déjà : jamais de doublon).
- * L'envoi réel aux souscripteurs arrive avec la brique N4.
+ * N3.7 : « Créer d'après le modèle » = numéro complet du modèle standard
+ * (septembre 2026). L'envoi réel aux souscripteurs arrive avec la brique N4.
  */
 export default async function AdminNewslettersPage() {
   const session = await auth();
@@ -59,6 +60,21 @@ export default async function AdminNewslettersPage() {
               placeholder="Titre du numéro (ex : Message spécial…)"
             />
             <button type="submit">Nouvelle newsletter</button>
+          </form>
+          <form action={createNewsletterModele} className="cf-nl__new">
+            <input
+              type="text"
+              name="numero"
+              required
+              placeholder="Numéro (ex : #3 - Décembre 2026)"
+            />
+            <input
+              type="text"
+              name="title"
+              required
+              placeholder="Titre (ex : 6 randonnées FFR de la Xaintrie)"
+            />
+            <button type="submit">Créer d'après le modèle</button>
           </form>
           <form action={generateNewsletterOfMonth}>
             <button type="submit">
