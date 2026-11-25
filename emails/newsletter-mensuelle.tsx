@@ -5,7 +5,7 @@ import { Html } from "@react-email/html";
 import { Preview } from "@react-email/preview";
 import { Section } from "@react-email/section";
 import { Text } from "@react-email/text";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   type NlBlock,
   type NlEventCard,
@@ -34,6 +34,11 @@ import {
  * conformes des fichiers des CDN Mailchimp/Framer, plus aucune
  * dépendance externe pour l'e-mail.
  *
+ * N3.9 (2/2) : le canvas WYSIWYG reçoit en plus « inline » (callback de
+ * modification d'un champ du bloc) — les textes deviennent alors
+ * éditables EN PLACE (EditeTexte). L'e-mail, l'aperçu fidèle et le test
+ * ne passent JAMAIS inline : leur rendu reste l'arbre N3.6 inchangé.
+ *
  * N3.9 : le rendu du CONTENU est exporté séparément (NewsletterContenu)
  * pour être affiché tel quel dans le canvas WYSIWYG de l'admin — même
  * moteur, donc aperçu éditable 100 % fidèle. Le surçouche d'édition
@@ -52,6 +57,17 @@ export type WrapBlock = (
   block: NlBlock,
   children: ReactNode
 ) => ReactNode;
+
+/**
+ * N3.9 (2/2) : édition EN PLACE — callback du canvas adressant un bloc
+ * par son index dans le tableau COMPLET (même adressage que wrapBlock).
+ * Absent (e-mail, aperçu fidèle, test, version navigateur) : le rendu
+ * ne pose AUCUNE surcouche d'édition, l'arbre est celui de la N3.6.
+ */
+export type NlInlineEdit = (
+  index: number,
+  patch: Record<string, unknown>
+) => void;
 
 /** Palette du modèle Mailchimp (relevé HTML de septembre 2026). */
 const C = {
@@ -111,17 +127,73 @@ const footStyle = {
   textAlign: "center" as const,
 };
 
+/**
+ * N3.9 (2/2) : paragraphe édité EN PLACE, réservé au canvas (inline).
+ * contentEditable non contrôlé : la valeur ne part au moteur que sur
+ * blur, React ne réécrit jamais le DOM pendant la frappe. Entrée
+ * désactivée : un champ = une ligne, la structure des paragraphes se
+ * règle dans la colonne de droite.
+ */
+function EditeTexte({
+  value,
+  style,
+  onCommit,
+}: {
+  value: string;
+  style?: Record<string, unknown>;
+  onCommit: (texte: string) => void;
+}) {
+  return (
+    <span
+      className="cf-wys__edite"
+      contentEditable
+      suppressContentEditableWarning
+      spellCheck={false}
+      style={style as CSSProperties}
+      onBlur={(e) => {
+        const texte = (e.currentTarget.textContent ?? "").replace(/\r/g, "");
+        if (texte !== value) onCommit(texte);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.preventDefault();
+      }}
+    >
+      {value}
+    </span>
+  );
+}
+
 /** Découpe un corps de texte en paragraphes (séparés par une ligne vide). */
-function paragraphs(body: string, style?: Record<string, unknown>) {
-  return body
+function paragraphs(
+  body: string,
+  style?: Record<string, unknown>,
+  edit?: { index: number; onEdit: NlInlineEdit }
+) {
+  const parts = body
     .split(/\n{2,}/)
     .map((p) => p.trim())
-    .filter(Boolean)
-    .map((p, i) => (
-      <Text key={i} style={{ ...pStyle, ...(style ?? {}) }}>
-        {p}
-      </Text>
-    ));
+    .filter(Boolean);
+  return parts.map((p, i) => {
+    if (!edit) {
+      return (
+        <Text key={i} style={{ ...pStyle, ...(style ?? {}) }}>
+          {p}
+        </Text>
+      );
+    }
+    return (
+      <EditeTexte
+        key={i}
+        value={p}
+        style={{ ...pStyle, ...(style ?? {}) }}
+        onCommit={(texte) => {
+          const suivants = [...parts];
+          suivants[i] = texte;
+          edit.onEdit(edit.index, { body: suivants.join("\n\n") });
+        }}
+      />
+    );
+  });
 }
 
 /**
@@ -209,9 +281,11 @@ type EntreeVisible<B extends NlBlock = NlBlock> = { block: B; index: number };
 function BandeItineraires({
   cards,
   wrapBlock,
+  inline,
 }: {
   cards: EntreeVisible<NlRouteBlock>[];
   wrapBlock?: WrapBlock;
+  inline?: NlInlineEdit;
 }) {
   return (
     <Section
@@ -234,7 +308,19 @@ function BandeItineraires({
               const blocRoute = entry.block;
               const cell = (
                 <>
-                  <Text style={h2Style}>{blocRoute.card.townshipLabel}</Text>
+                  {inline ? (
+                    <EditeTexte
+                      value={blocRoute.card.townshipLabel}
+                      style={h2Style}
+                      onCommit={(texte) =>
+                        inline(entry.index, {
+                          card: { ...blocRoute.card, townshipLabel: texte },
+                        })
+                      }
+                    />
+                  ) : (
+                    <Text style={h2Style}>{blocRoute.card.townshipLabel}</Text>
+                  )}
                   {blocRoute.card.imageUrl ? (
                     <a
                       href={blocRoute.card.url}
@@ -255,8 +341,32 @@ function BandeItineraires({
                       />
                     </a>
                   ) : null}
-                  <Text style={pStyle}>{blocRoute.card.title}</Text>
-                  {blocRoute.note ? <Text style={pStyle}>{blocRoute.note}</Text> : null}
+                  {inline ? (
+                    <EditeTexte
+                      value={blocRoute.card.title}
+                      style={pStyle}
+                      onCommit={(texte) =>
+                        inline(entry.index, {
+                          card: { ...blocRoute.card, title: texte },
+                        })
+                      }
+                    />
+                  ) : (
+                    <Text style={pStyle}>{blocRoute.card.title}</Text>
+                  )}
+                  {blocRoute.note ? (
+                    inline ? (
+                      <EditeTexte
+                        value={blocRoute.note}
+                        style={pStyle}
+                        onCommit={(texte) =>
+                          inline(entry.index, { note: texte })
+                        }
+                      />
+                    ) : (
+                      <Text style={pStyle}>{blocRoute.note}</Text>
+                    )
+                  ) : null}
                   <BoutonModele href={blocRoute.card.url} label="Accédez" />
                 </>
               );
@@ -370,16 +480,40 @@ function LigneSortie({ card }: { card: NlEventCard }) {
  * Rendu d'un bloc autonome (tout sauf les itinéraires, regroupés en
  * bandes par le composant principal).
  */
-function BlocSansGroupe({ block, adhesionUrl }: { block: NlBlock; adhesionUrl: string }) {
+function BlocSansGroupe({
+  block,
+  index,
+  adhesionUrl,
+  inline,
+}: {
+  block: NlBlock;
+  index: number;
+  adhesionUrl: string;
+  inline?: NlInlineEdit;
+}) {
   switch (block.type) {
     case "intro":
       return (
-        <Section style={{ padding: "0 16px" }}>{paragraphs(block.body)}</Section>
+        <Section style={{ padding: "0 16px" }}>
+          {paragraphs(
+            block.body,
+            undefined,
+            inline ? { index, onEdit: inline } : undefined
+          )}
+        </Section>
       );
     case "events":
       return (
         <Section style={{ padding: "0 16px", marginTop: "12px" }}>
-          <Text style={h2Style}>{block.title ?? "Les sorties à venir"}</Text>
+          {inline ? (
+            <EditeTexte
+              value={block.title ?? "Les sorties à venir"}
+              style={h2Style}
+              onCommit={(texte) => inline(index, { title: texte })}
+            />
+          ) : (
+            <Text style={h2Style}>{block.title ?? "Les sorties à venir"}</Text>
+          )}
           {block.cards.map((c) => (
             <LigneSortie key={c.slug} card={c} />
           ))}
@@ -390,7 +524,15 @@ function BlocSansGroupe({ block, adhesionUrl }: { block: NlBlock; adhesionUrl: s
         <Section style={{ marginTop: "12px" }}>
           {block.title ? (
             <Section style={{ padding: "0 16px" }}>
-              <Text style={h2Style}>{block.title}</Text>
+              {inline ? (
+                <EditeTexte
+                  value={block.title}
+                  style={h2Style}
+                  onCommit={(texte) => inline(index, { title: texte })}
+                />
+              ) : (
+                <Text style={h2Style}>{block.title}</Text>
+              )}
             </Section>
           ) : null}
           {block.photos.map((p, i) => (
@@ -401,8 +543,22 @@ function BlocSansGroupe({ block, adhesionUrl }: { block: NlBlock; adhesionUrl: s
     case "texte":
       return (
         <Section style={{ padding: "0 16px", marginTop: "12px" }}>
-          {block.title ? <Text style={h2Style}>{block.title}</Text> : null}
-          {paragraphs(block.body)}
+          {block.title ? (
+            inline ? (
+              <EditeTexte
+                value={block.title}
+                style={h2Style}
+                onCommit={(texte) => inline(index, { title: texte })}
+              />
+            ) : (
+              <Text style={h2Style}>{block.title}</Text>
+            )
+          ) : null}
+          {paragraphs(
+            block.body,
+            undefined,
+            inline ? { index, onEdit: inline } : undefined
+          )}
         </Section>
       );
     case "image":
@@ -490,6 +646,7 @@ export function NewsletterContenu({
   siteUrl,
   unsubscribeUrl,
   wrapBlock,
+  inline,
 }: {
   title: string;
   publicationLabel: string;
@@ -497,6 +654,7 @@ export function NewsletterContenu({
   siteUrl: string; // base du site (liens internes complets)
   unsubscribeUrl: string; // lien de désinscription 1 clic (test ou envoi réel)
   wrapBlock?: WrapBlock;
+  inline?: NlInlineEdit; // N3.9 (2/2) : canvas seulement, jamais l'e-mail
 }) {
   const adhesionUrl = siteUrl + "/fr";
   const webVersionUrl = siteUrl + "/fr/newsletters";
@@ -580,10 +738,23 @@ export function NewsletterContenu({
 
       {items.map((item, i) => {
         if (item.kind === "bande") {
-          return <BandeItineraires key={i} cards={item.cards} wrapBlock={wrapBlock} />;
+          return (
+            <BandeItineraires
+              key={i}
+              cards={item.cards}
+              wrapBlock={wrapBlock}
+              inline={inline}
+            />
+          );
         }
         const contenu = (
-          <BlocSansGroupe key={i} block={item.block} adhesionUrl={adhesionUrl} />
+          <BlocSansGroupe
+            key={i}
+            block={item.block}
+            index={item.index}
+            adhesionUrl={adhesionUrl}
+            inline={inline}
+          />
         );
         const avecQr = qrRestant;
         qrRestant = false;
