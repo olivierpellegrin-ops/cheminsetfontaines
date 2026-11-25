@@ -10,14 +10,11 @@ import { type NlBlock } from "@/lib/newsletters";
  * bloc dans l'éditeur.
  *
  * Toutes les données sont PUBLIQUES (contenu du site et de ses
- * parcours, textes du bureau) : rien de personnel ici. Les vignettes
- * des panneaux restent servies par le CDN de l'ancien compte Mailchimp
- * (TODO : re-héberger dans public/images/brand/panels avec les PNG
- * sources quand Olivier les fournira).
+ * parcours, textes du bureau) : rien de personnel ici. Depuis le
+ * re-hébergement des images (N3.10), les vignettes des itinéraires
+ * sont servies par le site lui-même (public/images/routes), plus
+ * aucune dépendance au CDN de l'ancien compte Mailchimp.
  */
-
-const IMG =
-  "https://mcusercontent.com/d8ca3d7b03b51b0bc6b05e561/images/";
 
 const SITE = "https://www.cheminsetfontaines.fr";
 
@@ -53,7 +50,7 @@ export function modeleStandardBlocks(): NlBlock[] {
         slug: "les-moulinots",
         title: "Les Moulinots",
         townshipLabel: "Argentat",
-        imageUrl: IMG + "3bb2da2e-2e5c-a9c1-aeb2-9842ed62e2d4.png",
+        imageUrl: SITE + "/images/routes/les-moulinots-01.jpg",
         imageAlt: null,
         excerpt: "",
         url: SITE + "/fr/routes/les-moulinots",
@@ -66,7 +63,7 @@ export function modeleStandardBlocks(): NlBlock[] {
         slug: "puy-du-bassin",
         title: "Le Puy du Bassin",
         townshipLabel: "Auriac",
-        imageUrl: IMG + "7b2c200d-22a6-9eb4-34aa-f18138f688ea.png",
+        imageUrl: SITE + "/images/routes/puy-du-bassin-01.jpg",
         imageAlt: null,
         excerpt: "",
         url: SITE + "/fr/routes/puy-du-bassin",
@@ -79,7 +76,7 @@ export function modeleStandardBlocks(): NlBlock[] {
         slug: "le-trou-du-loup",
         title: "Le Trou du Loup",
         townshipLabel: "Bassignac Le Haut",
-        imageUrl: IMG + "0638d49b-4878-6add-1f05-68ac58836408.png",
+        imageUrl: SITE + "/images/routes/le-trou-du-loup-01.jpg",
         imageAlt: null,
         excerpt: "",
         url: SITE + "/fr/routes/le-trou-du-loup",
@@ -92,7 +89,7 @@ export function modeleStandardBlocks(): NlBlock[] {
         slug: "sentier-des-4-puys",
         title: "Le Sentier des 4 Puys",
         townshipLabel: "Sexcles",
-        imageUrl: IMG + "4ac51171-4219-fd76-c4c1-3f7576ec4044.png",
+        imageUrl: SITE + "/images/routes/sentier-des-4-puys-01.jpg",
         imageAlt: null,
         excerpt: "",
         url: SITE + "/fr/routes/sentier-des-4-puys",
@@ -105,7 +102,7 @@ export function modeleStandardBlocks(): NlBlock[] {
         slug: "le-gourdaloup",
         title: "Le Gourdaloup",
         townshipLabel: "St Cirgue La Loutre",
-        imageUrl: IMG + "c749e08c-bbcf-2d22-bcd2-3586c240c9ef.png",
+        imageUrl: SITE + "/images/routes/le-gourdaloup-01.jpg",
         imageAlt: null,
         excerpt: "",
         url: SITE + "/fr/routes/le-gourdaloup",
@@ -118,7 +115,7 @@ export function modeleStandardBlocks(): NlBlock[] {
         slug: "circuit-des-3-sapins",
         title: "Chemins des marchands",
         townshipLabel: "St Julien aux Bois",
-        imageUrl: IMG + "b3cec76b-4eae-2dbd-0472-19f67d474b0d.png",
+        imageUrl: SITE + "/images/routes/circuit-des-3-sapins-01.jpg",
         imageAlt: null,
         excerpt: "",
         url: SITE + "/fr/routes/circuit-des-3-sapins",
