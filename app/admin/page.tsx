@@ -3,17 +3,19 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Tableau de bord minimal (B0) : compteurs + derniers itinéraires modifiés.
- * La liste et le CRUD arrivent en B1/B2.
+ * Tableau de bord minimal (B0) : compteurs (itinéraires, sorties,
+ * newsletters, souscripteurs inscrits brique N1) + derniers itinéraires
+ * modifiés.
  */
 export default async function AdminHome() {
   const session = await auth();
   if (!session?.user) redirect("/admin/login");
 
-  const [routeCount, eventCount, newsletterCount] = await Promise.all([
+  const [routeCount, eventCount, newsletterCount, subscriberCount] = await Promise.all([
     prisma.route.count(),
     prisma.event.count(),
     prisma.newsletter.count(),
+    prisma.subscriber.count({ where: { status: "subscribed" } }),
   ]);
   const lastRoutes = await prisma.route.findMany({
     orderBy: { updatedAt: "desc" },
@@ -28,6 +30,10 @@ export default async function AdminHome() {
         <li><strong>{routeCount}</strong> itinéraires</li>
         <li><strong>{eventCount}</strong> sorties</li>
         <li><strong>{newsletterCount}</strong> newsletters</li>
+        <li>
+          <strong>{subscriberCount}</strong>{" "}
+          <a href="/admin/subscribers">souscripteurs inscrits</a>
+        </li>
       </ul>
       <h2>Derniers itinéraires modifiés</h2>
       <p><a href="/admin/routes" className="cf-admin__allroutes">Voir tous les itinéraires →</a></p>

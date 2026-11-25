@@ -23,7 +23,10 @@ type MailTransport = ReturnType<typeof nodemailer.createTransport>;
  */
 
 /** Types d'e-mails émis (catalogue spec §5.3, enrichi par les briques N1+). */
-export type MailKind = "contact_notification";
+export type MailKind =
+  | "contact_notification"
+  | "nl_confirmation"
+  | "nl_bienvenue";
 
 export interface SendMailInput {
   kind: MailKind;

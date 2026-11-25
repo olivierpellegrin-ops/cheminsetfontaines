@@ -153,6 +153,14 @@ model Subscriber {
   status           SubscriberStatus   @default(pending)
   source           SubscriptionSource @default(formulaire)
   confirmedAt      DateTime?
+  // Brique N1 « Remplacement Mailchimp » (spec du 25/11/2026, §4.1/§5.2) :
+  // double opt-in interne. confirmToken : lien de confirmation à usage
+  // unique (32 octets hex), valable 30 jours après son envoi ; unsubToken :
+  // lien de désinscription en 1 clic ; lastEmailAt : garde anti-renvoi
+  // (max 1 e-mail de confirmation par heure) et base de la validité du lien.
+  confirmToken     String?            @unique
+  unsubToken       String?            @unique
+  lastEmailAt      DateTime?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 }

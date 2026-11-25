@@ -27,7 +27,9 @@
       acté le 22/11 (la carte n'est pas accessible aux visiteurs actuellement)
 - [ ] Chantier « Remplacement Mailchimp » (spec du 25/11/2026, dev interne,
       D1-D6 actées) : [x] N0 socle MailService (SMTP Gandi + Mailpit local +
-      notification contact) ; [ ] N1 double opt-in souscripteurs ; [ ] N2
+      notification contact) ; [x] N1 double opt-in souscripteurs (confirmation,
+      bienvenue, désinscription 1 clic, admin souscripteurs, script import
+      Mailchimp — l'import réel est une procédure bureau, hors repo) ; [ ] N2
       parcours e-mails adhérents ; [ ] N3 éditeur de newsletters ; [ ] N4
       envoi de masse + DNS SPF/DKIM/DMARC ; [ ] N5 réseaux sociaux assistés
 - [ ] Import abonnés Mailchimp (39 actifs en `subscribed`, marquage `import` ;
