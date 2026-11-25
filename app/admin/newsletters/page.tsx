@@ -3,7 +3,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { blocksHash, parseBlocks } from "@/lib/newsletters";
-import { generateNewsletterOfMonth } from "@/app/actions/admin-newsletters";
+import { generateNewsletterOfMonth, createBlankNewsletter } from "@/app/actions/admin-newsletters";
 import NewsletterRowActions from "./newsletter-row-actions";
 import "./newsletters.css";
 
@@ -51,6 +51,15 @@ export default async function AdminNewslettersPage() {
       <div className="cf-admin__head">
         <h1>Newsletters</h1>
         <div className="cf-admin__head-right">
+          <form action={createBlankNewsletter} className="cf-nl__new">
+            <input
+              type="text"
+              name="title"
+              required
+              placeholder="Titre du numéro (ex : Message spécial…)"
+            />
+            <button type="submit">Nouvelle newsletter</button>
+          </form>
           <form action={generateNewsletterOfMonth}>
             <button type="submit">
               Générer la newsletter du mois

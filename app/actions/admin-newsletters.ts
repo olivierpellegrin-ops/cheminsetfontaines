@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendMail } from "@/lib/mail/service";
 import { emailBaseUrl } from "@/lib/mail/notifications";
+import { normalizeSlug } from "@/lib/slug";
 import { generateMonthlyNewsletter, renderNewsletter } from "@/lib/newsletter-engine";
 import { blocksHash, parseBlocks, type NlBlock } from "@/lib/newsletters";
 
@@ -59,6 +60,9 @@ export async function saveNewsletter(
   const summary = String(fd.get("summary") ?? "").trim();
   const coverImageUrl = String(fd.get("coverImageUrl") ?? "").trim() || null;
   const featured = String(fd.get("featured") ?? "").trim() || null;
+  // Libellé « Numéro » éditable (ex : « Septembre 2026 » ou « Message
+  // spécial ») : champ vide = inchangé (garde anti-effacement accidentel).
+  const publicationLabel = String(fd.get("publicationLabel") ?? "").trim();
 
   let blocks: NlBlock[];
   try {
@@ -85,6 +89,7 @@ export async function saveNewsletter(
       summary,
       coverImageUrl,
       featured,
+      ...(publicationLabel ? { publicationLabel } : {}),
       blocks: blocks as unknown as Prisma.InputJsonValue,
       ...(testInvalidated ? { testedAt: null, testedBlocksHash: null } : {}),
       ...(nl.status === "pret" ? { status: "brouillon" as const } : {}),
@@ -212,4 +217,91 @@ export async function deleteNewsletterDraft(fd: FormData): Promise<void> {
   await prisma.newsletter.delete({ where: { id } });
 
   revalidatePath("/admin/newsletters");
+}
+
+/**
+ * Duplication d'un numéro (retour Olivier du 25/11 : « newsletter
+ * exceptionnelle » — message particulier, don, nouvel évènement) :
+ * la CONCEPTION entière (blocs, couverture, à la une) est copiée en
+ * brouillon, titre et libellé « Numéro » restent éditables dans
+ * l'éditeur. Le test d'envoi repart de zéro (jamais hérité : la copie
+ * est une nouvelle version à relire et re-tester).
+ */
+export async function duplicateNewsletter(fd: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user) redirect("/admin/login");
+
+  const id = String(fd.get("id") ?? "");
+  const nl = await prisma.newsletter.findUnique({ where: { id } });
+  if (!nl) return;
+
+  // Slug unique : <slug>-copie, puis suffixe numérique si collision.
+  let slug = (nl.slug + "-copie").slice(0, 80);
+  let n = 2;
+  while (await prisma.newsletter.findUnique({ where: { slug } })) {
+    slug = (nl.slug + "-copie-" + n).slice(0, 80);
+    n++;
+  }
+
+  const copy = await prisma.newsletter.create({
+    data: {
+      slug,
+      title: nl.title + " (copie)",
+      publicationDate: new Date(),
+      publicationLabel: nl.publicationLabel,
+      summary: nl.summary,
+      coverImageUrl: nl.coverImageUrl,
+      featured: nl.featured,
+      status: "brouillon",
+      blocks: nl.blocks ?? Prisma.DbNull,
+      snapshot: nl.snapshot ?? Prisma.DbNull,
+    },
+  });
+
+  revalidatePath("/admin/newsletters");
+  redirect("/admin/newsletters/" + copy.id + "/editer");
+}
+
+/**
+ * Numéro vierge (retour Olivier du 25/11) : édito vide + invitation à
+ * adhérer, tout le reste se compose dans l'éditeur via les blocs. Le
+ * titre saisi devient le libellé « Numéro » (éditable ensuite).
+ */
+export async function createBlankNewsletter(fd: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user) redirect("/admin/login");
+
+  const title = String(fd.get("title") ?? "").trim();
+  if (!title) {
+    revalidatePath("/admin/newsletters");
+    return;
+  }
+
+  const base = normalizeSlug(title) || "newsletter";
+  let slug = base;
+  let n = 2;
+  while (await prisma.newsletter.findUnique({ where: { slug } })) {
+    slug = (base + "-" + n).slice(0, 80);
+    n++;
+  }
+
+  const blocks: NlBlock[] = [
+    { type: "intro", body: "" },
+    { type: "adhesion" },
+  ];
+
+  const nl = await prisma.newsletter.create({
+    data: {
+      slug,
+      title,
+      publicationDate: new Date(),
+      publicationLabel: title,
+      summary: "",
+      status: "brouillon",
+      blocks: blocks as unknown as Prisma.InputJsonValue,
+    },
+  });
+
+  revalidatePath("/admin/newsletters");
+  redirect("/admin/newsletters/" + nl.id + "/editer");
 }

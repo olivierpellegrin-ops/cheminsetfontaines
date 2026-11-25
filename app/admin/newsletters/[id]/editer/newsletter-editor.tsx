@@ -27,6 +27,7 @@ import {
 export default function NewsletterEditor({
   id,
   initialTitle,
+  initialPublicationLabel,
   initialSummary,
   initialCoverImageUrl,
   initialFeatured,
@@ -37,6 +38,7 @@ export default function NewsletterEditor({
 }: {
   id: string;
   initialTitle: string;
+  initialPublicationLabel: string;
   initialSummary: string;
   initialCoverImageUrl: string;
   initialFeatured: string;
@@ -136,6 +138,14 @@ export default function NewsletterEditor({
             <label>
               Titre du numéro
               <input type="text" name="title" defaultValue={initialTitle} />
+            </label>
+            <label>
+              Numéro (libellé affiché dans la liste et l&apos;archive)
+              <input
+                type="text"
+                name="publicationLabel"
+                defaultValue={initialPublicationLabel}
+              />
             </label>
             <label>
               Résumé

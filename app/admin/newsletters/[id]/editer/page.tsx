@@ -32,6 +32,7 @@ export default async function EditNewsletterPage({
     <NewsletterEditor
       id={nl.id}
       initialTitle={nl.title}
+      initialPublicationLabel={nl.publicationLabel}
       initialSummary={nl.summary}
       initialCoverImageUrl={nl.coverImageUrl ?? ""}
       initialFeatured={nl.featured ?? ""}
