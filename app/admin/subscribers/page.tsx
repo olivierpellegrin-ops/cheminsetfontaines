@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import SubscriberRowActions from "./subscriber-row-actions";
+import "./subscribers.css";
 
 /**
  * Brique N1 (spec §5.2) : liste des souscripteurs à la newsletter —
@@ -55,7 +56,7 @@ export default async function AdminSubscribersPage({
     d ? d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "—";
 
   return (
-    <section>
+    <section className="cf-admin__subscribers">
       <div className="cf-admin__head">
         <h1>Souscripteurs</h1>
         <div className="cf-admin__head-right">
