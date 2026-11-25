@@ -29,9 +29,10 @@ import {
  * e-mails transactionnels restent sur BaseEmail. Le lien de
  * désinscription est paramétrique (test = Mailpit, envoi réel = brique N4).
  *
- * NB : images d'identité (logos, QR, icônes sociales) encore servies par
- * les CDN du modèle d'origine (TODO N4/N5 : les re-héberger dans
- * public/images/brand quand le PNG source est fourni).
+ * NB : depuis le 27/11, les images d'identité (logos, QR, icônes
+ * sociales) sont re-hébergées dans public/images/brand — copies
+ * conformes des fichiers des CDN Mailchimp/Framer, plus aucune
+ * dépendance externe pour l'e-mail.
  *
  * N3.9 : le rendu du CONTENU est exporté séparément (NewsletterContenu)
  * pour être affiché tel quel dans le canvas WYSIWYG de l'admin — même
@@ -62,27 +63,14 @@ const C = {
 
 const FONT = "'Helvetica Neue', Helvetica, Arial, Verdana, sans-serif";
 
-/** Logo d'en-tête du modèle (416 px), lié vers le site. */
-const LOGO_HEADER =
-  "https://brand-assets.mailchimp.com/01KZF00C714Y4NW3R6FMW5YD1M.png";
-
-/** Logo de pied du modèle (434 px). */
-const LOGO_FOOTER =
-  "https://brand-assets.mailchimp.com/01KZF00BN02JPBMEBPRBZR994K.png";
-
-/** QR « Scannez-moi » du modèle (110 px) : pointe vers le site public. */
-const QR_SITE =
-  "https://mcusercontent.com/d8ca3d7b03b51b0bc6b05e561/images/85e8a7e3-4809-92ba-69bb-6e46d8dced01.png";
-
-/** Icônes sociales du modèle (24 px, variante sombre, CDN Mailchimp). */
-const ICONS = {
-  facebook:
-    "https://cdn-images.mailchimp.com/icons/social-block-v3/block-icons-v3/facebook-icon-dark-40.png",
-  instagram:
-    "https://cdn-images.mailchimp.com/icons/social-block-v3/block-icons-v3/instagram-icon-dark-40.png",
-  website:
-    "https://cdn-images.mailchimp.com/icons/social-block-v3/block-icons-v3/website-icon-dark-40.png",
-};
+/**
+ * Images d'identité re-hébergées dans public/images/brand (logos, QR,
+ * icônes sociales). L'E-MAIL exige des URL absolues : elles sont
+ * construites depuis siteUrl (le canvas WYSIWYG de l'admin et la
+ * version navigateur passent par la même base).
+ */
+const brand = (siteUrl: string, fichier: string) =>
+  siteUrl + "/images/brand/" + fichier;
 
 /** Paragraphe standard du modèle : 14 px gras #4d6b4b centré, interligne 1,5. */
 const pStyle = {
@@ -182,12 +170,12 @@ function BoutonModele({ href, label }: { href: string; label: string }) {
 }
 
 /** QR « Scannez-moi » du modèle : image 110 px centrée, cliquable vers le site. */
-function QrModele({ siteUrl }: { siteUrl: string }) {
+function QrModele({ siteUrl, qrSrc }: { siteUrl: string; qrSrc: string }) {
   return (
     <Section align="center" style={{ padding: "12px 24px" }}>
       <a href={siteUrl} target="_blank" style={{ display: "block" }}>
         <img
-          src={QR_SITE}
+          src={qrSrc}
           alt="Scannez-moi : le site Chemins et Fontaines"
           width={110}
           style={{
@@ -506,12 +494,19 @@ export function NewsletterContenu({
   title: string;
   publicationLabel: string;
   blocks: NlBlock[];
-  siteUrl: string; // base du site (liens internes complets)
+  siteUrl: string; // base du site (liens interns complets)
   unsubscribeUrl: string; // lien de désinscription 1 clic (test ou envoi réel)
   wrapBlock?: WrapBlock;
 }) {
   const adhesionUrl = siteUrl + "/fr";
   const webVersionUrl = siteUrl + "/fr/newsletters";
+  const logoHeader = brand(siteUrl, "mail-logo-header.png");
+  const logoFooter = brand(siteUrl, "mail-logo-footer.png");
+  const icons = {
+    facebook: brand(siteUrl, "icon-facebook.png"),
+    instagram: brand(siteUrl, "icon-instagram.png"),
+    website: brand(siteUrl, "icon-website.png"),
+  };
   const visibles: EntreeVisible[] = blocks
     .map((block, index) => ({ block, index }))
     .filter((e) => !e.block.hidden);
@@ -562,7 +557,7 @@ export function NewsletterContenu({
       <Section align="center" style={{ padding: "12px 24px" }}>
         <a href={siteUrl} target="_blank" style={{ display: "block" }}>
           <img
-            src={LOGO_HEADER}
+            src={logoHeader}
             alt="Chemins et Fontaines"
             width={416}
             style={{
@@ -595,7 +590,7 @@ export function NewsletterContenu({
         return avecQr ? (
           <div key={i} style={{ display: "contents" }}>
             {wrapBlock ? wrapBlock(item.index, item.block, contenu) : contenu}
-            <QrModele siteUrl={siteUrl} />
+            <QrModele siteUrl={siteUrl} qrSrc={brand(siteUrl, "qr-site.png")} />
           </div>
         ) : wrapBlock ? (
           wrapBlock(item.index, item.block, contenu)
@@ -611,17 +606,17 @@ export function NewsletterContenu({
             <tr>
               <td style={{ padding: "3px 12px" }}>
                 <a href="https://www.facebook.com/profile.php?id=61568993068777" target="_blank">
-                  <img src={ICONS.facebook} width={24} height={24} alt="Facebook" className="mceSocialFollowImage" style={{ display: "block", border: 0 }} />
+                  <img src={icons.facebook} width={24} height={24} alt="Facebook" className="mceSocialFollowImage" style={{ display: "block", border: 0 }} />
                 </a>
               </td>
               <td style={{ padding: "3px 12px" }}>
                 <a href="https://www.instagram.com/" target="_blank">
-                  <img src={ICONS.instagram} width={24} height={24} alt="Instagram" className="mceSocialFollowImage" style={{ display: "block", border: 0 }} />
+                  <img src={icons.instagram} width={24} height={24} alt="Instagram" className="mceSocialFollowImage" style={{ display: "block", border: 0 }} />
                 </a>
               </td>
               <td style={{ padding: "3px 12px" }}>
                 <a href={siteUrl} target="_blank">
-                  <img src={ICONS.website} width={24} height={24} alt="Site web" className="mceSocialFollowImage" style={{ display: "block", border: 0 }} />
+                  <img src={icons.website} width={24} height={24} alt="Site web" className="mceSocialFollowImage" style={{ display: "block", border: 0 }} />
                 </a>
               </td>
             </tr>
@@ -654,7 +649,7 @@ export function NewsletterContenu({
       <Section align="center" style={{ padding: "12px 24px", backgroundColor: C.blanc }}>
         <a href={siteUrl} target="_blank" style={{ display: "block" }}>
           <img
-            src={LOGO_FOOTER}
+            src={logoFooter}
             alt="Chemins et Fontaines"
             width={434}
             style={{
