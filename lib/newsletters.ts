@@ -8,6 +8,9 @@
  * génération (redondance volontaire avec Newsletter.snapshot) : le bureau
  * réordonne, masque, édite sans que les données vivent du site ne changent
  * le numéro sous ses pieds entre la rédaction et l'envoi.
+ *
+ * N3.6 : trois blocs de composition calés sur le modèle Mailchimp —
+ * image, bouton, séparateur — pour les numéros exceptionnels.
  */
 
 export interface NlEventCard {
@@ -40,6 +43,9 @@ export type NlBlock =
   | { type: "route"; title?: string; card: NlRouteCard; note?: string; hidden?: boolean }
   | { type: "album"; title?: string; photos: NlPhoto[]; hidden?: boolean }
   | { type: "texte"; title?: string; body: string; hidden?: boolean }
+  | { type: "image"; src: string; alt?: string; width?: number; href?: string; hidden?: boolean }
+  | { type: "bouton"; label: string; href: string; hidden?: boolean }
+  | { type: "separateur"; hidden?: boolean }
   | { type: "adhesion"; hidden?: boolean };
 
 export const BLOCK_TYPE_LABELS: Record<NlBlock["type"], string> = {
@@ -48,6 +54,9 @@ export const BLOCK_TYPE_LABELS: Record<NlBlock["type"], string> = {
   route: "Itinéraire à la une",
   album: "Album photo",
   texte: "Texte libre",
+  image: "Image",
+  bouton: "Bouton",
+  separateur: "Séparateur",
   adhesion: "Invitation à adhérer",
 };
 
@@ -65,7 +74,7 @@ export function parseBlocks(raw: unknown): NlBlock[] {
     (b): b is NlBlock =>
       typeof b === "object" &&
       b !== null &&
-      ["intro", "events", "route", "album", "texte", "adhesion"].includes(
+      ["intro", "events", "route", "album", "texte", "image", "bouton", "separateur", "adhesion"].includes(
         (b as { type?: unknown }).type as string
       )
   );
