@@ -29,8 +29,11 @@
       D1-D6 actées) : [x] N0 socle MailService (SMTP Gandi + Mailpit local +
       notification contact) ; [x] N1 double opt-in souscripteurs (confirmation,
       bienvenue, désinscription 1 clic, admin souscripteurs, script import
-      Mailchimp — l'import réel est une procédure bureau, hors repo) ; [ ] N2
-      parcours e-mails adhérents ; [ ] N3 éditeur de newsletters ; [ ] N4
+      Mailchimp — l'import réel est une procédure bureau, hors repo) ; [x] N2 parcours e-mails
+      adhérents (confirmation à jeton 30 j, fiche au bureau, admin membres +
+      export CSV, bienvenue à la création, rappels de renouvellement,
+      suppression RGPD) ; [ ] N3
+      éditeur de newsletters ; [ ] N4
       envoi de masse + DNS SPF/DKIM/DMARC ; [ ] N5 réseaux sociaux assistés
 - [ ] Import abonnés Mailchimp (39 actifs en `subscribed`, marquage `import` ;
       5 `cleaned` exclues — décision D4) — hors repo, procédure bureau
