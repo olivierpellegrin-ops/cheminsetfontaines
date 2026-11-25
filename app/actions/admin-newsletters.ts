@@ -11,6 +11,7 @@ import { emailBaseUrl } from "@/lib/mail/notifications";
 import { normalizeSlug } from "@/lib/slug";
 import { generateMonthlyNewsletter, renderNewsletter } from "@/lib/newsletter-engine";
 import { blocksHash, parseBlocks, type NlBlock } from "@/lib/newsletters";
+import { modeleStandardBlocks } from "@/lib/newsletter-modele";
 
 /**
  * Server Actions du back-office (brique N3, spec §6.3) : génération du
@@ -296,6 +297,51 @@ export async function createBlankNewsletter(fd: FormData): Promise<void> {
       title,
       publicationDate: new Date(),
       publicationLabel: title,
+      summary: "",
+      status: "brouillon",
+      blocks: blocks as unknown as Prisma.InputJsonValue,
+    },
+  });
+
+  revalidatePath("/admin/newsletters");
+  redirect("/admin/newsletters/" + nl.id + "/editer");
+}
+
+/**
+ * « Créer d'après le modèle standard » (brique N3.7) : nouveau numéro
+ * parti de la newsletter de septembre 2026 reconstruite en blocs
+ * (édito, 6 itinéraires commune/vignette/lien, texte du bureau,
+ * invitation à adhérer) — la structure complète du modèle Mailchimp,
+ * prête à retoucher ou à dupliquer.
+ */
+export async function createNewsletterModele(fd: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user) redirect("/admin/login");
+
+  const title = String(fd.get("title") ?? "").trim();
+  const numero = String(fd.get("numero") ?? "").trim();
+  if (!title) {
+    revalidatePath("/admin/newsletters");
+    return;
+  }
+
+  const label = numero || title;
+  const base = normalizeSlug(label) || "newsletter";
+  let slug = base;
+  let n = 2;
+  while (await prisma.newsletter.findUnique({ where: { slug } })) {
+    slug = (base + "-" + n).slice(0, 80);
+    n++;
+  }
+
+  const blocks = modeleStandardBlocks();
+
+  const nl = await prisma.newsletter.create({
+    data: {
+      slug,
+      title,
+      publicationDate: new Date(),
+      publicationLabel: label,
       summary: "",
       status: "brouillon",
       blocks: blocks as unknown as Prisma.InputJsonValue,
