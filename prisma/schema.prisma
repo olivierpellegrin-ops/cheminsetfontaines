@@ -66,8 +66,8 @@ model Commune {
   // Truth de regroupement des itinéraires (Q16) ; le libellé d'affichage
   // historique (ex. "St-Chamand") est conservé sur Route.townshipLabel.
   routes        Route[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 }
 
 model Route {
