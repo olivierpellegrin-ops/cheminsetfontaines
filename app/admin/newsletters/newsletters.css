@@ -1,6 +1,29 @@
 /* Brique N3 : concepteur de newsletters — boutons d'action à la taille du
    contenu (même correctif que members : la grille fixe 82/96/96 px de
    admin.css est dédiée à la liste itinéraires). */
+.cf-admin__newsletters .cf-admin__head-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cf-admin__newsletters .cf-admin__head-right form {
+  margin: 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cf-admin__newsletters .cf-admin__head-right input[type="text"] {
+  font: inherit;
+  padding: 8px 10px;
+  min-width: 280px;
+  border: 1px solid #c9cec7;
+  border-radius: 6px;
+  background: #fff;
+}
+
 .cf-admin__newsletters .cf-admin__row-actions {
   display: flex;
   gap: 8px;
