@@ -1,12 +1,17 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { notifyContactMessage } from "@/lib/mail/notifications";
 import { SITE } from "@/lib/site";
 
 /**
  * v0.1 : les soumissions sont persistées localement (source de vérité).
- * v0.2 (Brevo) : relay transactionnel + inscription liste (clé dans
- * .env, jamais dans le repo) — points d'extension marqués TODO(v2).
+ * Chantier « Remplacement Mailchimp » (spec du 25/11/2026, décisions D1-D6
+ * actées : développement interne, PAS de SaaS emailing) :
+ * - N0 (cette brique) : sendMessage notifie le bureau via le MailService
+ *   interne (SMTP de la mailbox Gandi, journal EmailOutbox).
+ * - N1 : double opt-in souscripteurs (TODO ci-dessous).
+ * - N2 : parcours e-mails des adhérents (TODO ci-dessous).
  */
 
 export type FormState = { ok: boolean; message: string };
@@ -42,7 +47,8 @@ export async function subscribe(
     update: { firstName, lastName, status: "pending" },
   });
 
-  // TODO(v2 Brevo) : e-mail de double opt-in + inscription liste Brevo.
+  // TODO(N1) : e-mail de double opt-in (lien de confirmation, Subscriber
+  // pending -> subscribed, spec §5.2) via lib/mail/notifications.
 
   return {
     ok: true,
@@ -79,9 +85,8 @@ export async function requestMembership(
     },
   });
 
-  // TODO(v2 Brevo) : notification à NOTIFY_EMAIL (contact@cheminsetfontaines.fr)
-  // + inscription liste avec attribut source=adhesion -> e-mail de bienvenue
-  // unique (abonnés et adhérents, spec §9.8).
+  // TODO(N2) : e-mail de confirmation de demande à l'adhérent + notification
+  // du bureau à NOTIFY_EMAIL (parcours adhérents, spec §5.1).
 
   return {
     ok: true,
@@ -109,7 +114,13 @@ export async function sendMessage(
 
   await prisma.contactMessage.create({ data: { name, email, message } });
 
-  // TODO(v2 Brevo) : notification à NOTIFY_EMAIL.
+  // N0 : notification du bureau (MailService interne). Toujours APRÈS la
+  // persistance, et jamais bloquante pour le visiteur.
+  try {
+    await notifyContactMessage({ name, email, message });
+  } catch (err) {
+    console.error("[mail] notification de message de contact impossible :", err);
+  }
 
   return {
     ok: true,

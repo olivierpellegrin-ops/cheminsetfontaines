@@ -17,5 +17,17 @@ services:
       timeout: 5s
       retries: 10
 
+  # Brique N0 « Remplacement Mailchimp » : mailbox factice pour tester TOUS
+  # les parcours e-mails en local sans émettre un seul vrai message.
+  #   SMTP  : localhost:1025  (-> SMTP_HOST/SMTP_PORT du .env)
+  #   UI    : http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: cheminsetfontaines-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 volumes:
   cf_pgdata:
