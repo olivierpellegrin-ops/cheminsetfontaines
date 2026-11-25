@@ -170,10 +170,9 @@ Recommandations : relation many-to-many **Events ↔ ROUTES** (aujourd'hui le li
 **Éclatage du champ `Details`** (texte libre au format non constant : "12 kms - dénivellé 280m" / "16 km · 772 m D+ · niveau modéré") :
 
 | Champ cible | Type | Valeurs |
-|---|---|---|
-| `distance_km` | `numeric` | 6, 9, 12, 13, 14, 15, 16, 20… |
+|---|---|---|---n| `distance_km` | `numeric` | 6, 9, 12, 13, 14, 15, 16, 20… |
 | `elevation_gain_m` | `numeric` | 100, 127, 167, 280, 466, 590, 772… |
-| `difficulty` | `enum` | `facile`, `moyen`, `difficile` ("modéré" → `moyen` à la migration) |
+| `difficulty` | `enum` | `facile`, `moyen`, `difficile` ("modéré" → `moyen` à la migration) |.
 
 Uniquement nécessaire pour badges, **filtres de la carte interactive** et cohérence typographique.
 
@@ -419,7 +418,7 @@ Sources : copie HTTrack du site (`02_FrontOffice/cheminsetfontaines_2026/`, HTML
 | Section Title (H2) | 38 px / interligne 1.1 |
 | Body | 17 px / interligne 1.6, **Fira Sans** (regular, medium, semibold) |
 
-**Composants du panneau Assets :** Association Layout (gabarit), Mobile Navigation, Contact Submit Button ; styles de liens Navigation / Section / Footer. **Code components (.tsx)** : les 5 sources ont été copiées le 22/11/2026 au soir (dossier `02_FrontOffice/`). Lecture faite : `NamedGPXDownload.tsx` (bouton de téléchargement GPX avec nommage et fallback CORS, logique réutilisable telle quelle), `RoutePhotoGallery.tsx` (grille responsive 3/2/1 colonnes, lightbox clavier, ratio 4/3, rayon 14 px : comportement à reproduire exactement), `MailchimpNewsletterSignup.tsx` (formulaire EMAIL + honeypot → ~~à réécrire pour Brevo~~ **réécrit en server action interne + double opt-in, cf. §9.2**), `XaintrieTownshipMap.tsx` (cf. §9.3), `XaintrieTownshipMap_.tsx` (le gabarit de démarrage Framer, sans valeur métier). Seul `Examples.tsx` (démo Framer) n'a pas été copié : sans objet.
+**Composants du panneau Assets :** Association Layout (gabarit), Mobile Navigation, Contact Submit Button ; styles de liens Navigation / Section / Footer. **Code components (.tsx)** : les 5 sources ont été copiées le 22/11/2026 au soir (dossier `02_FrontOffice/`). Lecture faite : `NamedGPXDownload.tsx` (bouton de téléchargement GPX avec nommage et fallback CORS, logique réutilisable telle quel), `RoutePhotoGallery.tsx` (grille responsive 3/2/1 colonnes, lightbox clavier, ratio 4/3, rayon 14 px : comportement à reproduire exactement), `MailchimpNewsletterSignup.tsx` (formulaire EMAIL + honeypot → ~~à réécrire pour Brevo~~ **réécrit en server action interne + double opt-in, cf. §9.2**), `XaintrieTownshipMap.tsx` (cf. §9.3), `XaintrieTownshipMap_.tsx` (le gabarit de démarrage Framer, sans valeur métier). Seul `Examples.tsx` (démo Framer) n'a pas été copié : sans objet.
 
 **Méthode de reproduction** : extraction des design tokens ci-dessus + mesures d'espacement et grilles depuis les blocs de style des pages HTTrack (noms de sections sémantiques via `data-framer-name`), puis reconstruction en CSS propre (tokens + composants Tailwind/CSS modules). Le CSS machine Framer (classes hachées `framer-*`) n'est pas réutilisé tel quel, seulement lu comme référence. Les interactions JS (menu mobile, hover, transitions) sont réimplémentées nativement. Contrepartie assumée : fidélité visuelle quasi identique, code maintenable.
 
@@ -438,7 +437,7 @@ Le bouton « Adhérer à l'association » de la home (bloc `Join the Association
 ### 9.8 Relevé de la chaîne Mailchimp actuelle (22/11/2026, documents fournis par Olivier)
 
 **Formulaire intégré** (`https://cheminsetfontaines.us19.list-manage.com/subscribe?u=d8ca3d7b03b51b0bc6b05e561&id=1782fcea85`, servi en JS via form-assets.mailchimp.com, formId 536178 / compte 261472047 — non interrogeable en curl, relevé depuis la capture) :
-- Titre « Chemins et Fontaines », intro : « Merci de bien vouloir remplir le formulaire suivant pour nous inscrire à la liste. »
+- Titre « Chemins et Fontaines », intro : « Merci de bien vouloir remplir le formulaire suivant pour vous inscrire à notre lettre d'informations. »
 - Champs : **Adresse e-mail*** (requis), Prénom, Nom de famille ; bouton « Inscrivez-vous ».
 
 **Page de confirmation** (après double opt-in) : « Votre inscription est confirmée. Vous recevrez notre lettre d'informations **tous les 1er de chaque mois**. » + lien « Gérer vos préférences d'inscription ». → cadence newsletter à conserver en §9.2.
@@ -473,7 +472,7 @@ Contrainte : chaque module (`/lib/strava-agent/`, composants carte, formulaires,
 
 ## 11. Inconnues / questions ouvertes
 
-Q4 (remplacement de Mailchimp) et Q5 (paiement des dons) du document v1.0 sont traités en §9.2 et §9.4 ; elles ont leurs relais décisionnels en Q15 et Q17.
+Q4 (remplacement de Mailchimp) et Q5 (paiement des dons) du document v1.0 sont traitées en §9.2 et §9.4 ; elles ont leurs relus décisionnels en Q15 et Q17.
 
 **Décision d'Olivier du 22-23/11/2026 (soir)** : lancement acté le 23/11. **Socle v0.1 construit** (Next.js 15 + TS strict + Prisma/PostgreSQL + seed depuis les CSV Framer, 9 pages FR + squelette EN, modale adhésion à l'identique, formulaires serveur, téléchargement GPX nommé via /api/gpx, Gallery 3/2/1 + lightbox clavier, sitemap/robots, CI GitHub Actions, sécurité : zéro secret, zéro donnée personnelle committée). Reste à : ~~créer le repo GitHub (le connecteur a le droit de pusher mais pas de créer), pousser le code, `npm install` + docker compose + seed, puis portage pixel + carte SVG + Brevo + back office~~ **(v1.2 : tout ceci est livré, voir `docs/ROADMAP.md` ; seule la carte SVG reste en attente, non essentielle)**. Traces GPX de 25 itinéraires téléchargées depuis les assets Framer (18 Mo, auto-hébergeables).
 
