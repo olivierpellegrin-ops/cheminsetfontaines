@@ -16,6 +16,8 @@ import "./members.css";
  * confirmation, validation de la cotisation, suppression RGPD) et
  * membres (statut, historique complet des saisons payées, droit à
  * l'image, relances de cotisation, export CSV).
+ * Retouche recette : prénom et nom séparés, adresse complète visible,
+ * une seule ligne par adhérent, badges de statut agrandis (members.css).
  * Le statut « à renouveler » est DÉRIVÉ (membre actif sans cotisation
  * de la saison en cours) : jamais stocké, recalculé ici.
  * La relance suit la règle « anniversaire » (lib/renewal.ts) : jamais
@@ -154,9 +156,11 @@ export default async function AdminMembersPage({
         <table className="cf-admin__table">
           <thead>
             <tr>
+              <th>Prénom</th>
               <th>Nom</th>
               <th>E-mail</th>
               <th>Téléphone</th>
+              <th>Adresse</th>
               <th>Demandé le</th>
               <th>Confirmé le</th>
               <th>Statut</th>
@@ -177,11 +181,15 @@ export default async function AdminMembersPage({
                   : "cf-admin__badge--draft";
               return (
                 <tr key={r.id}>
-                  <td className="cf-admin__cell-title">
-                    {[r.civilite, r.firstName, r.lastName].filter(Boolean).join(" ") || "—"}
-                  </td>
+                  <td>{r.firstName || "—"}</td>
+                  <td className="cf-admin__cell-title">{r.lastName || "—"}</td>
                   <td>{r.email}</td>
                   <td>{r.phone || "—"}</td>
+                  <td>
+                    {[r.address, [r.postalCode, r.city].filter(Boolean).join(" ")]
+                      .filter(Boolean)
+                      .join(", ") || "—"}
+                  </td>
                   <td>{r.createdAt.toLocaleDateString("fr-FR")}</td>
                   <td>{r.confirmedAt ? r.confirmedAt.toLocaleDateString("fr-FR") : "—"}</td>
                   <td>
@@ -246,8 +254,10 @@ export default async function AdminMembersPage({
         <table className="cf-admin__table">
           <thead>
             <tr>
+              <th>Prénom</th>
               <th>Nom</th>
               <th>E-mail</th>
+              <th>Adresse</th>
               <th>Statut</th>
               <th>Saisons payées</th>
               <th>Droit à l&apos;image</th>
@@ -260,10 +270,14 @@ export default async function AdminMembersPage({
               const renouveler = m.status === "actif" && !hasCurrentSeason(m);
               return (
                 <tr key={m.id}>
-                  <td className="cf-admin__cell-title">
-                    {[m.civilite, m.firstName, m.lastName].filter(Boolean).join(" ") || "—"}
-                  </td>
+                  <td>{m.firstName || "—"}</td>
+                  <td className="cf-admin__cell-title">{m.lastName || "—"}</td>
                   <td>{m.email}</td>
+                  <td>
+                    {[m.address, [m.postalCode, m.city].filter(Boolean).join(" ")]
+                      .filter(Boolean)
+                      .join(", ") || "—"}
+                  </td>
                   <td>
                     <span
                       className={`cf-admin__badge ${m.status === "actif" ? "cf-admin__badge--published" : ""}`}

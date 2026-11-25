@@ -23,3 +23,26 @@
 .cf-admin__members > form {
   margin: 0 0 16px;
 }
+
+/* Retouche recette 25/11 : page adhérents élargie — le conteneur admin
+   de 960 px est trop étroit pour lire coordonnées + actions d'une ligne. */
+.cf-admin__main:has(.cf-admin__members) {
+  max-width: 1280px;
+}
+
+/* Une seule ligne par adhérent : aucun retour à la ligne dans les cellules. */
+.cf-admin__members .cf-admin__table th,
+.cf-admin__members .cf-admin__table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Statut plus lisible : badge agrandi sur cette page seulement. */
+.cf-admin__members .cf-admin__badge {
+  font-size: 13px;
+  padding: 6px 12px;
+}
+
+.cf-admin__members .cf-admin__badge + .cf-admin__badge {
+  margin-left: 6px;
+}
