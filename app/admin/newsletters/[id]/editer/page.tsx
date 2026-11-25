@@ -2,13 +2,15 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { blocksHash, parseBlocks } from "@/lib/newsletters";
+import { emailBaseUrl } from "@/lib/mail/notifications";
 import NewsletterEditor from "./newsletter-editor";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Éditeur d'un numéro (brique N3, spec §6.2) : en-tête du numéro, blocs
- * réordonnables/masquables, panneau test d'envoi et aperçu fidèle.
+ * Éditeur d'un numéro (brique N3, spec §6.2) : en-tête du numéro, canvas
+ * WYSIWYG vivant (N3.9 : rendu réel du moteur manipulé bloc par bloc),
+ * panneau test d'envoi et aperçu fidèle détaillable.
  * La version des blocs en base fait foi ; le composant client
  * sérialise ses blocs vers l'action saveNewsletter à l'enregistrement.
  */
@@ -38,6 +40,7 @@ export default async function EditNewsletterPage({
       initialFeatured={nl.featured ?? ""}
       initialStatus={nl.status}
       initialBlocks={blocks}
+      siteUrl={emailBaseUrl()}
       testedAtIso={nl.testedAt ? nl.testedAt.toISOString() : null}
       testUpToDate={testUpToDate}
     />

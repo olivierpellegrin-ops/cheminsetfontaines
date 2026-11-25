@@ -13,6 +13,8 @@ import {
   type NlBlock,
   type NlPhoto,
 } from "@/lib/newsletters";
+import NewsletterCanvas from "./newsletter-canvas";
+import BlocFields from "./bloc-fields";
 
 /**
  * Concepteur du numéro courant (brique N3, spec §6.2/§6.3) : l'en-tête
@@ -27,6 +29,14 @@ import {
  * retouchables ici — le modèle standard se personnalise bloc par bloc.
  * N3.8 : bouton « Annuler » (tête de page + à côté d'« Enregistrer »),
  * avec garde anti-perte si des modifications ne sont pas enregistrées.
+ * N3.8b (retour d'Olivier) : « Enregistrer » et « Annuler » sur une même
+ * ligne, en petit et classique — plus de deux gros boutons empilés.
+ * N3.9 (1/2) : WYSIWYG façon Mailchimp — l'ancien panneau « Blocs de
+ * l'e-mail » et l'iframe d'aperçu laissent place au CANVAS : le rendu
+ * RÉEL du moteur affiché dans la page, vivant (chaque frappe se voit
+ * immédiatement), survol = barre d'actions par bloc, clic = réglages du
+ * bloc dans la colonne de droite. Enregistrer garde l'empreinte à jour
+ * pour la garde anti-perte.
  *
  * Toute modification des blocs invalide le test d'envoi de la version
  * précédente (empreinte calculée côté serveur) ; le numéro repasse
@@ -41,6 +51,7 @@ export default function NewsletterEditor({
   initialFeatured,
   initialStatus,
   initialBlocks,
+  siteUrl,
   testedAtIso,
   testUpToDate,
 }: {
@@ -52,14 +63,20 @@ export default function NewsletterEditor({
   initialFeatured: string;
   initialStatus: string;
   initialBlocks: NlBlock[];
+  siteUrl: string;
   testedAtIso: string | null;
   testUpToDate: boolean;
 }) {
   const [blocks, setBlocks] = useState<NlBlock[]>(initialBlocks);
   const [saveState, onSave, saving] = useActionState(saveNewsletter, null);
   const [testState, onTest, testing] = useActionState(sendNewsletterTest, null);
-  const [previewKey, setPreviewKey] = useState(0);
   const [enteteTouchee, setEnteteTouchee] = useState(false);
+  // Titre et libellé suivis dans l'état : le canvas les reflète VIVANT.
+  const [titre, setTitre] = useState(initialTitle);
+  const [libelle, setLibelle] = useState(initialPublicationLabel);
+  // Bloc sélectionné dans le canvas (index dans le tableau complet) :
+  // ses réglages s'affichent dans la colonne de droite.
+  const [selection, setSelection] = useState<number | null>(null);
   // Empreinte de la dernière version ENREGISTRÉE (ou initiale) : sert de
   // point de comparaison à « Annuler » — après un enregistrement réussi,
   // les blocs édités redeviennent la référence et aucun confirmation
@@ -88,10 +105,10 @@ export default function NewsletterEditor({
     router.push("/admin/newsletters");
   };
 
-  // L'aperçu suit la version en base : rafraîchi après chaque enregistrement.
+  // Après un enregistrement réussi : l'empreinte enregistrée rattrape
+  // l'état courant (la garde « Annuler » ne demande plus confirmation).
   useEffect(() => {
     if (saveState?.ok) {
-      setPreviewKey((k) => k + 1);
       setBlocsEnregistres(JSON.stringify(blocks));
       setEnteteTouchee(false);
     }
@@ -101,36 +118,6 @@ export default function NewsletterEditor({
     setBlocks((bs) =>
       bs.map((b, j) => (j === i ? ({ ...b, ...patch } as NlBlock) : b))
     );
-
-  const move = (i: number, dir: -1 | 1) =>
-    setBlocks((bs) => {
-      const j = i + dir;
-      if (j < 0 || j >= bs.length) return bs;
-      const copy = [...bs];
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-      return copy;
-    });
-
-  const removeBlock = (i: number) =>
-    setBlocks((bs) => bs.filter((_, j) => j !== i));
-
-  const addText = () =>
-    setBlocks((bs) => [...bs, { type: "texte", title: "", body: "" }]);
-
-  const addAlbum = () =>
-    setBlocks((bs) => [...bs, { type: "album", title: "", photos: [] }]);
-
-  const addImage = () =>
-    setBlocks((bs) => [
-      ...bs,
-      { type: "image", src: "", alt: "", href: "", width: 172 },
-    ]);
-
-  const addBouton = () =>
-    setBlocks((bs) => [...bs, { type: "bouton", label: "", href: "" }]);
-
-  const addSeparateur = () =>
-    setBlocks((bs) => [...bs, { type: "separateur" }]);
 
   const patchPhoto = (i: number, pi: number, patch: Partial<NlPhoto>) =>
     setBlocks((bs) =>
@@ -160,6 +147,81 @@ export default function NewsletterEditor({
       })
     );
 
+  const move = (i: number, dir: -1 | 1) => {
+    setBlocks((bs) => {
+      const j = i + dir;
+      if (j < 0 || j >= bs.length) return bs;
+      const copy = [...bs];
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+      return copy;
+    });
+    // La sélection suit le bloc déplacé.
+    setSelection((s) => (s === i ? i + dir : s));
+  };
+
+  const dupliquerBloc = (i: number) => {
+    setBlocks((bs) => {
+      if (i < 0 || i >= bs.length) return bs;
+      const copie = JSON.parse(JSON.stringify(bs[i])) as NlBlock;
+      const next = [...bs];
+      next.splice(i + 1, 0, copie);
+      return next;
+    });
+    setSelection(i + 1);
+  };
+
+  const masquerBloc = (i: number) =>
+    setBlocks((bs) =>
+      bs.map((b, j) => (j === i ? { ...b, hidden: !b.hidden } : b))
+    );
+
+  const supprimerBloc = (i: number) => {
+    const b = blocks[i];
+    if (!b) return;
+    if (
+      !window.confirm(
+        "Supprimer le bloc « " +
+          BLOCK_TYPE_LABELS[b.type] +
+          " » de ce numéro ?"
+      )
+    ) {
+      return;
+    }
+    setBlocks((bs) => bs.filter((_, j) => j !== i));
+    setSelection((s) =>
+      s === null ? null : s === i ? null : s > i ? s - 1 : s
+    );
+  };
+
+  // Nouveau bloc : ajouté en fin de tableau ET sélectionné d'office,
+  // ses réglages s'ouvrent immédiatement dans la colonne de droite.
+  const ajouter = (b: NlBlock) => {
+    const index = blocks.length;
+    setBlocks((bs) => [...bs, b]);
+    setSelection(index);
+  };
+
+  const addText = () => ajouter({ type: "texte", title: "", body: "" });
+
+  const addAlbum = () => ajouter({ type: "album", title: "", photos: [] });
+
+  const addImage = () =>
+    ajouter({ type: "image", src: "", alt: "", href: "", width: 172 });
+
+  const addBouton = () => ajouter({ type: "bouton", label: "", href: "" });
+
+  const addSeparateur = () => ajouter({ type: "separateur" });
+
+  // Borne de la pile des blocs VISIBLES : les flèches du canvas se
+  // désactivent sur le premier/dernier bloc affiché.
+  const visiblesIdx: number[] = [];
+  blocks.forEach((b, i) => {
+    if (!b.hidden) visiblesIdx.push(i);
+  });
+  const premierVisible = visiblesIdx.length > 0 ? visiblesIdx[0] : 0;
+  const dernierVisible =
+    visiblesIdx.length > 0 ? visiblesIdx[visiblesIdx.length - 1] : -1;
+
   const statusBadge =
     initialStatus === "brouillon"
       ? { label: "brouillon", cls: "cf-admin__badge--draft" }
@@ -186,7 +248,9 @@ export default function NewsletterEditor({
       </div>
 
       <div className="cf-nl__layout">
-        <div className="cf-nl__main">
+        {/* Colonne gauche : l'en-tête du numéro + le test d'envoi. */}
+        <div className="cf-nl__col">
+          <h2>Numéro</h2>
           <form
             action={onSave}
             className="cf-nl__save"
@@ -200,14 +264,26 @@ export default function NewsletterEditor({
             />
             <label>
               Titre du numéro
-              <input type="text" name="title" defaultValue={initialTitle} />
+              <input
+                type="text"
+                name="title"
+                value={titre}
+                onChange={(e) => {
+                  setTitre(e.target.value);
+                  setEnteteTouchee(true);
+                }}
+              />
             </label>
             <label>
               Numéro (libellé affiché dans la liste et l&apos;archive)
               <input
                 type="text"
                 name="publicationLabel"
-                defaultValue={initialPublicationLabel}
+                value={libelle}
+                onChange={(e) => {
+                  setLibelle(e.target.value);
+                  setEnteteTouchee(true);
+                }}
               />
             </label>
             <label>
@@ -226,353 +302,21 @@ export default function NewsletterEditor({
               À la une (texte « Featured » sous le titre)
               <input type="text" name="featured" defaultValue={initialFeatured} />
             </label>
-            <button type="submit" disabled={saving}>
-              {saving ? "Enregistrement…" : "Enregistrer"}
-            </button>
-            <button
-              type="button"
-              className="cf-admin__btn-cancel"
-              onClick={annulerModifications}
-            >
-              Annuler
-            </button>
+            <div className="cf-nl__actions">
+              <button type="submit" disabled={saving}>
+                {saving ? "Enregistrement…" : "Enregistrer"}
+              </button>
+              <button
+                type="button"
+                className="cf-admin__btn-cancel"
+                onClick={annulerModifications}
+              >
+                Annuler
+              </button>
+            </div>
             {saveState && <p role="status">{saveState.message}</p>}
           </form>
 
-          <h2>Blocs de l&apos;e-mail</h2>
-          <p className="cf-nl__hint">
-            Ordre, masquage et retraits s&apos;enregistrent avec le bouton
-            « Enregistrer ». Les blocs sorties/itinéraire/adhésion sont figés
-            à la création (garde anti-erreur : le site peut bouger, pas le numéro).
-          </p>
-          <div>
-            {blocks.map((b, i) => (
-              <div
-                key={i}
-                className={"cf-nl__block" + (b.hidden ? " cf-nl__ghost" : "")}
-              >
-                <div className="cf-nl__block-head">
-                  <h3>{BLOCK_TYPE_LABELS[b.type]}</h3>
-                  <button
-                    type="button"
-                    onClick={() => move(i, -1)}
-                    disabled={i === 0}
-                    title="Monter"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => move(i, 1)}
-                    disabled={i === blocks.length - 1}
-                    title="Descendre"
-                  >
-                    ↓
-                  </button>
-                  <button type="button" onClick={() => removeBlock(i)}>
-                    Supprimer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => patchBlock(i, { hidden: !b.hidden })}
-                  >
-                    {b.hidden ? "Réafficher" : "Masquer"}
-                  </button>
-                </div>
-
-                {(b.type === "intro" || b.type === "texte") && (
-                  <label>
-                    {b.type === "intro" ? "Édito" : "Texte libre"}
-                    <textarea
-                      value={b.body}
-                      rows={4}
-                      disabled={b.hidden}
-                      placeholder="Deux paragraphes séparés par une ligne vide."
-                      onChange={(e) => patchBlock(i, { body: e.target.value })}
-                    />
-                  </label>
-                )}
-
-                {b.type === "events" && (
-                  <>
-                    <label>
-                      Titre du bloc
-                      <input
-                        type="text"
-                        value={b.title ?? ""}
-                        disabled={b.hidden}
-                        onChange={(e) =>
-                          patchBlock(i, { title: e.target.value })
-                        }
-                      />
-                    </label>
-                    <p className="cf-nl__hint">
-                      {b.cards.length} sortie{b.cards.length > 1 ? "s" : ""}{" "}
-                      figée{b.cards.length > 1 ? "s" : ""} à la génération —
-                      détails visibles dans l&apos;aperçu.
-                    </p>
-                  </>
-                )}
-
-                {b.type === "route" && (
-                  <>
-                    <label>
-                      Titre du bloc
-                      <input
-                        type="text"
-                        value={b.title ?? ""}
-                        disabled={b.hidden}
-                        onChange={(e) =>
-                          patchBlock(i, { title: e.target.value })
-                        }
-                      />
-                    </label>
-                    <label>
-                      Nom du parcours (affiché sous la vignette)
-                      <input
-                        type="text"
-                        value={b.card.title}
-                        disabled={b.hidden}
-                        onChange={(e) =>
-                          patchBlock(i, {
-                            card: { ...b.card, title: e.target.value },
-                          })
-                        }
-                      />
-                    </label>
-                    <label>
-                      Commune (titre de la colonne)
-                      <input
-                        type="text"
-                        value={b.card.townshipLabel}
-                        disabled={b.hidden}
-                        onChange={(e) =>
-                          patchBlock(i, {
-                            card: { ...b.card, townshipLabel: e.target.value },
-                          })
-                        }
-                      />
-                    </label>
-                    <label>
-                      Vignette (URL — vide pour masquer)
-                      <input
-                        type="text"
-                        value={b.card.imageUrl ?? ""}
-                        disabled={b.hidden}
-                        placeholder="https://…"
-                        onChange={(e) =>
-                          patchBlock(i, {
-                            card: {
-                              ...b.card,
-                              imageUrl: e.target.value || null,
-                            },
-                          })
-                        }
-                      />
-                    </label>
-                    <label>
-                      Lien du bouton « Accédez »
-                      <input
-                        type="text"
-                        value={b.card.url}
-                        disabled={b.hidden}
-                        placeholder="https://…/fr/routes/…"
-                        onChange={(e) =>
-                          patchBlock(i, {
-                            card: { ...b.card, url: e.target.value },
-                          })
-                        }
-                      />
-                    </label>
-                    <label>
-                      Note de rédaction (facultatif)
-                      <textarea
-                        value={b.note ?? ""}
-                        rows={2}
-                        disabled={b.hidden}
-                        onChange={(e) =>
-                          patchBlock(i, { note: e.target.value })
-                        }
-                      />
-                    </label>
-                    <p className="cf-nl__hint">
-                      Itinéraire « {b.card.title} » ({b.card.townshipLabel}),
-                      figé à la création et retouchable ici : commune, nom,
-                      vignette et lien alimentent la colonne du rendu.
-                    </p>
-                  </>
-                )}
-
-                {b.type === "album" && (
-                  <>
-                    <label>
-                      Titre du bloc
-                      <input
-                        type="text"
-                        value={b.title ?? ""}
-                        disabled={b.hidden}
-                        onChange={(e) =>
-                          patchBlock(i, { title: e.target.value })
-                        }
-                      />
-                    </label>
-                    {b.photos.map((p, pi) => (
-                      <div className="cf-nl__photo" key={pi}>
-                        <input
-                          type="text"
-                          value={p.url}
-                          placeholder="URL de la photo"
-                          disabled={b.hidden}
-                          onChange={(e) =>
-                            patchPhoto(i, pi, { url: e.target.value })
-                          }
-                        />
-                        <input
-                          type="text"
-                          value={p.alt ?? ""}
-                          placeholder="Texte alternatif"
-                          disabled={b.hidden}
-                          onChange={(e) =>
-                            patchPhoto(i, pi, { alt: e.target.value })
-                          }
-                        />
-                        <input
-                          type="text"
-                          value={p.caption ?? ""}
-                          placeholder="Légende"
-                          disabled={b.hidden}
-                          onChange={(e) =>
-                            patchPhoto(i, pi, { caption: e.target.value })
-                          }
-                        />
-                        <button type="button" onClick={() => removePhoto(i, pi)}>
-                          Retirer
-                        </button>
-                      </div>
-                    ))}
-                    <button type="button" onClick={() => addPhoto(i)}>
-                      Ajouter une photo
-                    </button>
-                  </>
-                )}
-
-                {b.type === "image" && (
-                  <>
-                    <label>
-                      URL de l&apos;image
-                      <input
-                        type="text"
-                        value={b.src}
-                        disabled={b.hidden}
-                        placeholder="https://…"
-                        onChange={(e) => patchBlock(i, { src: e.target.value })}
-                      />
-                    </label>
-                    <label>
-                      Texte alternatif
-                      <input
-                        type="text"
-                        value={b.alt ?? ""}
-                        disabled={b.hidden}
-                        onChange={(e) => patchBlock(i, { alt: e.target.value })}
-                      />
-                    </label>
-                    <label>
-                      Lien au clic (facultatif)
-                      <input
-                        type="text"
-                        value={b.href ?? ""}
-                        disabled={b.hidden}
-                        placeholder="https://…"
-                        onChange={(e) => patchBlock(i, { href: e.target.value })}
-                      />
-                    </label>
-                    <label>
-                      Largeur en pixels (vide = 172)
-                      <input
-                        type="number"
-                        min={1}
-                        value={b.width ?? ""}
-                        disabled={b.hidden}
-                        onChange={(e) =>
-                          patchBlock(i, {
-                            width:
-                              e.target.value === ""
-                                ? undefined
-                                : Number(e.target.value),
-                          })
-                        }
-                      />
-                    </label>
-                  </>
-                )}
-
-                {b.type === "bouton" && (
-                  <>
-                    <label>
-                      Libellé du bouton
-                      <input
-                        type="text"
-                        value={b.label}
-                        disabled={b.hidden}
-                        placeholder="Accédez"
-                        onChange={(e) =>
-                          patchBlock(i, { label: e.target.value })
-                        }
-                      />
-                    </label>
-                    <label>
-                      Lien du bouton
-                      <input
-                        type="text"
-                        value={b.href}
-                        disabled={b.hidden}
-                        placeholder="https://…"
-                        onChange={(e) => patchBlock(i, { href: e.target.value })}
-                      />
-                    </label>
-                    <p className="cf-nl__hint">
-                      Bouton vert du modèle (fond #4d6b4b, coins 8 px).
-                    </p>
-                  </>
-                )}
-
-                {b.type === "separateur" && (
-                  <p className="cf-nl__hint">
-                    Trait horizontal vert 2 px, à l&apos;identique du
-                    séparateur du modèle Mailchimp.
-                  </p>
-                )}
-
-                {b.type === "adhesion" && (
-                  <p className="cf-nl__hint">
-                    Bloc automatique : invitation à adhérer, bouton vers la
-                    page d&apos;adhésion du site.
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="cf-nl__add">
-            <button type="button" onClick={addText}>
-              Ajouter un bloc texte
-            </button>
-            <button type="button" onClick={addAlbum}>
-              Ajouter un bloc album
-            </button>
-            <button type="button" onClick={addImage}>
-              Ajouter une image
-            </button>
-            <button type="button" onClick={addBouton}>
-              Ajouter un bouton
-            </button>
-            <button type="button" onClick={addSeparateur}>
-              Ajouter un séparateur
-            </button>
-          </div>
-        </div>
-
-        <aside className="cf-nl__side">
           <h2>Test d&apos;envoi</h2>
           <p className="cf-nl__hint">
             {testedAtIso
@@ -610,18 +354,96 @@ export default function NewsletterEditor({
             </form>
           )}
 
-          <h2>Aperçu</h2>
           <p className="cf-nl__hint">
-            Rendu fidèle (même moteur que l&apos;e-mail). Se rafraîchit après
-            chaque enregistrement :
+            <a
+              className="cf-nl__apercu-lien"
+              href={"/admin/newsletters/" + id + "/apercu"}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Ouvrir l&apos;aperçu fidèle (rendu e-mail complet)
+            </a>
           </p>
-          <iframe
-            key={previewKey}
-            src={"/admin/newsletters/" + id + "/apercu"}
-            className="cf-nl__preview"
-            title="Aperçu de la newsletter"
+        </div>
+
+        {/* Colonne centrale : le CANVAS — rendu réel vivant du moteur. */}
+        <div className="cf-nl__col cf-nl__col--canvas">
+          <h2>Aperçu éditable</h2>
+          <p className="cf-nl__hint">
+            Rendu vivant, identique à l&apos;e-mail : chaque modification
+            se voit immédiatement. Survolez un bloc pour agir, cliquez-le
+            pour ouvrir ses réglages à droite.
+          </p>
+          <NewsletterCanvas
+            title={titre}
+            publicationLabel={libelle}
+            blocks={blocks}
+            siteUrl={siteUrl}
+            selection={selection}
+            premierVisible={premierVisible}
+            dernierVisible={dernierVisible}
+            onSelect={setSelection}
+            onMove={move}
+            onDuplicate={dupliquerBloc}
+            onToggleHidden={masquerBloc}
+            onRemove={supprimerBloc}
           />
-        </aside>
+          <div className="cf-nl__add">
+            <button type="button" onClick={addText}>
+              Ajouter un bloc texte
+            </button>
+            <button type="button" onClick={addAlbum}>
+              Ajouter un bloc album
+            </button>
+            <button type="button" onClick={addImage}>
+              Ajouter une image
+            </button>
+            <button type="button" onClick={addBouton}>
+              Ajouter un bouton
+            </button>
+            <button type="button" onClick={addSeparateur}>
+              Ajouter un séparateur
+            </button>
+          </div>
+          {blocks.some((b) => b.hidden) && (
+            <div className="cf-nl__masques">
+              <h3>Blocs masqués (absents de l&apos;e-mail)</h3>
+              <ul>
+                {blocks.map((b, i) =>
+                  b.hidden ? (
+                    <li key={i}>
+                      <span>{BLOCK_TYPE_LABELS[b.type]}</span>
+                      <button type="button" onClick={() => masquerBloc(i)}>
+                        Réafficher
+                      </button>
+                    </li>
+                  ) : null
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Colonne droite : réglages du bloc sélectionné. */}
+        <div className="cf-nl__col cf-nl__col--reglages">
+          <h2>Réglages du bloc</h2>
+          {selection !== null && blocks[selection] ? (
+            <BlocFields
+              block={blocks[selection]}
+              index={selection}
+              patchBlock={patchBlock}
+              patchPhoto={patchPhoto}
+              addPhoto={addPhoto}
+              removePhoto={removePhoto}
+            />
+          ) : (
+            <p className="cf-nl__hint">
+              Cliquez sur un bloc dans l&apos;aperçu : ses réglages
+              s&apos;affichent ici. Les liens de l&apos;e-mail sont
+              neutralisés dans le canvas, aucune navigation involontaire.
+            </p>
+          )}
+        </div>
       </div>
     </section>
   );

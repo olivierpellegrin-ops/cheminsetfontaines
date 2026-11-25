@@ -48,97 +48,150 @@
   vertical-align: middle;
 }
 
-/* Éditeur large : formulaire/blocs à gauche, test + aperçu à droite. */
+/* Éditeur large N3.9 (1/2) : numéro à gauche, CANVAS WYSIWYG vivant au
+   centre, réglages du bloc sélectionné à droite. */
 .cf-admin__main:has(.cf-admin__nl-editor) {
-  max-width: 1400px;
+  max-width: 1600px;
 }
 
 .cf-nl__layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 430px;
-  gap: 32px;
+  grid-template-columns:
+    minmax(280px, 340px)
+    minmax(660px, 1fr)
+    minmax(280px, 380px);
+  gap: 24px;
   align-items: start;
+}
+
+@media (max-width: 1500px) {
+  .cf-nl__layout {
+    grid-template-columns: minmax(260px, 1fr) minmax(620px, 1.4fr);
+  }
+  .cf-nl__col--reglages {
+    grid-column: 1;
+  }
+  .cf-nl__col--canvas {
+    grid-column: 2;
+  }
 }
 
 @media (max-width: 1100px) {
   .cf-nl__layout {
     grid-template-columns: 1fr;
   }
+  .cf-nl__col--canvas,
+  .cf-nl__col--reglages {
+    grid-column: 1;
+  }
+}
+
+.cf-nl__col {
+  min-width: 0;
+}
+
+.cf-nl__col > form {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 20px;
 }
 
 .cf-nl__save {
   display: grid;
   gap: 10px;
-  margin: 0 0 24px;
+  margin: 0;
 }
 
 .cf-nl__save label,
-.cf-nl__block label,
-.cf-nl__side label {
+.cf-nl__col label,
+.cf-nl__fields label {
   display: grid;
   gap: 4px;
   font-size: 13px;
   color: #333;
 }
 
-.cf-nl__block input[type="text"],
-.cf-nl__block textarea,
 .cf-nl__save input,
 .cf-nl__save textarea,
-.cf-nl__side input {
+.cf-nl__col input,
+.cf-nl__col textarea,
+.cf-nl__fields input,
+.cf-nl__fields textarea {
   width: 100%;
   box-sizing: border-box;
   font: inherit;
-  padding: 8px;
+  font-size: 13px;
+  padding: 7px 8px;
   border: 1px solid #c9cec7;
   border-radius: 6px;
   background: #fff;
 }
 
-.cf-nl__side button,
-.cf-nl__block-head button,
+.cf-nl__col button:not(.cf-wys__toolbar button),
 .cf-nl__add button,
-.cf-nl__photo button {
+.cf-nl__photo button,
+.cf-nl__masques button {
   font: inherit;
+  font-size: 13px;
   padding: 6px 12px;
   border: 1px solid #c9cec7;
   border-radius: 6px;
   background: #f4f6f3;
+  color: #1c2b24;
   cursor: pointer;
+  width: auto;
+  justify-self: start;
 }
 
-.cf-nl__block {
-  border: 1px solid #d8dcd6;
-  border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 12px;
-  background: #fff;
-  display: grid;
-  gap: 10px;
+.cf-nl__col .cf-admin__row-edit {
+  width: auto;
 }
 
-.cf-nl__ghost {
-  opacity: 0.5;
-}
-
-.cf-nl__block-head {
+/* N3.8b (retour d'Olivier) : « Enregistrer » et « Annuler » sur une
+   même ligne, petits et classiques — plus deux gros boutons empilés. */
+.cf-nl__actions {
   display: flex;
-  align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 4px;
 }
 
-.cf-nl__block-head h3 {
-  margin: 0;
-  font-size: 14px;
-  flex: 1 1 auto;
+.cf-nl__actions button[type="submit"] {
+  background: #163c32;
+  border-color: #163c32;
+  color: #fff;
+}
+
+.cf-nl__actions button[type="submit"]:hover {
+  background: #0f2c24;
+}
+
+.cf-nl__actions button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.cf-nl__actions .cf-admin__btn-cancel {
+  padding: 7px 14px;
+  font-size: 13px;
+  background: #fff;
+  color: #6a7a70;
+}
+
+.cf-nl__apercu-lien {
+  color: #4d6b4b;
+  font-weight: 600;
 }
 
 .cf-nl__photo {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr auto;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
-  align-items: center;
+  align-items: start;
+}
+
+.cf-nl__photo button {
+  align-self: end;
 }
 
 @media (max-width: 900px) {
@@ -149,14 +202,9 @@
 
 .cf-nl__add {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  margin: 12px 0 24px;
-}
-
-.cf-nl__side form {
-  display: grid;
-  gap: 10px;
-  margin: 0 0 20px;
+  margin: 16px 0 24px;
 }
 
 .cf-nl__hint {
@@ -165,10 +213,143 @@
   margin: 0;
 }
 
-.cf-nl__preview {
+/* Réglages du bloc sélectionné (colonne de droite). */
+.cf-nl__fields {
+  display: grid;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #d8dcd6;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.cf-nl__fields h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.cf-nl__fields > button {
+  justify-self: start;
+}
+
+/* Blocs masqués : liste de réaffichage sous le canvas. */
+.cf-nl__masques {
+  border: 1px dashed #c9cec7;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #fff;
+  margin: 0 0 24px;
+}
+
+.cf-nl__masques h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #555;
+}
+
+.cf-nl__masques ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.cf-nl__masques li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+/* ---------- Canvas WYSIWYG (N3.9 1/2) ---------- */
+/* Fond + coquille : même fond que l'e-mail (#f9f9f9), conteneur blanc
+   660 px centré par le moteur lui-même ; typo du modèle imposée ici car
+   le canvas vit sous la charte admin (system-ui). */
+.cf-wys {
   width: 100%;
-  height: 640px;
+  max-width: 720px;
+  margin: 0 auto;
+  background: #f9f9f9;
   border: 1px solid #c9cec7;
   border-radius: 10px;
+  padding: 24px 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Aucune navigation depuis le canvas : les liens de l'e-mail sont
+   décoratifs ici (l'aperçu fidèle reste l'adresse de contrôle). */
+.cf-wys a {
+  pointer-events: none;
+}
+
+/* Enveloppe d'édition posée autour de chaque bloc (survol = cadre
+   pointillé + barre d'actions ; clic = sélection pleine). */
+.cf-wys__bloc {
+  position: relative;
+  cursor: pointer;
+}
+
+.cf-wys__bloc:hover {
+  outline: 2px dashed rgba(77, 107, 75, 0.55);
+  outline-offset: -2px;
+}
+
+.cf-wys__bloc.is-selected {
+  outline: 2px solid #4d6b4b;
+  outline-offset: -2px;
+}
+
+.cf-wys__toolbar {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 5;
+  display: none;
+  gap: 4px;
+  padding: 3px;
   background: #fff;
+  border: 1px solid #c9cec7;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.cf-wys__bloc:hover .cf-wys__toolbar,
+.cf-wys__bloc.is-selected .cf-wys__toolbar {
+  display: flex;
+}
+
+.cf-wys__toolbar button {
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #c9cec7;
+  border-radius: 5px;
+  background: #f4f6f3;
+  color: #1c2b24;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cf-wys__toolbar button:hover {
+  background: #e8eee4;
+}
+
+.cf-wys__toolbar button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.cf-wys__toolbar .cf-wys__del:hover {
+  background: #fbeae8;
+  border-color: #b3402e;
+  color: #b3402e;
 }
