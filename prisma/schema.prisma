@@ -2,7 +2,8 @@
 // Correspondance collections Framer -> tables :
 //   ROUTES -> Route (+ RoutePhoto), EVENTS -> Event, NEWSLETTERS -> Newsletter,
 //   SUBSCRIBERS -> Subscriber (source de vérité locale, double opt-in).
-// Nouvelles tables refonte : Commune (Xaintrie), MembershipRequest, ContactMessage.
+// Nouvelles tables refonte : Commune (Xaintrie), MembershipRequest,
+// ContactMessage, Member/MemberYear (brique N2 adhérents).
 // Extension prévue agent Strava : StravaActivity (§7 des spécifications),
 // publiée APRÈS validation humaine par clonage dans Route (source="strava").
 
@@ -147,7 +148,7 @@ model Subscriber {
   id               String             @id @default(cuid())
   email            String             @unique
   firstName        String?
-  lastName         String?
+  lastName        String?
   phone            String?
   language         String             @default("fr")
   status           SubscriberStatus   @default(pending)
@@ -176,8 +177,69 @@ model MembershipRequest {
   postalCode String?
   city       String?
   country    String? // France | Belgique | Suisse | Autre
+  // Brique N2 « Remplacement Mailchimp » (spec §4.2/§5.1) : cases cochées
+  // au formulaire (jamais par défaut, RGPD) + jeton de confirmation de
+  // l'e-mail, même mécanique que le double opt-in souscripteurs (usage
+  // unique, valable 30 jours, garde anti-renvoi 1 h via lastEmailAt).
+  newsletter   Boolean   @default(false) // case « nouvelles du sentier »
+  photoConsent Boolean   @default(false) // droit à l'image (jamais par défaut)
+  confirmToken String?   @unique
+  confirmedAt  DateTime? // clic sur le lien fr/adhesion/confirmation
+  lastEmailAt  DateTime? // garde anti-renvoi : 1 e-mail de confirmation max/h
+  memberId     String? // membre créé lors de la validation de la cotisation
+  member       Member?  @relation(fields: [memberId], references: [id])
   handledAt  DateTime? // traité par le bureau
   createdAt  DateTime @default(now())
+}
+
+// Adhérents (brique N2, spec §4.2) : MembershipRequest reste l'entrée du
+// formulaire public ; le bureau valide la cotisation => la demande devient
+// un Member stable d'année en année (merge sur l'e-mail à la ré-adhésion).
+// Statut « à renouveler » : NON stocké — dérivé dans /admin/members
+// (membre actif sans MemberYear de la saison en cours).
+enum MemberStatus {
+  demande_recue // valeur de référence du catalogue (parcours conservé sur la demande)
+  email_confirme // idem : la demande porte confirmedAt
+  actif // cotisation de la saison validée par le bureau
+  sorti
+}
+
+model Member {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  civilite       String?
+  firstName      String?
+  lastName       String?
+  address        String?
+  postalCode     String?
+  city           String?
+  country        String?
+  phone          String?
+  newsletter     Boolean      @default(false) // case reçue au formulaire
+  consentAt      DateTime // consentement RGPD horodaté (= confirmation d'e-mail)
+  photoConsent   Boolean      @default(false) // droit à l'image (jamais par défaut)
+  status         MemberStatus @default(actif)
+  lastReminderAt DateTime? // garde : jamais 2 rappels de renouvellement à moins de 30 jours
+  years          MemberYear[]
+  requests       MembershipRequest[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([status])
+}
+
+// Cotisation d'une saison : année civile (décision D6), hors-ligne (D2).
+model MemberYear {
+  id        String   @id @default(cuid())
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId  String
+  season    Int // 2026, 2027… (année civile, décision D6)
+  paidAt    DateTime // date d'encaissement de la cotisation
+  amount    Float? // facultatif, suivi interne
+  createdAt DateTime @default(now())
+
+  @@unique([memberId, season])
+  @@index([season])
 }
 
 model ContactMessage {

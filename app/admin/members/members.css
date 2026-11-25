@@ -1,0 +1,25 @@
+/* Brique N2 : liste adhérents — boutons d'action à la taille du contenu
+   (cf. correctif souscripteurs PR #15 : la grille fixe 82/96/96 px de
+   admin.css est dédiée à la liste itinéraires). */
+.cf-admin__members .cf-admin__row-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.cf-admin__members .cf-admin__row-actions form {
+  margin: 0;
+  display: inline;
+}
+
+.cf-admin__members .cf-admin__row-edit,
+.cf-admin__members .cf-admin__row-toggle,
+.cf-admin__members .cf-admin__row-delete {
+  width: auto;
+}
+
+/* Bandeau du rappel de renouvellement : même espacement que les filtres. */
+.cf-admin__members > form {
+  margin: 0 0 16px;
+}

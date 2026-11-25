@@ -4,18 +4,29 @@ import { prisma } from "@/lib/prisma";
 
 /**
  * Tableau de bord minimal (B0) : compteurs (itinéraires, sorties,
- * newsletters, souscripteurs inscrits brique N1) + derniers itinéraires
- * modifiés.
+ * newsletters, souscripteurs inscrits brique N1, adhérents actifs et
+ * demandes à traiter brique N2) + derniers itinéraires modifiés.
  */
 export default async function AdminHome() {
   const session = await auth();
   if (!session?.user) redirect("/admin/login");
 
-  const [routeCount, eventCount, newsletterCount, subscriberCount] = await Promise.all([
+  const [
+    routeCount,
+    eventCount,
+    newsletterCount,
+    subscriberCount,
+    memberActiveCount,
+    memberToHandleCount,
+  ] = await Promise.all([
     prisma.route.count(),
     prisma.event.count(),
     prisma.newsletter.count(),
     prisma.subscriber.count({ where: { status: "subscribed" } }),
+    prisma.member.count({ where: { status: "actif" } }),
+    prisma.membershipRequest.count({
+      where: { confirmedAt: { not: null }, handledAt: null },
+    }),
   ]);
   const lastRoutes = await prisma.route.findMany({
     orderBy: { updatedAt: "desc" },
@@ -33,6 +44,14 @@ export default async function AdminHome() {
         <li>
           <strong>{subscriberCount}</strong>{" "}
           <a href="/admin/subscribers">souscripteurs inscrits</a>
+        </li>
+        <li>
+          <strong>{memberActiveCount}</strong>{" "}
+          <a href="/admin/members">adhérents actifs</a>
+        </li>
+        <li>
+          <strong>{memberToHandleCount}</strong>{" "}
+          <a href="/admin/members">demandes d&apos;adhésion à traiter</a>
         </li>
       </ul>
       <h2>Derniers itinéraires modifiés</h2>

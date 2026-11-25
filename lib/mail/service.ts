@@ -22,11 +22,15 @@ type MailTransport = ReturnType<typeof nodemailer.createTransport>;
  * changeant QUE les variables SMTP_* de l'environnement, aucun appel à modifier.
  */
 
-/** Types d'e-mails émis (catalogue spec §5.3, enrichi par les briques N1+). */
+/** Types d'e-mails émis (catalogue spec §5.3, enrichi par les briques N1/N2). */
 export type MailKind =
   | "contact_notification"
   | "nl_confirmation"
-  | "nl_bienvenue";
+  | "nl_bienvenue"
+  | "adhesion_confirmation"
+  | "adhesion_notif_bureau"
+  | "adhesion_bienvenue"
+  | "adhesion_renouvellement";
 
 export interface SendMailInput {
   kind: MailKind;
