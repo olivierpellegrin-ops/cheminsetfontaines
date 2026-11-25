@@ -1,0 +1,22 @@
+/* Brique N1 : liste souscripteurs — boutons d'action à la taille du
+   contenu. La grille fixe 82/96/96 px de admin.css est dédiée à la liste
+   itinéraires (3 boutons alignés entre lignes) ; ici il n'y a que 1 à 2
+   boutons par ligne et elle réservait des pistes vides, d'où un large
+   espace à droite du bouton Supprimer. */
+.cf-admin__subscribers .cf-admin__row-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.cf-admin__subscribers .cf-admin__row-actions form {
+  margin: 0;
+  display: inline;
+}
+
+.cf-admin__subscribers .cf-admin__row-edit,
+.cf-admin__subscribers .cf-admin__row-toggle,
+.cf-admin__subscribers .cf-admin__row-delete {
+  width: auto;
+}
