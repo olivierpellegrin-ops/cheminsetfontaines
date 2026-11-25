@@ -16,12 +16,15 @@ on:
       seed:
         description: "Seed initial de la base de production (a cocher uniquement pour la mise en prod)"
         type: boolean
-        required: true
+        # required: false est OBLIGATOIRE pour un boolean : une case decochee
+        # compte comme "non fournie" et GitHub refuse le dispatch entier
+        # ("Workflow dispatch failed") si l'input est requise.
+        required: false
         default: false
       accept_data_loss:
         description: "Contourner la garde de Prisma UNIQUEMENT apres verification humaine que l'avertissement est benin (ex : contrainte unique ajoute sur des colonnes neuves, toutes NULL)"
         type: boolean
-        required: true
+        required: false
         default: false
 
 concurrency:
