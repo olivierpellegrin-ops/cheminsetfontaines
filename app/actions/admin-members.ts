@@ -6,6 +6,10 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
+  RENEWAL_REMINDER_GUARD_MS,
+  RENEWAL_REMINDER_MIN_AGE_MS,
+} from "@/lib/renewal";
+import {
   sendMemberWelcome,
   sendMembershipConfirmation,
   sendRenewalReminder,
@@ -16,17 +20,15 @@ import {
  * /admin/members — renvoi de la confirmation de demande (garde 1 h),
  * validation de la cotisation (création/mise à jour du Member + MemberYear
  * de la saison en cours, e-mail de bienvenue à la création uniquement),
- * renouvellement direct d'un membre, rappels de renouvellement en masse
- * (garde 30 jours par membre) et suppressions RGPD.
+ * renouvellement direct d'un membre, relances de renouvellement (garde
+ * « anniversaire » : dernier règlement de plus de ~11 mois, et jamais deux
+ * relances à moins de 30 jours) et suppressions RGPD.
  *
  * Jamais d'API d'écriture : session vérifiée dans chaque action.
  */
 
 /** Garde anti-renvoi : un seul e-mail de confirmation par heure et par demande. */
 const CONFIRMATION_RESEND_GUARD_MS = 60 * 60 * 1000;
-
-/** Garde du rappel de renouvellement : jamais 2 rappels à moins de 30 jours. */
-const RENEWAL_REMINDER_GUARD_MS = 30 * 24 * 60 * 60 * 1000;
 
 /**
  * Renvoie l'e-mail de confirmation d'une demande non confirmée : nouveau
@@ -179,38 +181,99 @@ export async function markMemberSeasonPaid(fd: FormData): Promise<void> {
   revalidatePath("/admin/members");
 }
 
+/** Relance de renouvellement : regroupe les gardes communes (anniversaire
+ * + 30 jours) évaluées pareillement par la page et par l'action. */
+function reminderEligibility(
+  status: string,
+  years: { season: number; paidAt: Date }[],
+  lastReminderAt: Date | null,
+  now: number
+): "at-jour" | "grace" | "recent" | "eligible" {
+  const currentSeason = new Date(now).getFullYear();
+  if (status !== "actif") return "at-jour";
+  if (years.some((y) => y.season === currentSeason)) return "at-jour";
+  if (years.length > 0) {
+    const lastPaid = Math.max(...years.map((y) => y.paidAt.getTime()));
+    if (now - lastPaid < RENEWAL_REMINDER_MIN_AGE_MS) return "grace";
+  }
+  if (lastReminderAt && now - lastReminderAt.getTime() < RENEWAL_REMINDER_GUARD_MS) {
+    return "recent";
+  }
+  return "eligible";
+}
+
 /**
- * Rappels de renouvellement de la cohorte « à renouveler » (spec §5.1) :
- * membres actifs sans cotisation de la saison en cours, sans rappel
- * depuis 30 jours. Chaque envoi est non bloquant ; lastReminderAt porte
- * la garde des 30 jours.
+ * Relance d'un seul membre (bouton « Relance » de la liste) : mêmes gardes
+ * que l'envoi en masse — cotisation de la saison absente, dernier
+ * règlement de plus de ~11 mois (grâce « anniversaire »), pas de relance
+ * depuis 30 jours. Non bloquant ; lastReminderAt porte la garde des 30 j.
+ */
+export async function sendMemberRenewalReminder(fd: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user) redirect("/admin/login");
+
+  const id = String(fd.get("id") ?? "");
+  const member = await prisma.member.findUnique({
+    where: { id },
+    include: { years: { select: { season: true, paidAt: true } } },
+  });
+  if (!member) return;
+
+  if (reminderEligibility(member.status, member.years, member.lastReminderAt, Date.now()) !== "eligible") {
+    return;
+  }
+
+  const season = new Date().getFullYear();
+  try {
+    await sendRenewalReminder({
+      memberId: member.id,
+      to: member.email,
+      firstName: member.firstName,
+      season,
+    });
+  } catch (err) {
+    console.error("[mail] relance de renouvellement impossible :", err);
+  }
+  try {
+    await prisma.member.update({
+      where: { id: member.id },
+      data: { lastReminderAt: new Date() },
+    });
+  } catch (err) {
+    console.error("[mail] enregistrement de la relance impossible :", err);
+  }
+
+  revalidatePath("/admin/members");
+}
+
+/**
+ * Relances de renouvellement en masse (spec §5.1) : membres actifs dont la
+ * cotisation de la saison en cours est absente, dont le dernier règlement
+ * date de plus de ~11 mois (règle « anniversaire » : un paiement de
+ * novembre/décembre n'est pas ressassé en janvier) et sans relance depuis
+ * 30 jours. Chaque envoi est non bloquant.
  */
 export async function sendRenewalReminders(fd: FormData): Promise<void> {
   void fd;
   const session = await auth();
   if (!session?.user) redirect("/admin/login");
 
-  const season = new Date().getFullYear();
   const members = await prisma.member.findMany({
     where: { status: "actif" },
-    include: { years: { where: { season }, select: { id: true } } },
+    include: { years: { select: { season: true, paidAt: true } } },
   });
 
   const now = Date.now();
   for (const m of members) {
-    if (m.years.length > 0) continue; // cotisation déjà enregistrée
-    if (
-      m.lastReminderAt &&
-      now - m.lastReminderAt.getTime() < RENEWAL_REMINDER_GUARD_MS
-    ) {
-      continue; // garde 30 jours
+    if (reminderEligibility(m.status, m.years, m.lastReminderAt, now) !== "eligible") {
+      continue;
     }
     try {
       await sendRenewalReminder({
         memberId: m.id,
         to: m.email,
         firstName: m.firstName,
-        season,
+        season: new Date(now).getFullYear(),
       });
     } catch (err) {
       console.error("[mail] rappel de renouvellement impossible :", err);
