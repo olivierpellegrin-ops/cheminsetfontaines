@@ -18,6 +18,11 @@ on:
         type: boolean
         required: true
         default: false
+      accept_data_loss:
+        description: "Contourner la garde de Prisma UNIQUEMENT apres verification humaine que l'avertissement est benin (ex : contrainte unique ajoute sur des colonnes neuves, toutes NULL)"
+        type: boolean
+        required: true
+        default: false
 
 concurrency:
   group: prod-db
@@ -41,7 +46,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: set -o pipefail; npx prisma db push 2>&1 | tee step-db.log
+      # Strict par defaut sur les push : --accept-data-loss n'est ajoute que
+      # sur declenchement manuel explicite (input accept_data_loss), apres
+      # verification que l'avertissement de Prisma est benin (colonnes
+      # concernees neuves ou toutes NULL). Cas N1 : contraintes @unique sur
+      # confirmToken/unsubToken, colonnes ajoutees a des lignes existantes
+      # donc necessairement NULL.
+      - run: set -o pipefail; npx prisma db push ${{ inputs.accept_data_loss == true && '--accept-data-loss' || '' }} 2>&1 | tee step-db.log
       # Meme garde-fou que la CI : publier la fin des logs dans une issue
       # pour diagnostiquer sans acces authentifie aux logs Actions.
       - name: Journal d'echec vers issue
@@ -50,6 +61,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for f in step-*.log; do echo "--- $f (fin) ---" >> tutti.log; tail -n 80 "$f" >> tutti.log; done
+          sed -i -E 's/ at "ep-[^"]*"/ at "[endpoint masque]"/g' tutti.log
           gh issue create -R olivierpellegrin-ops/cheminsetfontaines \
             -t "Prod DB : journal d'echec (${GITHUB_SHA::7})" \
             -F tutti.log || true
@@ -87,6 +99,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for f in step-*.log; do echo "--- $f (fin) ---" >> tutti.log; tail -n 80 "$f" >> tutti.log; done
+          sed -i -E 's/ at "ep-[^"]*"/ at "[endpoint masque]"/g' tutti.log
           gh issue create -R olivierpellegrin-ops/cheminsetfontaines \
             -t "Prod SEED : journal d'echec (${GITHUB_SHA::7})" \
             -F tutti.log || true
