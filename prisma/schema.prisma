@@ -96,8 +96,8 @@ model Route {
   // dans la meme position pour recadrer la photo principale.
   viewerCamera   Json?
   photos         RoutePhoto[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@index([communeId])
   @@index([status])
@@ -137,7 +137,7 @@ model Newsletter {
   publicationLabel String // "Septembre 2026"
   summary          String
   coverImageUrl    String?
-  featured          String? // "Featured Route Or Township"
+  featured         String? // "Featured Route Or Township"
   externalUrl      String? // archive Mailchimp conservée
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -179,4 +179,26 @@ model ContactMessage {
   message   String
   handledAt DateTime?
   createdAt DateTime  @default(now())
+}
+
+// Brique N0 « Remplacement Mailchimp » (spec du 25/11/2026) : file/journal de
+// TOUS les e-mails émis par le site (transactionnels N0-N2, newsletter N3-N4).
+// status : queued (créée) | sent (accepté par le SMTP) | failed (erreur SMTP,
+// reprise via le back-office en N4) | skipped (SMTP_HOST absent : environnement
+// sans envoi configuré, ex. CI — l'enregistrement applicatif reste la vérité).
+model EmailOutbox {
+  id           String    @id @default(cuid())
+  kind         String // contact_notification | nl_confirmation | newsletter… (spec §5.3)
+  toEmail      String
+  subject      String
+  status       String    @default("queued")
+  error        String?
+  attempts     Int       @default(0)
+  subscriberId String? // non contraint en N0 : les refs arrivent en N1/N3
+  memberId     String?
+  newsletterId String?
+  requestedAt  DateTime  @default(now())
+  sentAt       DateTime?
+
+  @@index([status, requestedAt])
 }
