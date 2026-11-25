@@ -130,9 +130,30 @@ model Event {
   @@index([status, sortDate])
 }
 
+// Brique N3 (spec §4.3/§6) : workflow brouillon → pret → valide_envoyee
+// → archivee ; modèle d'habillage et contenu par blocs (Json) + snapshot
+// figé à la génération. Les anciens numéros (archive Mailchimp) gardent
+// externalUrl : la page d'archive publique les montre toujours, les
+// brouillons n'y paraissent jamais.
+enum NewsletterStatus {
+  brouillon // autogénérée ou en rédaction : invisible côté front
+  pret // relue, prête pour validation (l'envoi réel arrive avec la brique N4)
+  valide_envoyee // envoyée aux souscripteurs (brique N4)
+  archivee // publiée sur fr/newsletters
+}
+
+model NewsletterTemplate {
+  id          String        @id @default(cuid())
+  name        String // « Standard charte » (v1 : un seul modèle, spec §6.1)
+  isDefault   Boolean       @default(false)
+  newsletters Newsletter[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
 model Newsletter {
-  id               String   @id @default(cuid())
-  slug             String   @unique
+  id               String             @id @default(cuid())
+  slug             String             @unique
   title            String
   publicationDate  DateTime
   publicationLabel String // "Septembre 2026"
@@ -140,8 +161,18 @@ model Newsletter {
   coverImageUrl    String?
   featured          String? // "Featured Route Or Township"
   externalUrl      String? // archive Mailchimp conservée
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  // Brique N3 (spec §4.3/§6.2) :
+  status           NewsletterStatus   @default(brouillon)
+  templateId       String?
+  template         NewsletterTemplate? @relation(fields: [templateId], references: [id])
+  blocks           Json? // tableau de blocs (lib/newsletters.ts, spec §6.2)
+  snapshot         Json? // données figées à la génération : { generatedAt, events, route }
+  testedAt         DateTime? // dernier test envoyé (garde-fou avant l'envoi réel, brique N4)
+  testedBlocksHash String? // empreinte des blocs testés : modifier invalide le test (lib/newsletters.ts)
+  sentAt           DateTime? // date d'envoi réel (brique N4)
+  recipientCount   Int? // statistiques d'envoi (brique N4)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 }
 
 model Subscriber {

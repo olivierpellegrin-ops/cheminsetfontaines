@@ -30,6 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/routes">Itinéraires</Link>
           <Link href="/admin/subscribers">Souscripteurs</Link>
           <Link href="/admin/members">Adhérents</Link>
+          <Link href="/admin/newsletters">Newsletters</Link>
         </nav>
       ) : null}
       <main className="cf-admin__main">{children}</main>

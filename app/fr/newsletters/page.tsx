@@ -31,10 +31,19 @@ type Nl = {
  * (mobile 100%×210), détails gap 8 : date, titre NP 28px lh 1.1,
  * description Fira Sans lh 1.45 #43534A, featured 14px/600 #587551,
  * bouton pilule #c18a21 radius 100 padding 11/18 → Mailchimp.
+ * Brique N3 : les brouillons et numéros « prêts » du concepteur ne sont
+ * JAMAIS listés ici — seuls les numéros envoyés/archivés ou les anciens
+ * numéros Mailchimp (externalUrl) sont publics.
  */
 export default async function NewslettersPage() {
   const newsletters: Nl[] = await prisma.newsletter.findMany({
     orderBy: [{ publicationDate: "desc" }],
+    where: {
+      OR: [
+        { externalUrl: { not: null } },
+        { status: { in: ["valide_envoyee", "archivee"] } },
+      ],
+    },
   });
 
   return (

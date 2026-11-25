@@ -21,7 +21,9 @@ export default async function AdminHome() {
   ] = await Promise.all([
     prisma.route.count(),
     prisma.event.count(),
-    prisma.newsletter.count(),
+    prisma.newsletter.count({
+      where: { status: { in: ["brouillon", "pret"] } },
+    }),
     prisma.subscriber.count({ where: { status: "subscribed" } }),
     prisma.member.count({ where: { status: "actif" } }),
     prisma.membershipRequest.count({
@@ -40,7 +42,10 @@ export default async function AdminHome() {
       <ul className="cf-admin__stats">
         <li><strong>{routeCount}</strong> itinéraires</li>
         <li><strong>{eventCount}</strong> sorties</li>
-        <li><strong>{newsletterCount}</strong> newsletters</li>
+        <li>
+          <strong>{newsletterCount}</strong>{" "}
+          <a href="/admin/newsletters">newsletters en préparation</a>
+        </li>
         <li>
           <strong>{subscriberCount}</strong>{" "}
           <a href="/admin/subscribers">souscripteurs inscrits</a>
