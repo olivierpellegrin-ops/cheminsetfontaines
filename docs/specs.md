@@ -1,8 +1,14 @@
 
 # Spécifications — Refonte de cheminsetfontaines.fr
 
-**Version** : 1.1 (brouillon de référence, à valider) · **Date** : 22/11/2026
-**Statut** : document de base pour le développement ; servira de gabarit pour les spécifications SylvaGreen Management.
+**Version** : 1.2 · **Date** : 25/11/2026
+**Statut** : spécifications validées, chantier en cours d'exécution (l'état précis vit dans `docs/ROADMAP.md`) ; servira de gabarit pour les spécifications SylvaGreen Management.
+
+**Journal des versions** :
+
+- **v1.0** (22/11/2026) : document initial — relevé Framer factuel, architecture cible, questions Q1-Q18.
+- **v1.1** (22-23/11/2026) : arbitrages des questions structurantes ; lancement du chantier acté le 23/11.
+- **v1.2** (25/11/2026, mise à jour après livraison) : **remplacement Mailchimp réorienté en développement 100 % interne** (envoi direct SMTP Gandi via Nodemailer derrière un `MailService` abstrait ; Brevo relégué au rang de plan B délivrabilité ; décisions D1-D6 actées le 25/11) — remplace la décision « Brevo » (Q15) du 22/11 ; **Q7 résolu : hébergement Vercel (Hobby) + PostgreSQL géré Neon eu-central-1, déployé le 24/11** ; **livrés depuis v1.1** : back-office complet auth + CRUD itinéraires + uploads (B0-B4), viewer GPX satellite 3D avec capture 1200×800 (suppression de Gimp), migration des contenus réels (25 GPX + images auto-hébergés, plus aucune image visible servie par un CDN externe), parcours e-mails interne N0→N3 (socle MailService, double opt-in souscripteurs, adhérents à l'anniversaire de paiement, concepteur de newsletters WYSIWYG façon Mailchimp avec drag & drop et édition en place) ; **Q3/Q18 quasi clos** ; détail architectural du programme e-mail interne dans la spec dédiée du 25/11 (canvas « cf-spec-remplacement-mailchimp », source de vérité D1-D6).
 
 ## 1. Objet, périmètre et sources
 
@@ -94,11 +100,11 @@ Autres sections : Skills, Performance, Versions (historique des déploiements), 
 | Fichiers | Stockage fichier/objet + **Sharp** (images AVIF/WebP), GPX en statique | |
 | Auth back office | Auth.js/NextAuth, rôles `admin` / `bureau` | Répétition générale du pattern SylvaGreen (rôles + MFA) |
 | Carte front office | **SVG à l'identique** (réécriture React du composant Framer, voir §9.3) | Zéro dépendance, zéro tuile ; fidélité maximale (acté le 22/11) |
-| Newsletter | **Solution native + Brevo** remplaçant Mailchimp (voir §9.2, acté le 22/11) | Suppression du coût Mailchimp |
+| Newsletter | **v1.2 : développement 100 % interne** — envoi SMTP Gandi direct (Nodemailer) derrière un `MailService` abstrait, rendu React Email (voir §9.2). Brevo abandonné, reste un plan B relais SMTP en cas de délivrabilité insuffisante | Suppression du coût Mailchimp, souveraineté des données |
 | Dons | **Stripe Payment Link** intégré (voir §9.4) | Pas de secret en v1 |
 | Agent Strava | Job interne Next.js (cron/manuel) + génération de texte par modèle Mistral (voir §7) | GPX + DB = plus simple app-side ; le modèle n'est appelé que pour le texte |
 | Analytics | Umami ou Plausible CE auto-hébergé | RGPD, sans consentement pour mesure d'audience |
-| Hébergement | À arbitrer (Q7) : Vercel vs VPS UE (Scaleway/OVH + Docker/Coolify) | Simplicité vs préférence UE |
+| Hébergement | **Acté le 24/11/2026 (Q7 clo)** : Vercel (plan Hobby) pour le site + PostgreSQL géré Neon (AWS eu-central-1, Frankfurt) ; le domaine cheminsetfontaines.fr ET la messagerie contact@ restent chez Gandi, seule la zone DNS web changera (**à la toute fin du chantier**) | Simplicité, CI/CD natif, UE, gratuit |
 | Repo | GitHub via le connecteur GitHub App | Pattern validé |
 
 ## 5. Front office — arborescence (validée par sitemap.xml + navigation)
@@ -202,6 +208,8 @@ Aujourd'hui : archive de **liens** Mailchimp (le contenu vit chez Mailchimp). En
 Compris ainsi : **les internautes qui s'inscrivent au formulaire "Les nouvelles du sentier" de la home** (champs relevés : Email, Status, First Name, Last Name, Phone, Subscription Date, Language). Dans l'architecture cible, cette table devient la **source de vérité de la liste de diffusion** (contrepartie directe de l'audience Mailchimp), alimentée par double opt-in. Base vide aujourd'hui côté Framer.
 
 Champs cible : `email` (unique), `first_name`, `last_name`, `phone` (optionnel), `language` (fr/en), `status` (`pending` → `subscribed` / `unsubscribed`), `confirmed_at`, `source` (formulaire, import), RGPD : consentement horodaté, page mentions + désinscription en un clic.
+
+**(v1.2 — livré)** : modèle `Subscriber` avec double opt-in à jeton (pending → subscribed, jeton à usage unique valable 30 j, `unsubToken` + confirmation/désinscription en 1 clic, garde anti-renvoi 1 h), admin souscripteurs (renvoi, suppression RGPD) ; **import Mailchimp exécuté le 25/11 (D4)** : les 39 `subscribed` importés **sans re-demande d'opt-in** (marquage `source: import`, consentement horodaté Mailchimp conservé), les 5 `cleaned` exclues (script bureau `scripts/import-mailchimp.ts`, le CSV n'est jamais committé).
 
 ### 6.7 Tables nouvelles (ajouts de la refonte)
 
@@ -357,18 +365,14 @@ Téléchargement par itinéraire et par commune (`/fr/routes` + filtres) ; la ca
 
 Oui, j'ai bien compris le rôle des **Subscribers** : ce sont les abonnés à "Les nouvelles du sentier", captés par le formulaire de la home ; ils constituent la liste de diffusion.
 
-Remplacement proposé (suppression de l'abonnement Mailchimp) :
+**(v1.2 — le remplacement Mailchimp est un développement 100 % interne, décision d'Olivier du 25/11/2026, D1-D6 actées ; spec détaillée = canvas « cf-spec-remplacement-mailchimp »)** :
 
-1. **Source de vérité locale** : table SUBSCRIBERS (double opt-in, désinscription en un clic, export CSV pour le bureau).
-2. **Envoi depuis le back office** : éditeur de newsletter intégré (markdown + images), chaque numéro devient **une page du site** (`/fr/newsletters/[slug]`, servant d'archive visible ET de version web de l'e-mail).
-3. **Passe-plat SMTP** : l'application envoie via un fournisseur transactionnel — **Brevo (décision actée le 22/11/2026)** : offre gratuite ~300 e-mails/jour, UE, SPF/DKIM faciles, clé API à créer par Olivier (jamais dans le chat). À volumétrie actuelle (< 100 abonnés), l'offre gratuite couvre très largement.
-4. **Migration** : export CSV de l'audience Mailchimp existante + ré-import avec marquage `import` + e-mail de ré-confirmation (bonne pratique RGPD après changement de sous-traitant). **Export reçu le 22/11/2026** dans `05_Newsletters/audience_export/` (2 CSV) :
-   - **39 abonnés actifs** (`subscribed_...csv`) : 18 issus d'un import de fichier du 07/08/2026 (fichier « client » de l'association), 15 « Admin Add » (dont ajout du 30/09/2026), 3 inscriptions site web, ~3 autres ; colonnes utiles : email, prénom, nom, téléphone, ville, code postal, OPTIN/CONFIRM time, source.
-   - **5 contacts « cleaned »** (`cleaned_...csv`) : e-mails en échec (hard bounce) lors de l'envoi « newsletter - août 2026 » du 10/08/2026 → à écarter de la liste d'envoi cible, à conserver en statut `invalid` pour mémoire.
-   - L'export Framer `Subscribers.csv` étant vide (en-têtes seuls), **cet export Mailchimp est la source réelle** des abonnés pour le seed de la table SUBSCRIBERS. Attention : les contacts importés en bloc du 07/08 n'ont pas fait de double opt-in → marquage `import` + ré-confirmation à la bascule, conformément au point RGPD ci-dessus. Audience Mailchimp identifiée : `cheminsetfontaines.us19.list-manage.com` (`u=d8ca3d7b03b51b0bc6b05e561`, liste `1782fcea85`, compte 261472047) — **audience unique « Chemins et Fontaines » partagée** entre le formulaire newsletter et le flux adhésion (voir §9.8) ; le formulaire intégré Mailchimp capte **EMAIL (requis) + Prénom + Nom de famille** (voir §9.8).
-5. Les 2 anciens numéros restent accessibles via leurs liens `mailchi.mp` (champ conservé) ou sont migrés en pages locales.
-
-Les archives restent lisibles via leurs liens `mailchi.mp` (champ conservé) ou migrées en pages locales.
+1. **Source de vérité locale (livré, N1)** : table `Subscriber` — double opt-in à jeton (jeton à usage unique valable 30 j, garde anti-renvoi 1 h), désinscription en un clic, admin souscripteurs (renvoi, suppression RGPD), export CSV pour le bureau.
+2. **Envoi depuis le back office (livré, N3 → N3.9)** : concepteur de newsletters **WYSIWYG façon Mailchimp** — génération mensuelle automatique (sorties à venir + dernière route publiée, garde anti-doublon de numéro), création vierge, clonage et « d'après le modèle » (numéro de septembre reconstruit à l'identique), blocs JSON édités **dans le rendu réel** (toolbar, drag & drop par poignée, édition en place des textes, aperçu vivant), workflow `brouillon → prêt → validée_envoyée`, e-mail de test avec garde « test à jour de la version » (`testedAt` + `testedBlocksHash`), never-send d'un brouillon ; chaque numéro devient **une page du site** (`/fr/newsletters`, l'archive publique ne montre jamais un brouillon).
+3. **Envoi par l'application elle-même (décision D1 du 25/11 — remplace Brevo)** : SMTP **Gandi direct** (la messagerie `contact@cheminsetfontaines.fr`) via Nodemailer derrière un **`MailService` abstrait jamais-throw** (journal `EmailOutbox`, statuts queued/sent/failed/skipped si SMTP absent, Mailpit en local). **Plan B tranché** : en cas de délivrabilité insuffisante, bascule vers un relais SMTP transactionnel (Brevo ou équivalent) **sans toucher au code**. DNS **SPF/DKIM/DMARC chez Gandi** avec validation mail-tester ≥ 8/10 (**brique N4**, avec l'envoi de masse et sa reprise par lots — pas de cron en Vercel Hobby).
+4. **Parcours adhérents (livré, N2 — prolonge l'audience)** : `MembershipRequest` → confirmation à jeton 30 j + fiche au bureau → `Member`/`MemberYear` (saison = année civile, cotisation hors-ligne v1) → bienvenue à la création, **relances de renouvellement à l'anniversaire de paiement** (~11 mois, garde 30 j), export CSV, suppression RGPD. L'« audience unique » Mailchimp (abonnés + adhérents) devient deux rôles dans la même base.
+5. **Migration (exécutée le 25/11, D4)** : les **39 abonnés actifs** importés **sans re-demande d'opt-in** (marquage `source: import`, date de consentement Mailchimp conservée), les **5 « cleaned »** exclues (hard bounce, conservées hors liste). La ré-confirmation initialement prévue (bonne pratique RGPD « changement de sous-traitant ») a été écartée : il n'y a pas de nouveau sous-traitant, les données restent celles de l'association. **Export reçu le 22/11/2026** dans `05_Newsletters/audience_export/` (2 CSV) ; l'export Framer `Subscribers.csv` étant vide, **l'export Mailchimp a été la source réelle** (script `scripts/import-mailchimp.ts`, procédure bureau, CSV jamais committé).
+6. Les 2 anciens numéros restent accessibles via leurs liens `mailchi.mp` (champ `externalUrl` conservé) ; les numéros créés dans la refonte sont rendus depuis leurs blocs (jamais de HTML stocké).
 
 ### 9.3 Carte interactive des communes/cantons
 
@@ -415,7 +419,7 @@ Sources : copie HTTrack du site (`02_FrontOffice/cheminsetfontaines_2026/`, HTML
 | Section Title (H2) | 38 px / interligne 1.1 |
 | Body | 17 px / interligne 1.6, **Fira Sans** (regular, medium, semibold) |
 
-**Composants du panneau Assets :** Association Layout (gabarit), Mobile Navigation, Contact Submit Button ; styles de liens Navigation / Section / Footer. **Code components (.tsx)** : les 5 sources ont été copiées le 22/11/2026 au soir (dossier `02_FrontOffice/`). Lecture faite : `NamedGPXDownload.tsx` (bouton de téléchargement GPX avec nommage et fallback CORS, logique réutilisable telle quelle), `RoutePhotoGallery.tsx` (grille responsive 3/2/1 colonnes, lightbox clavier, ratio 4/3, rayon 14 px : comportement à reproduire exactement), `MailchimpNewsletterSignup.tsx` (formulaire EMAIL + honeypot → à réécrire pour Brevo, cf. §9.2), `XaintrieTownshipMap.tsx` (cf. §9.3), `XaintrieTownshipMap_.tsx` (le gabarit de démarrage Framer, sans valeur métier). Seul `Examples.tsx` (démo Framer) n'a pas été copié : sans objet.
+**Composants du panneau Assets :** Association Layout (gabarit), Mobile Navigation, Contact Submit Button ; styles de liens Navigation / Section / Footer. **Code components (.tsx)** : les 5 sources ont été copiées le 22/11/2026 au soir (dossier `02_FrontOffice/`). Lecture faite : `NamedGPXDownload.tsx` (bouton de téléchargement GPX avec nommage et fallback CORS, logique réutilisable telle quelle), `RoutePhotoGallery.tsx` (grille responsive 3/2/1 colonnes, lightbox clavier, ratio 4/3, rayon 14 px : comportement à reproduire exactement), `MailchimpNewsletterSignup.tsx` (formulaire EMAIL + honeypot → ~~à réécrire pour Brevo~~ **réécrit en server action interne + double opt-in, cf. §9.2**), `XaintrieTownshipMap.tsx` (cf. §9.3), `XaintrieTownshipMap_.tsx` (le gabarit de démarrage Framer, sans valeur métier). Seul `Examples.tsx` (démo Framer) n'a pas été copié : sans objet.
 
 **Méthode de reproduction** : extraction des design tokens ci-dessus + mesures d'espacement et grilles depuis les blocs de style des pages HTTrack (noms de sections sémantiques via `data-framer-name`), puis reconstruction en CSS propre (tokens + composants Tailwind/CSS modules). Le CSS machine Framer (classes hachées `framer-*`) n'est pas réutilisé tel quel, seulement lu comme référence. Les interactions JS (menu mobile, hover, transitions) sont réimplémentées nativement. Contrepartie assumée : fidélité visuelle quasi identique, code maintenable.
 
@@ -429,7 +433,7 @@ Le bouton « Adhérer à l'association » de la home (bloc `Join the Association
   - `Civilité` (select : Madame / Monsieur / Autre) · `Prénom` · `Nom` · `Adresse` · `Email` (**seul champ requis**, type email) · `Téléphone` · `Code postal` + `Ville` (bloc « City Details ») · `Pays` (select : France / Belgique / Suisse / Autre)
   - Submit : bouton pleine largeur ochre `#C18A21`, rayon 100 px, « Envoyer la demande d'adhésion » (Fira Sans 600, 14 px, `#163C32`)
   - Honeypots anti-spam : champs cachés `website` et `company` (à reproduire à l'identique)
-- **Process cible acté le 22-23/11/2026 (Q3)** : relay **Brevo** (un seul outil, aligné sur Q15 newsletter) ; aujourd'hui Framer fait **les deux** (e-mail de notification + inscription audience Mailchimp — l'audience est **partagée** avec la newsletter, cf. §9.8). En cible : soumission → **table locale `MEMBERSHIP_REQUESTS`** (source de vérité, même pattern que Subscribers) → **e-mail de notification à `contact@cheminsetfontaines.fr`** (acté le 23/11) via Brevo transactionnel + inscription à la liste Brevo (attribut source = adhésion) déclenchant le double opt-in et l'e-mail de bienvenue unique (§9.8). Honeypots conservés.
+- **Process cible — v1.2 (livré, briques N0/N2) : développement interne, Brevo abandonné**. Soumission → **table locale `MembershipRequest`** (source de vérité, même pattern que Subscribers) → e-mails via SMTP Gandi (`MailService`) : **confirmation à jeton 30 j au demandeur** + **fiche de notification au bureau** (`contact@cheminsetfontaines.fr`, Reply-To demandeur) ; après validation du bureau (« cotisation reçue », hors-ligne v1) : création du `Member` + e-mail de bienvenue uniquement à la création ; relances de renouvellement à l'anniversaire de paiement (~11 mois, garde 30 j). Cases **newsletter** et **droit à l'image** ajoutées dans la modale (jamais cochées par défaut). Honeypots conservés.
 
 ### 9.8 Relevé de la chaîne Mailchimp actuelle (22/11/2026, documents fournis par Olivier)
 
@@ -448,7 +452,7 @@ Le bouton « Adhérer à l'association » de la home (bloc `Join the Association
 - Corps : salutation « Bonjour, nous sommes ravis de vous compter parmi les membres de la communauté Chemins et Fontaines 🌿🥾 » ; mission (promouvoir les sentiers, événements conviviaux, préserver les paysages Corrèze/Limousin) ; sections « Pourquoi nous suivre ? » (itinéraires exclusifs avec traces GPX téléchargeables, événements uniques, engagement local), « Comment participer ? » (3 items : télécharger les traces GPX → `/fr/routes`, devenir bénévole → `/fr/contact`, faire un don → `/fr/dons`), « Une question ? » (répondre à cet e-mail ou `contact@cheminsetfontaines.fr`).
 - Pied : logo, icône Facebook (lien générique `facebook.com` — à remplacer par la vraie page si elle existe), copyright 2026, **adresse postale : Chemins et Fontaines, 14 Le Sirieix, Bassignac-Le-Haut, 19220 France** (à reporter dans les mentions légales), liens mise à jour des préférences / désinscription Mailchimp (à régénérer côté Brevo).
 
-**Traduction cible (Brevo)** : liste unique « Chemins et Fontaines » + **attribut « source » (newsletter / adhésion)** ; double opt-in conservé ; template « Welcome » reproduisant le texte ci-dessus ; e-mails transactionnels (notification bureau) séparés. Les liens de Manage preferences/unsubscribe deviennent des pages locales du site (`/fr/newsletters/preferences`, `/fr/newsletters/desinscription`). **Confirmé par Olivier le 22/11/2026 : message de bienvenue unique pour tous (abonnés et adhérents).**
+**Traduction cible — v1.2 (livré) : pas de « liste » d'outil externe, la base interne fait foi** : `Subscriber` pour l'audience newsletter, `Member`/`MembershipRequest` pour les adhérents (l'audience unique Mailchimp devient deux rôles de la même base) ; double opt-in conservé ; l'e-mail de bienvenue unique (texte relevé ci-dessus) est reproduit en interne (jeton de confirmation, zéro re-saisie pour un adhérent) ; la désinscription est une page locale à jeton (`/fr/newsletters/desinscription`, 1 clic). **Confirmé par Olivier le 22/11/2026 : message de bienvenue unique pour tous (abonnés et adhérents).**
 
 
 
@@ -471,15 +475,15 @@ Contrainte : chaque module (`/lib/strava-agent/`, composants carte, formulaires,
 
 Q4 (remplacement de Mailchimp) et Q5 (paiement des dons) du document v1.0 sont traitées en §9.2 et §9.4 ; elles ont leurs relais décisionnels en Q15 et Q17.
 
-**Décision d'Olivier du 22-23/11/2026 (soir)** : lancement acté le 23/11. **Socle v0.1 construit** (Next.js 15 + TS strict + Prisma/PostgreSQL + seed depuis les CSV Framer, 9 pages FR + squelette EN, modale adhésion à l'identique, formulaires serveur, téléchargement GPX nommé via /api/gpx, Gallery 3/2/1 + lightbox clavier, sitemap/robots, CI GitHub Actions, sécurité : zéro secret, zéro donnée personnelle committée). Reste à : créer le repo GitHub (le connecteur a le droit de pusher mais pas de créer), pousser le code, `npm install` + docker compose + seed, puis portage pixel + carte SVG + Brevo + back office + agent Strava. Traces GPX de 25 itinéraires téléchargées depuis les assets Framer (18 Mo, auto-hébergeables).
+**Décision d'Olivier du 22-23/11/2026 (soir)** : lancement acté le 23/11. **Socle v0.1 construit** (Next.js 15 + TS strict + Prisma/PostgreSQL + seed depuis les CSV Framer, 9 pages FR + squelette EN, modale adhésion à l'identique, formulaires serveur, téléchargement GPX nommé via /api/gpx, Gallery 3/2/1 + lightbox clavier, sitemap/robots, CI GitHub Actions, sécurité : zéro secret, zéro donnée personnelle committée). Reste à : ~~créer le repo GitHub (le connecteur a le droit de pusher mais pas de créer), pousser le code, `npm install` + docker compose + seed, puis portage pixel + carte SVG + Brevo + back office~~ **(v1.2 : tout ceci est livré, voir `docs/ROADMAP.md` ; seule la carte SVG reste en attente, non essentielle)**. Traces GPX de 25 itinéraires téléchargées depuis les assets Framer (18 Mo, auto-hébergeables).
 
 | # | Question | Impact |
 |---|---|---|
 | Q1 | ✅ **Réacté le 22/11/2026 (correction d'Olivier)** : v1 française + **squelette `/en` « under construction » obligatoire**, car copie à l'identique : le visiteur ne doit pas apercevoir de changement de structure ; bilingue complet plus tard | Périmètre |
 | Q2 | ✅ **Acté le 23/11/2026** : **normaliser les slugs** (sans accents, tirets multiples réduits : `afm-téléthon-2026---randonnée-12-kms` → `afm-telethon-2026-randonnee-12-kms`) + **redirections 301** systématiques des anciens URLs Framer pour préserver le référencement Google ; la table de correspondance ancien→nouveau sera générée et reviewée avant bascule | SEO — critique |
-| Q3 | ◐ **Quasi résolu le 23/11/2026** : modale (§9.7) + chaîne Mailchimp complète (§9.8), message de bienvenue unique confirmé, **adresse de notification bureau actée : `contact@cheminsetfontaines.fr`**. **Reste** : la vraie page Facebook (le lien du site pointe vers `facebook.com` générique), uniquement si elle existe | Périmètre |
+| Q3 | ✅ **Quasi clos (v1.2)** : modale (§9.7) + chaîne Mailchimp relevée (§9.8), notification bureau actée (`contact@cheminsetfontaines.fr`), **vraie page Facebook mise dans le footer (24/11)**. **Reste** : le lien Instagram générique (`instagram.com/` racine) à remplacer par le vrai compte, uniquement s'il existe | Périmètre |
 | Q6 | ✅ **Acté le 22/11/2026** : **ne pas masquer automatiquement** les événements passés (même l'event du 01/08/2026 reste affiché) ; le visiteur doit penser que le site n'a pas changé, la gestion est manuelle | Comportement |
-| Q7 | ◐ **Reporté le 22/11/2026** : décision d'hébergement (Vercel vs VPS UE) **au moment du déploiement** ; non bloquant pour le développement, le socle démarre hébergeur-agnostique | Infrastructure |
+| Q7 | ✅ **Résolu le 24/11/2026 (v1.2)** : **Vercel (Hobby) + PostgreSQL géré Neon (eu-central-1, Frankfurt)**, déployé et build production Ready ; le domaine et la messagerie restent chez Gandi, bascule DNS du site **à la toute fin du chantier** | Infrastructure |
 | Q8 | ✅ **Résolu le 22/11/2026 (relevé d'Olivier)** : **aucune redirection configurée** dans Framer (Settings → Hosting → Redirects : page vide) ; rien à migrer côté redirections ; les éventuelles 301 ne relèvent que de la future normalisation de slugs (Q2) | Migration |
 | Q9 | ✅ **Acté le 22/11/2026** : la **source de vérité est la collection Events du CMS**, que tu renseignes toi-même ; aucune automatisation du programme en v1. Reste à compléter les années des 3 brouillons (sept.-oct.) à la publication | Données |
 | **Q10** | ✅ **Acté le 22/11/2026** : reproduction **à l'identique** du design Framer ; charte de reproduction extraite en §9.6 (couleurs, typographie, composants) depuis la copie HTTrack et le panneau Assets | Design |
@@ -487,10 +491,10 @@ Q4 (remplacement de Mailchimp) et Q5 (paiement des dons) du document v1.0 sont t
 | **Q12** | ◐ **Descopé v1 le 22/11/2026** (brique agent supplémentaire, **non essentielle à la copie du site**) : application Strava API à créer sur strava.com/settings/api quand je te donnerai la marche à suivre (Client ID/secret chez toi/jamais dans le chat) ; à traiter ensemble ensuite | Agent |
 | **Q13** | ◐ **Réponse d'Olivier le 23/11/2026 : oui, écran de validation du filtre Xaintrie — mais plus tard** (brique de l'agent Strava, non essentielle à la copie du site) ; cahier des charges à établir avec l'agent (§7) | Agent |
 | **Q14** | ◐ **Descopé v1 le 22/11/2026** (brique agent supplémentaire, **non essentielle à la copie du site**) : règles de nommage des routes générées (noms de lieux, format « Commune — nom ») — à définir demain avec l'agent Strava | Qualité |
-| **Q15** | ✅ **Acté le 22/11/2026** : **Brevo** (offre gratuite, UE) remplace Mailchimp | Intégration |
+| **Q15** | ✅ **Remplacé le 25/11/2026 (v1.2)** : ~~Brevo~~ → **développement 100 % interne** (envoi SMTP Gandi direct via Nodemailer derrière `MailService` ; décisions D1-D6 actées, spec du 25/11) ; Brevo reste un plan B relais SMTP en cas de délivrabilité insuffisante, sans changement de code | Intégration |
 | **Q16** | ✅ **Acté le 22/11/2026** : regroupement **par commune** | Carte |
 | **Q17** | ✅ **Acté le 22/11/2026** : "Link" = Stripe Payment Link ; v1 lien simple sans secret, puis v2 avec secrets + webhooks (reçus, totaux) | Intégration |
-| **Q18** | **Analytics Framer** : le panneau Headers n'a pas pu être analysé (limite du modèle de vision cette session) — peux-tu décrire les redirections/headers configurés, ou me refournir une capture en début de prochaine session ? | Migration |
+| **Q18** | ✅ **Clos le 25/11/2026 (v1.2)** : la reproduction à l'identique ayant été livrée et validée par Olivier (24-25/11), le relevé du panneau Headers est sans objet ; il n'y avait pas non plus de redirections (cf. Q8) | Migration |
 
 ## Annexe A — Structure OneDrive demandée
 
@@ -571,14 +575,17 @@ Notes : [album photo à reprendre, particularités]
 | Rôles back-office, processus de validation | `07_BackOffice/` |
 | Pointeurs vers les comptes Stripe/Strava/Brevo (sans secrets) | `08_Contrats/` |
 
-## 12. Prochaines étapes
+## 12. Prochaines étapes (v1.2 — mise à jour du 25/11/2026)
 
-1. **Validation du document** + arbitrages sur les questions Q11 à Q18 (les plus structurantes posées dans le chat).
-2. Création de l'arborescence OneDrive ci-dessus (je peux pré-générer les fichiers `A_LIRE.md`) et dépôt des données par Olivier.
-3. Création du repo GitHub, socle Next.js + Prisma, migration des 25 routes + 5 events (sources : bibliothèque projet, CSV Framer si export, captures).
-4. Agent Strava : module d'ingestion ZIP → filtre Xaintrie → stock tampon → écran de prévisualisation.
-5. Génération des spécifications **SylvaGreen Management** sur le même gabarit (après lancement C&F, séquencement acté du 20/11/2026).
+1. ~~Validation du document, arborescence OneDrive, création du repo, socle~~ : **livrés** (repo `olivierpellegrin-ops/cheminsetfontaines`, arborescence OneDrive alimentée et exploitée).
+2. ~~Portage pixel, back office, déploiement~~ : **livrés** (parité validée par Olivier, B0-B4 + viewer GPX 3D, Vercel + Neon en production).
+3. **N4 — envoi de masse + reprise** : worker d'envoi par lots (`maxDuration` 300 s, reprise), bouton Envoyer exigeant un test à jour (`testedAt` + `testedBlocksHash` égal à la version courante), **DNS SPF/DKIM/DMARC chez Gandi** (validation mail-tester ≥ 8/10) ; cadrer l'automatisation des envois/relances (pas de cron en Vercel Hobby).
+4. **N5 — réseaux sociaux assistés v1** : texte + image vers Meta Business Suite (API Graph = extension v2 non cadrée).
+5. **Bascule DNS Gandi du site** (A + www CNAME, sans toucher MX ni SPF/DKIM) : **à LA TOUTE FIN du chantier**, comme acté, puis checklist post-déploiement (robots/sitemap, 301 slugs, restriction Origins MapTiler).
+6. Résiduels : analytics légère, mentions légales/RGPD (n° RNA manquant), import/export CSV génériques par collection.
+7. **v0.4 — agent Strava** (§7) : attend le ZIP d'export Strava (`06_Strava/export/`) ; **carte SVG** (§9.3) : toujours non essentielle (non publiée sur l'original).
+8. Génération des spécifications **SylvaGreen Management** sur le même gabarit (après clôture C&F, séquencement acté du 20/11/2026).
 
 ---
 
-*Document de travail — repo GitHub `chemins-et-fontaines` (à créer), branche `main`, dossier `docs/specs.md`.*
+*Document de travail — repo GitHub `olivierpellegrin-ops/cheminsetfontaines`, branche `main`, dossier `docs/specs.md`.*
