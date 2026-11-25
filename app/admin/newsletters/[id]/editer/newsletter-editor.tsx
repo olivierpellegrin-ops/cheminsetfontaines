@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   markNewsletterReady,
   saveNewsletter,
@@ -24,6 +25,8 @@ import {
  * (image, bouton, séparateur) pour les numéros exceptionnels.
  * N3.7 : les fiches d'itinéraire (nom, commune, vignette, lien) sont
  * retouchables ici — le modèle standard se personnalise bloc par bloc.
+ * N3.8 : bouton « Annuler » (tête de page + à côté d'« Enregistrer »),
+ * avec garde anti-perte si des modifications ne sont pas enregistrées.
  *
  * Toute modification des blocs invalide le test d'envoi de la version
  * précédente (empreinte calculée côté serveur) ; le numéro repasse
@@ -56,10 +59,42 @@ export default function NewsletterEditor({
   const [saveState, onSave, saving] = useActionState(saveNewsletter, null);
   const [testState, onTest, testing] = useActionState(sendNewsletterTest, null);
   const [previewKey, setPreviewKey] = useState(0);
+  const [enteteTouchee, setEnteteTouchee] = useState(false);
+  // Empreinte de la dernière version ENREGISTRÉE (ou initiale) : sert de
+  // point de comparaison à « Annuler » — après un enregistrement réussi,
+  // les blocs édités redeviennent la référence et aucun confirmation
+  // inutile n'est demandée.
+  const [blocsEnregistres, setBlocsEnregistres] = useState(() =>
+    JSON.stringify(initialBlocks)
+  );
+  const router = useRouter();
+
+  // « Annuler » (retour d'Olivier du 25/11) : visibilité du bouton à côté
+  // d'« Enregistrer » ET en tête de page. Garde anti-perte : si les blocs
+  // édités diffèrent de la version en base ou qu'un champ d'en-tête a
+  // bougé, une confirmation est demandée avant d'abandonner.
+  const blocsModifies = JSON.stringify(blocks) !== blocsEnregistres;
+
+  const annulerModifications = () => {
+    if (
+      (blocsModifies || enteteTouchee) &&
+      !window.confirm(
+        "Des modifications ne sont pas enregistrées.\n\n" +
+          "Annuler et revenir à la liste des numéros ?"
+      )
+    ) {
+      return;
+    }
+    router.push("/admin/newsletters");
+  };
 
   // L'aperçu suit la version en base : rafraîchi après chaque enregistrement.
   useEffect(() => {
-    if (saveState?.ok) setPreviewKey((k) => k + 1);
+    if (saveState?.ok) {
+      setPreviewKey((k) => k + 1);
+      setBlocsEnregistres(JSON.stringify(blocks));
+      setEnteteTouchee(false);
+    }
   }, [saveState]);
 
   const patchBlock = (i: number, patch: Record<string, unknown>) =>
@@ -140,12 +175,23 @@ export default function NewsletterEditor({
           <span className={`cf-admin__badge ${statusBadge.cls}`}>
             {statusBadge.label}
           </span>
+          <button
+            type="button"
+            className="cf-admin__btn-cancel"
+            onClick={annulerModifications}
+          >
+            Annuler
+          </button>
         </div>
       </div>
 
       <div className="cf-nl__layout">
         <div className="cf-nl__main">
-          <form action={onSave} className="cf-nl__save">
+          <form
+            action={onSave}
+            className="cf-nl__save"
+            onChange={() => setEnteteTouchee(true)}
+          >
             <input type="hidden" name="id" value={id} />
             <input
               type="hidden"
@@ -182,6 +228,13 @@ export default function NewsletterEditor({
             </label>
             <button type="submit" disabled={saving}>
               {saving ? "Enregistrement…" : "Enregistrer"}
+            </button>
+            <button
+              type="button"
+              className="cf-admin__btn-cancel"
+              onClick={annulerModifications}
+            >
+              Annuler
             </button>
             {saveState && <p role="status">{saveState.message}</p>}
           </form>
