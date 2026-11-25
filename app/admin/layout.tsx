@@ -28,6 +28,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <nav className="cf-admin__nav">
           <Link href="/admin">Tableau de bord</Link>
           <Link href="/admin/routes">Itinéraires</Link>
+          <Link href="/admin/subscribers">Souscripteurs</Link>
         </nav>
       ) : null}
       <main className="cf-admin__main">{children}</main>
