@@ -22,6 +22,8 @@ import {
  *
  * N3.6 : blocs de composition du modèle Mailchimp ajoutables à la main
  * (image, bouton, séparateur) pour les numéros exceptionnels.
+ * N3.7 : les fiches d'itinéraire (nom, commune, vignette, lien) sont
+ * retouchables ici — le modèle standard se personnalise bloc par bloc.
  *
  * Toute modification des blocs invalide le test d'envoi de la version
  * précédente (empreinte calculée côté serveur) ; le numéro repasse
@@ -188,7 +190,7 @@ export default function NewsletterEditor({
           <p className="cf-nl__hint">
             Ordre, masquage et retraits s&apos;enregistrent avec le bouton
             « Enregistrer ». Les blocs sorties/itinéraire/adhésion sont figés
-            à la génération (garde anti-erreur : le site peut bouger, pas le numéro).
+            à la création (garde anti-erreur : le site peut bouger, pas le numéro).
           </p>
           <div>
             {blocks.map((b, i) => (
@@ -273,6 +275,63 @@ export default function NewsletterEditor({
                       />
                     </label>
                     <label>
+                      Nom du parcours (affiché sous la vignette)
+                      <input
+                        type="text"
+                        value={b.card.title}
+                        disabled={b.hidden}
+                        onChange={(e) =>
+                          patchBlock(i, {
+                            card: { ...b.card, title: e.target.value },
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      Commune (titre de la colonne)
+                      <input
+                        type="text"
+                        value={b.card.townshipLabel}
+                        disabled={b.hidden}
+                        onChange={(e) =>
+                          patchBlock(i, {
+                            card: { ...b.card, townshipLabel: e.target.value },
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      Vignette (URL — vide pour masquer)
+                      <input
+                        type="text"
+                        value={b.card.imageUrl ?? ""}
+                        disabled={b.hidden}
+                        placeholder="https://…"
+                        onChange={(e) =>
+                          patchBlock(i, {
+                            card: {
+                              ...b.card,
+                              imageUrl: e.target.value || null,
+                            },
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      Lien du bouton « Accédez »
+                      <input
+                        type="text"
+                        value={b.card.url}
+                        disabled={b.hidden}
+                        placeholder="https://…/fr/routes/…"
+                        onChange={(e) =>
+                          patchBlock(i, {
+                            card: { ...b.card, url: e.target.value },
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
                       Note de rédaction (facultatif)
                       <textarea
                         value={b.note ?? ""}
@@ -285,7 +344,8 @@ export default function NewsletterEditor({
                     </label>
                     <p className="cf-nl__hint">
                       Itinéraire « {b.card.title} » ({b.card.townshipLabel}),
-                      figé à la génération.
+                      figé à la création et retouchable ici : commune, nom,
+                      vignette et lien alimentent la colonne du rendu.
                     </p>
                   </>
                 )}
