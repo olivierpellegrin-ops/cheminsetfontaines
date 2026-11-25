@@ -6,6 +6,9 @@
  *     cf. docs/MEDIA.md) — les fichiers sont dans public/images/routes/ ;
  *   - RoutePhoto.imageUrl : /images/routes/<slug>-01.jpg (6 albums,
  *     panneaux FFR compressés) ;
+ *   - Newsletter.coverImageUrl : la couverture de septembre 2026
+ *     (re-hébergement N3.10) bascule vers
+ *     /images/newsletters/couverture-09-2026.webp ;
  *   - les fiches créées via le back-office (imageUrl déjà local, ex.
  *     Combejean) ne sont JAMAIS touchées ;
  *   - les itinéraires sans bascule connue restent sur Framer (zéro rupture).
@@ -64,6 +67,12 @@ const ALBUM_SLUGS = new Set([
 
 const isLocal = (url: string) => url.startsWith("/images/");
 
+/** Couvertures de newsletters Framer encore externes (N3.10) : URL -> fichier local */
+const NEWSLETTER_COVERS: Record<string, string> = {
+  "https://framerusercontent.com/images/ummu5PHEcHXmlv6tpLOtN7HeapM.png":
+    "/images/newsletters/couverture-09-2026.webp",
+};
+
 async function existsInPublic(rel: string): Promise<boolean> {
   try {
     await access(path.join(process.cwd(), "public", rel));
@@ -77,6 +86,7 @@ async function main() {
   const dryRun = process.argv.includes("--dry-run");
   let heroes = 0;
   let albums = 0;
+  let covers = 0;
   const warnings: string[] = [];
 
   // 1. Photos d'albums (fichiers <slug>-01.jpg)
@@ -127,8 +137,30 @@ async function main() {
     heroes++;
   }
 
+  // 3. Couvertures de newsletters (N3.10)
+  const newsletters = await prisma.newsletter.findMany();
+  for (const nl of newsletters) {
+    if (!nl.coverImageUrl) continue;
+    const local = NEWSLETTER_COVERS[nl.coverImageUrl];
+    if (!local) continue;
+    if (!(await existsInPublic(local.slice(1)))) {
+      warnings.push(`newsletter ${nl.publicationLabel} : fichier manquant ${local}`);
+      continue;
+    }
+    console.log(
+      `${dryRun ? "[dry] " : ""}newsletter ${nl.publicationLabel} : ${nl.coverImageUrl} -> ${local}`,
+    );
+    if (!dryRun) {
+      await prisma.newsletter.update({
+        where: { id: nl.id },
+        data: { coverImageUrl: local },
+      });
+    }
+    covers++;
+  }
+
   console.log(
-    `\n${dryRun ? "[dry-run, RIEN écrit] " : ""}${heroes} image(s) principale(s), ${albums} photo(s) d'album.`,
+    `\n${dryRun ? "[dry-run, RIEN écrit] " : ""}${heroes} image(s) principale(s), ${albums} photo(s) d'album, ${covers} couverture(s) de newsletter.`,
   );
   if (warnings.length) {
     console.log("\nAvertissements :");

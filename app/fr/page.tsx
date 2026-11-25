@@ -65,13 +65,13 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO — à l'identique Framer : photo de fond (composant « Introduction »,
-          image framerusercontent PgAwvDzKwsXpUrrYpHZyKfslAw 1344x1008, height 600px,
-          padding 120/72, kicker beige rgb(230,215,174)), texte blanc. */}
+          1344x1008, height 600px, padding 120/72, kicker beige
+          rgb(230,215,174)), texte blanc. Image re-hébergée depuis le CDN
+          Framer (27/11) : WebP 1344x1008 q75, ~300 Ko. */}
       <section
         className="hero-intro"
         style={{
-          backgroundImage:
-            "url(https://framerusercontent.com/images/PgAwvDzKwsXpUrrYpHZyKfslAw.png?width=1344&height=1008)",
+          backgroundImage: "url(/images/home/hero-accueil.webp)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           color: "var(--parchment)",
@@ -95,7 +95,7 @@ export default async function HomePage() {
         <div className="about-columns">
           <div className="about-logo-card">
             <Image
-              src="https://framerusercontent.com/images/08OWyE53wBlq7B9DrXOKRkUsnE.png"
+              src="/images/home/logo-assoc.png"
               alt="Logo de l'association Chemins et Fontaines, Bassignac-le-Haut"
               width={1800}
               height={1200}
@@ -192,8 +192,7 @@ export default async function HomePage() {
         <div
           className="funds-card"
           style={{
-            backgroundImage:
-              "url(https://framerusercontent.com/images/BsraFx20t9LcEEnbZKrl8cCqCMU.png?width=1344&height=1008)",
+            backgroundImage: "url(/images/home/fond-dons.webp)",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
