@@ -20,6 +20,9 @@ import {
  * être ajoutés à la main. Les blocs events/route/adhesion sont FIGÉS à
  * la génération : seule leur note de rédaction est éditable ici.
  *
+ * N3.6 : blocs de composition du modèle Mailchimp ajoutables à la main
+ * (image, bouton, séparateur) pour les numéros exceptionnels.
+ *
  * Toute modification des blocs invalide le test d'envoi de la version
  * précédente (empreinte calculée côté serveur) ; le numéro repasse
  * « prêt » → « brouillon » à l'enregistrement.
@@ -79,6 +82,18 @@ export default function NewsletterEditor({
 
   const addAlbum = () =>
     setBlocks((bs) => [...bs, { type: "album", title: "", photos: [] }]);
+
+  const addImage = () =>
+    setBlocks((bs) => [
+      ...bs,
+      { type: "image", src: "", alt: "", href: "", width: 172 },
+    ]);
+
+  const addBouton = () =>
+    setBlocks((bs) => [...bs, { type: "bouton", label: "", href: "" }]);
+
+  const addSeparateur = () =>
+    setBlocks((bs) => [...bs, { type: "separateur" }]);
 
   const patchPhoto = (i: number, pi: number, patch: Partial<NlPhoto>) =>
     setBlocks((bs) =>
@@ -328,6 +343,94 @@ export default function NewsletterEditor({
                   </>
                 )}
 
+                {b.type === "image" && (
+                  <>
+                    <label>
+                      URL de l&apos;image
+                      <input
+                        type="text"
+                        value={b.src}
+                        disabled={b.hidden}
+                        placeholder="https://…"
+                        onChange={(e) => patchBlock(i, { src: e.target.value })}
+                      />
+                    </label>
+                    <label>
+                      Texte alternatif
+                      <input
+                        type="text"
+                        value={b.alt ?? ""}
+                        disabled={b.hidden}
+                        onChange={(e) => patchBlock(i, { alt: e.target.value })}
+                      />
+                    </label>
+                    <label>
+                      Lien au clic (facultatif)
+                      <input
+                        type="text"
+                        value={b.href ?? ""}
+                        disabled={b.hidden}
+                        placeholder="https://…"
+                        onChange={(e) => patchBlock(i, { href: e.target.value })}
+                      />
+                    </label>
+                    <label>
+                      Largeur en pixels (vide = 172)
+                      <input
+                        type="number"
+                        min={1}
+                        value={b.width ?? ""}
+                        disabled={b.hidden}
+                        onChange={(e) =>
+                          patchBlock(i, {
+                            width:
+                              e.target.value === ""
+                                ? undefined
+                                : Number(e.target.value),
+                          })
+                        }
+                      />
+                    </label>
+                  </>
+                )}
+
+                {b.type === "bouton" && (
+                  <>
+                    <label>
+                      Libellé du bouton
+                      <input
+                        type="text"
+                        value={b.label}
+                        disabled={b.hidden}
+                        placeholder="Accédez"
+                        onChange={(e) =>
+                          patchBlock(i, { label: e.target.value })
+                        }
+                      />
+                    </label>
+                    <label>
+                      Lien du bouton
+                      <input
+                        type="text"
+                        value={b.href}
+                        disabled={b.hidden}
+                        placeholder="https://…"
+                        onChange={(e) => patchBlock(i, { href: e.target.value })}
+                      />
+                    </label>
+                    <p className="cf-nl__hint">
+                      Bouton vert du modèle (fond #4d6b4b, coins 8 px).
+                    </p>
+                  </>
+                )}
+
+                {b.type === "separateur" && (
+                  <p className="cf-nl__hint">
+                    Trait horizontal vert 2 px, à l&apos;identique du
+                    séparateur du modèle Mailchimp.
+                  </p>
+                )}
+
                 {b.type === "adhesion" && (
                   <p className="cf-nl__hint">
                     Bloc automatique : invitation à adhérer, bouton vers la
@@ -343,6 +446,15 @@ export default function NewsletterEditor({
             </button>
             <button type="button" onClick={addAlbum}>
               Ajouter un bloc album
+            </button>
+            <button type="button" onClick={addImage}>
+              Ajouter une image
+            </button>
+            <button type="button" onClick={addBouton}>
+              Ajouter un bouton
+            </button>
+            <button type="button" onClick={addSeparateur}>
+              Ajouter un séparateur
             </button>
           </div>
         </div>

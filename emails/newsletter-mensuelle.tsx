@@ -1,230 +1,449 @@
-import { Heading } from "@react-email/heading";
-import { Link } from "@react-email/link";
+import { Body } from "@react-email/body";
+import { Container } from "@react-email/container";
+import { Head } from "@react-email/head";
+import { Html } from "@react-email/html";
+import { Preview } from "@react-email/preview";
 import { Section } from "@react-email/section";
 import { Text } from "@react-email/text";
-import { BaseEmail } from "./base";
-import { type NlBlock } from "@/lib/newsletters";
+import {
+  type NlBlock,
+  type NlEventCard,
+  type NlPhoto,
+} from "@/lib/newsletters";
 
 /**
- * Newsletter mensuelle « Les nouvelles du sentier » (brique N3, spec §5.3/§6.2) :
- * rendu du tableau de blocs dans la coquille BaseEmail (charte 600 px,
- * styles inline, pas d'image distante côté coquille ; les photos des blocs
- * sont servies par le site lui-même). Le pied légal (adresse postale,
- * rappel du contexte d'envoi) vient de BaseEmail ; le lien de
- * désinscription est réservé à l'envoi réel (brique N4) et au test.
+ * Newsletter « Lettre d'information » (N3.6) : rendu CALÉ SUR LE MODÈLE
+ * MAILCHIMP de l'association (modèle « CeF - newsletters - 09.26 », HTML
+ * fourni par Olivier). Structure du modèle, verrouillée à l'identique :
+ * fond de page #f9f9f9, conteneur blanc 660 px, lien « version
+ * navigateur », logo d'en-tête (416 px, cliquable), titre h1 20 px vert
+ * #4d6b4b, édito 14 px gras centré, QR « Scannez-moi » (110 px, cliquable
+ * vers le site), itinéraires groupés par bandes grises de 3 colonnes
+ * (commune 18 px, panneau 172 px, nom 14 px, bouton « Accédez »),
+ * réseaux sociaux, séparateur 2 px vert, logo de pied (434 px), pied
+ * légal 12 px. Textes partout en Helvetica Neue, #4d6b4b, gras, centré.
+ *
+ * Ce composant NE PASSE PAS par BaseEmail (coquille 600 px de la charte
+ * du site) : le modèle Mailchimp est une coquille à part, les autres
+ * e-mails transactionnels restent sur BaseEmail. Le lien de
+ * désinscription est paramétrique (test = Mailpit, envoi réel = brique N4).
+ *
+ * NB : images d'identité (logos, QR, icônes sociales) encore servies par
+ * les CDN du modèle d'origine (TODO N4/N5 : les re-héberger dans
+ * public/images/brand quand le PNG source est fourni).
  */
 
+/** Palette du modèle Mailchimp (relevé HTML de septembre 2026). */
 const C = {
-  ink: "#163c32",
-  muted: "#43534a",
-  line: "#d2dccb",
-  gold: "#c08a21",
-  tint: "#e8eee4",
+  vert: "#4d6b4b",
+  fond: "#f9f9f9",
+  blanc: "#ffffff",
+  noir: "#000000",
 };
 
-const h2 = {
+const FONT = "'Helvetica Neue', Helvetica, Arial, Verdana, sans-serif";
+
+/** Logo d'en-tête du modèle (416 px), lié vers le site. */
+const LOGO_HEADER =
+  "https://brand-assets.mailchimp.com/01KZF00C714Y4NW3R6FMW5YD1M.png";
+
+/** Logo de pied du modèle (434 px). */
+const LOGO_FOOTER =
+  "https://brand-assets.mailchimp.com/01KZF00BN02JPBMEBPRBZR994K.png";
+
+/** QR « Scannez-moi » du modèle (110 px) : pointe vers le site public. */
+const QR_SITE =
+  "https://mcusercontent.com/d8ca3d7b03b51b0bc6b05e561/images/85e8a7e3-4809-92ba-69bb-6e46d8dced01.png";
+
+/** Icônes sociales du modèle (24 px, variante sombre, CDN Mailchimp). */
+const ICONS = {
+  facebook:
+    "https://cdn-images.mailchimp.com/icons/social-block-v3/block-icons-v3/facebook-icon-dark-40.png",
+  instagram:
+    "https://cdn-images.mailchimp.com/icons/social-block-v3/block-icons-v3/instagram-icon-dark-40.png",
+  website:
+    "https://cdn-images.mailchimp.com/icons/social-block-v3/block-icons-v3/website-icon-dark-40.png",
+};
+
+/** Paragraphe standard du modèle : 14 px gras #4d6b4b centré, interligne 1,5. */
+const pStyle = {
   margin: "0 0 12px",
-  fontSize: "16px",
-  lineHeight: "22px",
+  fontSize: "14px",
+  lineHeight: "21px",
   fontWeight: 700,
-  color: C.ink,
-} as const;
+  color: C.vert,
+  textAlign: "center" as const,
+};
 
-const kicker = {
-  margin: "0 0 6px",
+/** Titre h1 du modèle : 20 px gras #4d6b4b centré, interligne 1,5. */
+const h1Style = {
+  margin: "0 0 12px",
+  fontSize: "20px",
+  lineHeight: "30px",
+  fontWeight: 700,
+  color: C.vert,
+  textAlign: "center" as const,
+};
+
+/** Intertitre de colonne/section du modèle : 18 px gras centré. */
+const h2Style = {
+  margin: "0 0 12px",
+  fontSize: "18px",
+  lineHeight: "27px",
+  fontWeight: 700,
+  color: C.vert,
+  textAlign: "center" as const,
+};
+
+/** Petit texte du pied légal du modèle : 12 px, noir. */
+const footStyle = {
+  margin: "0 0 12px",
   fontSize: "12px",
-  lineHeight: "16px",
-  fontWeight: 700,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  color: C.gold,
-} as const;
+  lineHeight: "18px",
+  color: C.noir,
+  textAlign: "center" as const,
+};
 
+/** Découpe un corps de texte en paragraphes (séparés par une ligne vide). */
 function paragraphs(body: string, style?: Record<string, unknown>) {
   return body
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean)
     .map((p, i) => (
-      <Text
-        key={i}
-        style={{
-          margin: "0 0 10px",
-          fontSize: "14px",
-          lineHeight: "21px",
-          whiteSpace: "pre-line",
-          ...(style ?? {}),
-        }}
-      >
+      <Text key={i} style={{ ...pStyle, ...(style ?? {}) }}>
         {p}
       </Text>
     ));
 }
 
-function BlockSwitch({
-  block,
-  adhesionUrl,
-}: {
-  block: NlBlock;
-  adhesionUrl: string;
-}) {
-  switch (block.type) {
-    case "intro":
-      return <>{paragraphs(block.body)}</>;
-    case "events":
-      return (
-        <>
-          <Text style={kicker}>{block.title ?? "Les sorties à venir"}</Text>
-          {block.cards.map((c) => (
-            <Section
-              key={c.slug}
+/**
+ * Bouton du modèle « Accédez » : pastille pleine #4d6b4b, coins 8 px,
+ * bordure 2 px, texte blanc 16 px, remplissage 16 x 28 px.
+ */
+function BoutonModele({ href, label }: { href: string; label: string }) {
+  return (
+    <table
+      align="center"
+      role="presentation"
+      style={{ margin: "0 auto" }}
+    >
+      <tbody>
+        <tr>
+          <td
+            style={{
+              backgroundColor: C.vert,
+              borderRadius: "8px",
+              textAlign: "center",
+            }}
+          >
+            <a
+              href={href}
+              target="_blank"
               style={{
-                margin: "0 0 10px",
-                padding: "12px 14px",
-                backgroundColor: C.tint,
-                borderRadius: "10px",
+                backgroundColor: C.vert,
+                borderRadius: "8px",
+                border: "2px solid " + C.vert,
+                color: C.blanc,
+                display: "block",
+                fontFamily: FONT,
+                fontSize: "16px",
+                fontWeight: "normal",
+                padding: "16px 28px",
+                textDecoration: "none",
               }}
             >
-              <Text style={{ margin: "0 0 4px", fontSize: "15px", fontWeight: 700, color: C.ink }}>
-                {c.title}
-              </Text>
-              <Text style={{ margin: "0 0 6px", fontSize: "13px", lineHeight: "18px", color: C.muted }}>
-                {c.dateLabel}
-              </Text>
-              {c.details ? (
-                <Text style={{ margin: "0 0 8px", fontSize: "13px", lineHeight: "19px", color: C.muted }}>
-                  {c.details}
-                </Text>
-              ) : null}
-              <Link href={c.url} style={{ fontSize: "13px", fontWeight: 700, color: C.ink }}>
-                Voir la sortie →
-              </Link>
-            </Section>
-          ))}
-        </>
-      );
-    case "route":
+              {label}
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+/** QR « Scannez-moi » du modèle : image 110 px centrée, cliquable vers le site. */
+function QrModele({ siteUrl }: { siteUrl: string }) {
+  return (
+    <Section align="center" style={{ padding: "12px 24px" }}>
+      <a href={siteUrl} target="_blank" style={{ display: "block" }}>
+        <img
+          src={QR_SITE}
+          alt="Scannez-moi : le site Chemins et Fontaines"
+          width={110}
+          style={{
+            display: "block",
+            width: "110px",
+            maxWidth: "100%",
+            height: "auto",
+            margin: "0 auto",
+          }}
+        />
+      </a>
+    </Section>
+  );
+}
+
+type NlRouteBlock = Extract<NlBlock, { type: "route" }>;
+
+/**
+ * Bande grise du modèle (#f9f9f9, marges 24 px) : les itinéraires
+ * consécutifs se regroupent par 3 — une colonne 33,33 % par parcours :
+ * commune 18 px, image du panneau 172 px (cliquable), nom 14 px,
+ * bouton « Accédez » vers la fiche.
+ */
+function BandeItineraires({ cards }: { cards: NlRouteBlock[] }) {
+  return (
+    <Section
+      style={{
+        backgroundColor: C.fond,
+        paddingTop: "24px",
+        paddingBottom: "24px",
+        marginTop: "12px",
+        marginBottom: "12px",
+      }}
+    >
+      <table
+        width="100%"
+        role="presentation"
+        style={{ borderCollapse: "separate" }}
+      >
+        <tbody>
+          <tr>
+            {cards.map((blocRoute) => (
+              <td
+                key={blocRoute.card.slug}
+                width="33.33333333333333%"
+                valign="top"
+                style={{ padding: "0 8px", verticalAlign: "top" }}
+              >
+                <Text style={h2Style}>{blocRoute.card.townshipLabel}</Text>
+                {blocRoute.card.imageUrl ? (
+                  <a
+                    href={blocRoute.card.url}
+                    target="_blank"
+                    style={{ display: "block", margin: "0 0 12px" }}
+                  >
+                    <img
+                      src={blocRoute.card.imageUrl}
+                      alt={blocRoute.card.imageAlt ?? blocRoute.card.title}
+                      width={172}
+                      style={{
+                        display: "block",
+                        width: "172px",
+                        maxWidth: "100%",
+                        height: "auto",
+                        margin: "0 auto",
+                      }}
+                    />
+                  </a>
+                ) : null}
+                <Text style={pStyle}>{blocRoute.card.title}</Text>
+                {blocRoute.note ? <Text style={pStyle}>{blocRoute.note}</Text> : null}
+                <BoutonModele href={blocRoute.card.url} label="Accédez" />
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+    </Section>
+  );
+}
+
+/** Bloc image autonome : centrée, largeur libre (défaut 172 px), lien facultatif. */
+function ImageModele({
+  src,
+  alt,
+  width,
+  href,
+}: {
+  src: string;
+  alt?: string;
+  width?: number;
+  href?: string;
+}) {
+  if (!src) return null;
+  const w = width && width > 0 ? width : 172;
+  const img = (
+    <img
+      src={src}
+      alt={alt ?? ""}
+      width={w}
+      style={{
+        display: "block",
+        width: w + "px",
+        maxWidth: "100%",
+        height: "auto",
+        margin: "12px auto",
+        border: 0,
+      }}
+    />
+  );
+  return (
+    <Section align="center">
+      {href ? (
+        <a href={href} target="_blank" style={{ display: "block" }}>
+          {img}
+        </a>
+      ) : (
+        img
+      )}
+    </Section>
+  );
+}
+
+/** Bloc photo d'album : pleine largeur, légende 12 px centrée. */
+function PhotoAlbum({ photo, i }: { photo: NlPhoto; i: number }) {
+  return (
+    <Section key={i} align="center" style={{ padding: "0 16px" }}>
+      <img
+        src={photo.url}
+        alt={photo.alt ?? ""}
+        width={628}
+        style={{
+          display: "block",
+          width: "100%",
+          maxWidth: "628px",
+          height: "auto",
+          margin: "12px auto",
+          border: 0,
+        }}
+      />
+      {photo.caption ? (
+        <Text
+          style={{
+            margin: "0 0 12px",
+            fontSize: "12px",
+            lineHeight: "18px",
+            color: C.vert,
+            textAlign: "center",
+          }}
+        >
+          {photo.caption}
+        </Text>
+      ) : null}
+    </Section>
+  );
+}
+
+/** Bloc sortie : nom en lien + libellé de date, une ligne centrée par sortie. */
+function LigneSortie({ card }: { card: NlEventCard }) {
+  return (
+    <Text style={pStyle}>
+      <a href={card.url} target="_blank" style={{ color: C.vert, textDecoration: "none" }}>
+        {card.title}
+      </a>
+      {" — " + card.dateLabel}
+    </Text>
+  );
+}
+
+/**
+ * Rendu d'un bloc autonome (tout sauf les itinéraires, regroupés en
+ * bandes par le composant principal).
+ */
+function BlocSansGroupe({ block, adhesionUrl }: { block: NlBlock; adhesionUrl: string }) {
+  switch (block.type) {
+    case "intro":
       return (
-        <>
-          <Text style={kicker}>{block.title ?? "Itinéraire à la une"}</Text>
-          {block.card.imageUrl ? (
-            <img
-              src={block.card.imageUrl}
-              alt={block.card.imageAlt ?? block.card.title}
-              width={600}
-              height={338}
-              style={{ width: "100%", maxWidth: "600px", height: "auto", borderRadius: "10px", display: "block" }}
-            />
-          ) : null}
-          <Text style={{ ...h2, margin: "12px 0 2px", fontSize: "18px" }}>{block.card.title}</Text>
-          <Text style={{ margin: "0 0 8px", fontSize: "13px", color: C.muted }}>
-            {block.card.townshipLabel}
-          </Text>
-          <Text
-            style={{
-              margin: "0 0 8px",
-              padding: "10px 12px",
-              border: "1px solid " + C.line,
-              borderRadius: "10px",
-              fontSize: "14px",
-              lineHeight: "21px",
-              color: C.muted,
-            }}
-          >
-            {block.card.excerpt}
-          </Text>
-          {block.note ? (
-            <Text style={{ margin: "0 0 8px", fontSize: "14px", lineHeight: "21px", color: C.ink }}>
-              {block.note}
-            </Text>
-          ) : null}
-          <Link
-            href={block.card.url}
-            style={{
-              display: "inline-block",
-              border: "1px solid " + C.gold,
-              color: C.ink,
-              fontWeight: 700,
-              fontSize: "14px",
-              lineHeight: "20px",
-              padding: "10px 20px",
-              borderRadius: "100px",
-              textDecoration: "none",
-            }}
-          >
-            Découvrir l&apos;itinéraire
-          </Link>
-        </>
+        <Section style={{ padding: "0 16px" }}>{paragraphs(block.body)}</Section>
+      );
+    case "events":
+      return (
+        <Section style={{ padding: "0 16px", marginTop: "12px" }}>
+          <Text style={h2Style}>{block.title ?? "Les sorties à venir"}</Text>
+          {block.cards.map((c) => (
+            <LigneSortie key={c.slug} card={c} />
+          ))}
+        </Section>
       );
     case "album":
       return (
-        <>
-          <Text style={kicker}>{block.title ?? "Photos du mois"}</Text>
-          {block.photos.map((p, i) => (
-            <Section key={i} style={{ margin: "0 0 12px" }}>
-              <img
-                src={p.url}
-                alt={p.alt ?? ""}
-                width={600}
-                height={338}
-                style={{ width: "100%", maxWidth: "600px", height: "auto", borderRadius: "10px", display: "block" }}
-              />
-              {p.caption ? (
-                <Text style={{ margin: "6px 0 0", fontSize: "12px", lineHeight: "17px", color: C.muted }}>
-                  {p.caption}
-                </Text>
-              ) : null}
+        <Section style={{ marginTop: "12px" }}>
+          {block.title ? (
+            <Section style={{ padding: "0 16px" }}>
+              <Text style={h2Style}>{block.title}</Text>
             </Section>
+          ) : null}
+          {block.photos.map((p, i) => (
+            <PhotoAlbum key={i} photo={p} i={i} />
           ))}
-        </>
+        </Section>
       );
     case "texte":
       return (
-        <>
-          {block.title ? <Text style={{ ...h2, fontSize: "15px" }}>{block.title}</Text> : null}
+        <Section style={{ padding: "0 16px", marginTop: "12px" }}>
+          {block.title ? <Text style={h2Style}>{block.title}</Text> : null}
           {paragraphs(block.body)}
-        </>
+        </Section>
       );
-    case "adhesion":
+    case "image":
+      return (
+        <ImageModele src={block.src} alt={block.alt} width={block.width} href={block.href} />
+      );
+    case "bouton":
+      if (!block.label || !block.href) return null;
+      return (
+        <Section style={{ padding: "12px 16px" }}>
+          <BoutonModele href={block.href} label={block.label} />
+        </Section>
+      );
+    case "separateur":
       return (
         <Section
           style={{
-            margin: "6px 0 10px",
-            padding: "14px 16px",
-            border: "1px solid " + C.gold,
-            borderRadius: "12px",
-            textAlign: "center",
-            backgroundColor: "#fdf9f0",
+            padding: "20px 48px",
+            marginTop: "12px",
+            marginBottom: "12px",
           }}
         >
-          <Text style={{ margin: "0 0 6px", fontSize: "15px", fontWeight: 700, color: C.ink }}>
-            Envie de rejoindre l&apos;association ?
-          </Text>
-          <Text style={{ margin: "0 0 12px", fontSize: "13px", lineHeight: "19px", color: C.muted }}>
-            Marcher ensemble, protéger les paysages qui nous relient. La
-            cotisation se règle simplement auprès du bureau : un
-            e-mail suffit pour commencer.
-          </Text>
-          <Link
-            href={adhesionUrl}
-            style={{
-              display: "inline-block",
-              border: "1px solid " + C.gold,
-              color: C.ink,
-              fontWeight: 700,
-              fontSize: "14px",
-              lineHeight: "20px",
-              padding: "10px 22px",
-              borderRadius: "100px",
-              textDecoration: "none",
-            }}
+          <table
+            width="100%"
+            role="presentation"
+            style={{ width: "100%", backgroundColor: "transparent" }}
           >
-            Adhérer à l&apos;association
-          </Link>
+            <tbody>
+              <tr>
+                <td
+                  style={{
+                    borderTopWidth: "2px",
+                    borderTopStyle: "solid",
+                    borderTopColor: C.vert,
+                    fontSize: 0,
+                    lineHeight: 0,
+                  }}
+                >
+                  {" "}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </Section>
       );
+    case "adhesion":
+      return (
+        <Section style={{ padding: "0 16px", marginTop: "24px", marginBottom: "12px" }}>
+          <Text style={h2Style}>Envie de rejoindre l&apos;association ?</Text>
+          <Text style={pStyle}>
+            Marcher ensemble, protéger les paysages qui nous relient. La
+            cotisation se règle simplement auprès du bureau : un e-mail
+            suffit pour commencer.
+          </Text>
+          <BoutonModele href={adhesionUrl} label="Adhérer à l'association" />
+        </Section>
+      );
+    case "route":
+      // Les blocs itinéraire sont regroupés en bandes par le composant
+      // principal : ce cas n'est jamais atteint individuellement.
+      return null;
   }
 }
+
+/**
+ * Élément de séquence : un bloc autonome, ou une bande de 3 colonnes
+ * d'itinéraires (chunks de parcours consécutifs).
+ */
+type NlItem = { kind: "bloc"; block: NlBlock } | { kind: "bande"; cards: NlRouteBlock[] };
 
 export function NewsletterMensuelle({
   title,
@@ -242,44 +461,189 @@ export function NewsletterMensuelle({
   summary?: string;
 }) {
   const adhesionUrl = siteUrl + "/fr";
+  const webVersionUrl = siteUrl + "/fr/newsletters";
   const visible = blocks.filter((b) => !b.hidden);
+
+  // Regroupement : les itinéraires CONSECUTIFS forment des bandes de 3
+  // colonnes, à l'identique du modèle (2 bandes de 3 pour 6 parcours).
+  const items: NlItem[] = [];
+  let run: NlRouteBlock[] = [];
+  const vider = () => {
+    while (run.length > 0) {
+      items.push({ kind: "bande", cards: run.slice(0, 3) });
+      run = run.slice(3);
+    }
+  };
+  for (const b of visible) {
+    if (b.type === "route") {
+      run.push(b);
+      continue;
+    }
+    vider();
+    items.push({ kind: "bloc", block: b });
+  }
+  vider();
+
+  // QR du modèle : rendu juste après le bloc édito (en tête du numéro,
+  // à l'identique du modèle qui le place entre l'édito et la 1re bande).
+  // Sans édito en tête de blocs, pas de QR (cas rare : le numéro reste maître).
+  let qrRestant = visible.length > 0 && visible[0].type === "intro";
+
   return (
-    <BaseEmail
-      preview={summary ?? title}
-      footerNote={
-        "Vous recevez cet e-mail car vous êtes inscrit(e) aux nouvelles du sentier de l'association Chemins et Fontaines. " +
-        "Vous pouvez vous désinscrire à tout moment (lien ci-dessous) ou en répondant à cet e-mail : le bureau vous retirera de la liste."
-      }
-    >
-      <Heading
-        as="h1"
-        style={{ margin: "0 0 4px", fontSize: "22px", lineHeight: "28px", color: C.ink }}
-      >
-        {title}
-      </Heading>
-      <Text style={{ margin: "0 0 18px", fontSize: "13px", color: C.muted }}>
-        {publicationLabel}
-      </Text>
-      {visible.map((b, i) => (
-        <div key={i}>
-          <BlockSwitch block={b} adhesionUrl={adhesionUrl} />
-        </div>
-      ))}
-      <Section
+    <Html lang="fr">
+      <Head />
+      <Preview>{summary ?? title}</Preview>
+      <Body
         style={{
-          margin: "18px 0 8px",
-          paddingTop: "14px",
-          borderTop: "1px solid " + C.line,
-          textAlign: "center",
+          margin: 0,
+          padding: "24px 0",
+          backgroundColor: C.fond,
+          fontFamily: FONT,
         }}
       >
-        <Link
-          href={unsubscribeUrl}
-          style={{ fontSize: "12px", color: C.muted, textDecoration: "underline" }}
+        <Container
+          style={{
+            maxWidth: "660px",
+            margin: "0 auto",
+            backgroundColor: C.blanc,
+          }}
         >
-          Se désinscrire des nouvelles du sentier
-        </Link>
-      </Section>
-    </BaseEmail>
+          {/* Lien « version navigateur » du modèle (b1). */}
+          <Section style={{ padding: "0 16px" }}>
+            <Text style={footStyle}>
+              <a href={webVersionUrl} target="_blank" style={{ color: C.noir }}>
+                Voir cette newsletter dans votre navigateur
+              </a>
+            </Text>
+          </Section>
+
+          {/* Logo d'en-tête du modèle (b2) : 416 px, cliquable. */}
+          <Section align="center" style={{ padding: "12px 24px" }}>
+            <a href={siteUrl} target="_blank" style={{ display: "block" }}>
+              <img
+                src={LOGO_HEADER}
+                alt="Chemins et Fontaines"
+                width={416}
+                style={{
+                  display: "block",
+                  width: "416px",
+                  maxWidth: "100%",
+                  height: "auto",
+                  margin: "0 auto",
+                  border: 0,
+                }}
+              />
+            </a>
+          </Section>
+
+          {/* Titres du modèle (b5) : « Lettre d'information - <numéro> » + titre du numéro. */}
+          <Section style={{ padding: "0 16px" }}>
+            <Text style={h1Style}>{"Lettre d'information" + (publicationLabel ? " - " + publicationLabel : "")}</Text>
+            {title ? <Text style={h1Style}>{title}</Text> : null}
+          </Section>
+
+          {items.map((item, i) => {
+            if (item.kind === "bande") {
+              return <BandeItineraires key={i} cards={item.cards} />;
+            }
+            const contenu = (
+              <BlocSansGroupe key={i} block={item.block} adhesionUrl={adhesionUrl} />
+            );
+            const avecQr = qrRestant;
+            qrRestant = false;
+            return avecQr ? (
+              <div key={i} style={{ display: "contents" }}>
+                {contenu}
+                <QrModele siteUrl={siteUrl} />
+              </div>
+            ) : (
+              contenu
+            );
+          })}
+
+          {/* Réseaux sociaux du modèle (b39) : Facebook, Instagram, site. */}
+          <Section style={{ padding: "48px 0 24px" }}>
+            <table align="center" role="presentation">
+              <tbody>
+                <tr>
+                  <td style={{ padding: "3px 12px" }}>
+                    <a href="https://www.facebook.com/profile.php?id=61568993068777" target="_blank">
+                      <img src={ICONS.facebook} width={24} height={24} alt="Facebook" className="mceSocialFollowImage" style={{ display: "block", border: 0 }} />
+                    </a>
+                  </td>
+                  <td style={{ padding: "3px 12px" }}>
+                    <a href="https://www.instagram.com/" target="_blank">
+                      <img src={ICONS.instagram} width={24} height={24} alt="Instagram" className="mceSocialFollowImage" style={{ display: "block", border: 0 }} />
+                    </a>
+                  </td>
+                  <td style={{ padding: "3px 12px" }}>
+                    <a href={siteUrl} target="_blank">
+                      <img src={ICONS.website} width={24} height={24} alt="Site web" className="mceSocialFollowImage" style={{ display: "block", border: 0 }} />
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </Section>
+
+          {/* Séparateur du modèle (b40) : 2 px vert. */}
+          <Section style={{ padding: "20px 48px" }}>
+            <table width="100%" role="presentation" style={{ width: "100%" }}>
+              <tbody>
+                <tr>
+                  <td
+                    style={{
+                      borderTopWidth: "2px",
+                      borderTopStyle: "solid",
+                      borderTopColor: C.vert,
+                      fontSize: 0,
+                      lineHeight: 0,
+                    }}
+                  >
+                    {" "}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </Section>
+
+          {/* Logo de pied du modèle (b41) : 434 px, cliquable. */}
+          <Section align="center" style={{ padding: "12px 24px", backgroundColor: C.blanc }}>
+            <a href={siteUrl} target="_blank" style={{ display: "block" }}>
+              <img
+                src={LOGO_FOOTER}
+                alt="Chemins et Fontaines"
+                width={434}
+                style={{
+                  display: "block",
+                  width: "434px",
+                  maxWidth: "100%",
+                  height: "auto",
+                  margin: "0 auto",
+                  border: 0,
+                }}
+              />
+            </a>
+          </Section>
+
+          {/* Pied légal du modèle (b45) : copyright, adresse postale, désinscription. */}
+          <Section style={{ padding: "12px 16px 24px" }}>
+            <Text style={footStyle}>
+              {"Copyright (C) " + new Date().getFullYear() + " Chemins et Fontaines. Tous droits réservés."}
+            </Text>
+            <Text style={footStyle}>
+              Notre adresse postale : 14 Le Sirieix, 19220 Bassignac-le-Haut, France
+            </Text>
+            <Text style={footStyle}>
+              Vous ne souhaitez plus recevoir ces e-mails ?{" "}
+              <a href={unsubscribeUrl} target="_blank" style={{ color: C.noir }}>
+                Vous pouvez vous désinscrire
+              </a>{" "}
+              ou en répondant à cet e-mail : le bureau vous retirera de la liste.
+            </Text>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
   );
 }
