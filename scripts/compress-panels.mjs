@@ -38,7 +38,7 @@ const normalize = (s) =>
 
 async function convert(rel) {
   const outRel = ALBUMS.get(rel) ?? `panels-ffr/${normalize(path.basename(rel))}.jpg`;
-  const outPath = path.resolve("public", outRel);
+  const outPath = path.resolve("public", "images", outRel);
   await mkdir(path.dirname(outPath), { recursive: true });
   const info = await sharp(path.join(SRC, rel))
     .rotate() // respecte l'orientation EXIF des photos iPhone
