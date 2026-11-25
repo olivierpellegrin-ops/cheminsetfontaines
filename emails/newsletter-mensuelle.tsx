@@ -494,7 +494,7 @@ export function NewsletterContenu({
   title: string;
   publicationLabel: string;
   blocks: NlBlock[];
-  siteUrl: string; // base du site (liens interns complets)
+  siteUrl: string; // base du site (liens internes complets)
   unsubscribeUrl: string; // lien de désinscription 1 clic (test ou envoi réel)
   wrapBlock?: WrapBlock;
 }) {
