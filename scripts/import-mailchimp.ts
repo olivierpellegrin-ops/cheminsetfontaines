@@ -14,8 +14,11 @@
  *  - une adresse déjà unsubscribed localement n'est PAS réabonnée
  *    (la désinscription locale est plus récente que le consentement Mailchimp) ;
  *  - une adresse locale pending passe subscribed (consentement Mailchimp) ;
- *  - détection automatique des colonnes (Email Address / EMAIL / E-mail…,
- *    First Name, Last Name, Confirm Time) : les exports Mailchimp varient.
+ *  - détection automatique des colonnes (Email Address / Adresse e-mail /
+ *    EMAIL / E-mail…, First Name / Prénom, Last Name / Nom de famille,
+ *    Confirm Time / CONFIRM_TIME) : les exports Mailchimp varient selon
+ *    la langue de l'interface (l'export FR nomme la colonne « Adresse
+ *    e-mail » et garde les noms techniques OPTIN_TIME/CONFIRM_TIME).
  */
 
 import { PrismaClient } from "@prisma/client";
@@ -50,6 +53,18 @@ function maskEmail(email: string): string {
   return `${name.slice(0, 1)}***@${domain}`;
 }
 
+/** Colonnes e-mail selon la langue de l'export Mailchimp. */
+const EMAIL_COLUMNS = [
+  "Email Address",
+  "Adresse e-mail",
+  "Adresse Email",
+  "Adresse mail",
+  "EMAIL",
+  "E-mail",
+  "Email",
+  "email address",
+];
+
 async function main() {
   const argv = process.argv.slice(2);
   const dryRun = argv.includes("--dry-run");
@@ -61,7 +76,7 @@ async function main() {
 
   const text = await readFile(csvPath, "utf8");
   const rows = parseCsvAsObjects(text).filter((r) => {
-    const email = pick(r, ["Email Address", "EMAIL", "E-mail", "Email", "email address"]);
+    const email = pick(r, EMAIL_COLUMNS);
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
   });
   if (rows.length === 0) {
@@ -80,7 +95,7 @@ async function main() {
   let excludedCleaned = 0;
 
   for (const row of rows) {
-    const email = pick(row, ["Email Address", "EMAIL", "E-mail", "Email", "email address"])
+    const email = pick(row, EMAIL_COLUMNS)
       .trim()
       .toLowerCase();
     const firstName = pick(row, ["First Name", "FIRSTNAME", "FNAME", "Prénom"]) || null;
