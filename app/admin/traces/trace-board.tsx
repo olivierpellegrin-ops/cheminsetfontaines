@@ -142,7 +142,7 @@ function Row({
               Renommer
             </button>
           ) : null}
-          {listKey === "selected" ? (
+          {listKey !== "new" ? (
             <>
               <button type="button" className="cf-traces__mini" onClick={onVoir}>
                 Voir

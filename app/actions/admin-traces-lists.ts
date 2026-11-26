@@ -107,7 +107,8 @@ export async function deleteTrace(formData: FormData): Promise<TraceActionResult
 }
 
 /**
- * Correctif S3b : retélécharge le GPX d'un tracé « Sélectionné » (Streams
+ * Correctif S3b : retélécharge le GPX d'un tracé « Sélectionné » ou du
+ * stock tampon « Prêts à publier » (Streams
  * robuste : timeout + retry + cause réseau) et met à jour gpxContent, sans
  * toucher au statut ni au titre. Répare une ligne dont le GPX stocké est
  * invalide ou atrophié (aperçu [Voir] en erreur « Aucune trace ») : le bouton
@@ -117,10 +118,11 @@ export async function refetchTraceGpx(formData: FormData): Promise<TraceActionRe
   await requireSession();
   const id = String(formData.get("traceId") ?? "");
   const trace = await prisma.stravaTrace.findUnique({ where: { id } });
-  if (!trace || trace.status !== "SELECTED") {
+  if (!trace || (trace.status !== "SELECTED" && trace.status !== "BUFFER")) {
     return {
       ok: false,
-      error: "Seul un tracé de la liste « Sélectionnés » peut voir son GPX retéléchargé.",
+      error:
+        "Seul un tracé des listes « Sélectionnés » ou « Prêts à publier » peut voir son GPX retéléchargé.",
     };
   }
   try {
