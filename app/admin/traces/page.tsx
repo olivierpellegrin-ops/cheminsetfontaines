@@ -89,10 +89,12 @@ export default async function AdminTracesPage({
       }
     : {};
 
-  const [newTotal, selectedTotal, bufferTotal, credential] = await Promise.all([
+  const [newTotal, selectedTotal, bufferTotal, consumedTotal, credential] = await Promise.all([
     prisma.stravaTrace.count({ where: { status: "NEW", ...qFilter } }),
     prisma.stravaTrace.count({ where: { status: "SELECTED" } }),
     prisma.stravaTrace.count({ where: { status: "BUFFER" } }),
+    // S4 (D6) : la liste repliée « Publiés » en bas de page.
+    prisma.stravaTrace.count({ where: { status: "CONSUMED" } }),
     prisma.stravaCredential.findFirst(),
   ]);
 
@@ -113,7 +115,7 @@ export default async function AdminTracesPage({
     distanceM: true,
   } as const;
 
-  const [newRows, selectedRows, bufferRows] = await Promise.all([
+  const [newRows, selectedRows, bufferRows, consumedRows] = await Promise.all([
     prisma.stravaTrace.findMany({
       where: { status: "NEW", ...qFilter },
       orderBy: { startTime: "desc" },
@@ -134,6 +136,13 @@ export default async function AdminTracesPage({
       skip: (pBuffer - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       select: traceSelect,
+    }),
+    // S4 (D6) : lignes consommées, avec l'itinéraire lié (lien + statut).
+    prisma.stravaTrace.findMany({
+      where: { status: "CONSUMED" },
+      orderBy: { startTime: "desc" },
+      take: PAGE_SIZE,
+      select: { ...traceSelect, route: { select: { id: true, status: true } } },
     }),
   ]);
 
@@ -201,6 +210,16 @@ export default async function AdminTracesPage({
           new: toList(newRows, newTotal, pNew, newPages),
           selected: toList(selectedRows, selectedTotal, pSelected, selectedPages),
           buffer: toList(bufferRows, bufferTotal, pBuffer, bufferPages),
+        }}
+        consumed={{
+          total: consumedTotal,
+          rows: consumedRows.map((r) => ({
+            id: r.id,
+            localTitle: r.localTitle,
+            startTime: r.startTime.toISOString(),
+            distanceM: r.distanceM,
+            route: r.route ? { id: r.route.id, status: String(r.route.status) } : null,
+          })),
         }}
         q={q}
         maptilerKey={process.env.MAPTILER_KEY ?? ""}

@@ -37,6 +37,15 @@ export interface TraceListData {
   pages: number;
 }
 
+/** Ligne consommée (S4, D6) : tracé devenu itinéraire, lien vers celui-ci. */
+export interface ConsumedTraceRow {
+  id: string;
+  localTitle: string;
+  startTime: string;
+  distanceM: number | null;
+  route: { id: string; status: string } | null;
+}
+
 const frDateTime = (iso: string) =>
   new Date(iso).toLocaleString("fr-FR", {
     timeZone: "Europe/Paris",
@@ -157,6 +166,17 @@ function Row({
               </button>
             </>
           ) : null}
+          {/* S4 : le stock « Prêts à publier » ouvre le formulaire d'itinéraire
+              pré-rempli (titre + GPX de la trace, spec §7 brique S4). */}
+          {listKey === "buffer" ? (
+            <Link
+              className="cf-traces__mini"
+              href={`/admin/routes/new?trace=${row.id}`}
+              title="Ouvre le formulaire d'itinéraire pré-rempli (titre + GPX de la trace)"
+            >
+              Créer l&apos;itinéraire
+            </Link>
+          ) : null}
           <button type="button" className="cf-traces__mini" onClick={onDelete}>
             Supprimer
           </button>
@@ -191,11 +211,13 @@ function Row({
 
 export default function TraceBoard({
   lists,
+  consumed,
   q,
   maptilerKey,
   connected,
 }: {
   lists: { new: TraceListData; selected: TraceListData; buffer: TraceListData };
+  consumed: { rows: ConsumedTraceRow[]; total: number };
   q: string;
   maptilerKey: string;
   connected: boolean;
@@ -405,6 +427,42 @@ export default function TraceBoard({
 
         {renderList("buffer", "Prêts à publier")}
       </div>
+
+      {/* S4 (D6) : liste REPLIÉE des tracés publiés — la ligne est conservée,
+          badge selon l'état de l'itinéraire lié + lien d'édition. */}
+      <details className="cf-traces__consumed">
+        <summary>
+          Publiés
+          <span className="cf-admin__badge cf-admin__badge--published">{consumed.total}</span>
+          <span className="cf-traces__consumed-hint">tracés devenus itinéraires</span>
+        </summary>
+        {consumed.rows.length === 0 ? (
+          <p className="cf-traces__empty">Aucun tracé publié pour l&apos;instant.</p>
+        ) : (
+          <ul className="cf-traces__rows cf-traces__rows--consumed">
+            {consumed.rows.map((t) => (
+              <li key={t.id} className="cf-traces__row">
+                <div className="cf-traces__row-main">
+                  <span className="cf-traces__row-time">{frDateTime(t.startTime)}</span>
+                  <span className="cf-traces__row-title">— {t.localTitle}</span>
+                  <span className="cf-traces__badge-done">
+                    {t.route
+                      ? t.route.status === "published"
+                        ? "publié"
+                        : "brouillon"
+                      : "itinéraire supprimé"}
+                  </span>
+                  {t.route ? (
+                    <Link className="cf-traces__mini" href={`/admin/routes/${t.route.id}`}>
+                      Itinéraire
+                    </Link>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </details>
 
       {/* Aperçu [Voir] : réutilise le viewer GPX existant, lit gpxContent servie
           par la route admin (jamais un fichier public). */}

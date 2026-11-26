@@ -318,3 +318,44 @@
   align-items: center;
   gap: 10px;
 }
+
+/* ======================= Brique S4 (spec §7, D6) =======================
+ * Liste repliée « Publiés » sous la grille : tracés devenus itinéraires.
+ * La ligne est conservée (décision D6), avec badge d'état de l'itinéraire
+ * lié et lien d'édition — repliée pour ne pas encombrer les 3 colonnes. */
+.cf-traces__consumed {
+  margin-top: 18px;
+  background: #fff;
+  border: 1px solid #dde4e0;
+  border-radius: 10px;
+  padding: 10px 16px;
+}
+.cf-traces__consumed summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  list-style: revert; /* garde le discloseur natif */
+}
+.cf-traces__consumed-hint {
+  font-weight: 400;
+  font-size: 12px;
+  color: #6b6455;
+}
+.cf-traces__consumed[open] summary {
+  margin-bottom: 8px;
+}
+.cf-traces__rows--consumed .cf-traces__row-main {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+.cf-traces__badge-done {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #e2efe4; /* même teinte que cf-admin__badge--published */
+  color: #2c5a33;
+}
