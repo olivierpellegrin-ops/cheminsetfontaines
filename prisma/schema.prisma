@@ -303,3 +303,58 @@ model EmailOutbox {
 
   @@index([status, requestedAt])
 }
+
+// Brique S0 « Agent Strava » (spec cf-spec-agent-strava du 26/11/2026) :
+// tracés importés des activités Strava (Walk/Hike uniquement) et traités en
+// 3 listes : NEW -> SELECTED -> BUFFER -> CONSUMED ; DELETED = tombestone
+// anti-resynchronisation (jamais réimporté). stravaId est stocké en String :
+// Strava passera les ids d'activité en 64 bits après juin 2027.
+// routeId est un simple pointeur sans FK : supprimer l'itinéraire ne doit pas
+// effacer l'historique des tracés (règle anti-doublon du chantier).
+model StravaTrace {
+  id           String           @id @default(cuid())
+  stravaId     String           @unique
+  stravaTitle  String           // dernier titre vu sur Strava
+  localTitle   String           // titre éditable dans le back-office
+  titleSource  TraceTitleSource @default(strava)
+  sportType    String           // "Walk" | "Hike"
+  startTime    DateTime         // départ de l'activité (locale Strava)
+  distanceM    Float?
+  elevDiffM    Float?
+  status       TraceStatus      @default(NEW)
+  gpxContent   String?          // GPX (Streams -> GPX), rempli à la sélection (D4)
+  gpxFetchedAt DateTime?
+  routeId      String?          // itinéraire créé depuis cette trace (CONSUMED)
+  syncedAt     DateTime         @default(now())
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([status, startTime])
+}
+
+enum TraceTitleSource {
+  strava // titre non renommé localement : la sync peut le rafraîchir
+  local  // renommé localement : la sync ne touche plus le titre
+}
+
+enum TraceStatus {
+  NEW       // liste 1 « Tracés Strava »
+  SELECTED  // liste 2 « Sélectionnés » (GPX téléchargé)
+  BUFFER    // liste 3 « Prêts à publier » (stock tampon)
+  CONSUMED  // itinéraire créé (rattaché à routeId)
+  DELETED   // supprimé par le bureau : tombestone, jamais resynchronisé
+}
+
+// Brique S1 : jetons OAuth Strava (une seule ligne = un seul athlète, Olivier).
+// accessToken/refreshToken sont chiffrés applicativement (AES-GCM, clé dérivée
+// d'AUTH_SECRET) — jamais en clair en base, jamais dans le repo (spec §8).
+model StravaCredential {
+  id           String   @id @default(cuid())
+  athleteId    String   @unique
+  athleteName  String   // affiché dans le bandeau de connexion
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  scope        String
+  updatedAt    DateTime @updatedAt
+}
