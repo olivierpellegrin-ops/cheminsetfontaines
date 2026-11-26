@@ -14,10 +14,10 @@ import { createPortal } from "react-dom";
  * sur un fond vert-noir semi-transparent rgba(9, 30, 23, 0.88)
  * (teinte mesurée sur l'original à partir de l'écran publié).
  * Radius 14 et ombre 0 12px 40px rgba(0, 0, 0, 0.35) (specs
- * RoutePhotoGallery.tsx d'origine), sans bouton ni légende visibles
- * (caption sert uniquement au libellé d'accessibilité). Le bouton
- * trigger reprend le style de l'image via className (.route-img /
- * .card-image / .route-detail-image).
+ * RoutePhotoGallery.tsx d'origine), avec bouton ✕ en haut à droite
+ * (bricole du 26/11 : la fermeture par Échap ou clic sur le fond seul
+ * n'était pas intuitive). Le bouton trigger reprend le style de l'image
+ * via className (.route-img / .card-image / .route-detail-image).
  */
 export default function ZoomImage({
   src,
@@ -97,6 +97,34 @@ export default function ZoomImage({
               padding: 24,
             }}
           >
+            <button
+              type="button"
+              aria-label="Fermer"
+              onClick={(e) => {
+                e.stopPropagation();
+                close();
+              }}
+              style={{
+                position: "fixed",
+                top: 24,
+                right: 24,
+                zIndex: 10000,
+                width: 44,
+                height: 44,
+                border: 0,
+                borderRadius: 999,
+                background: "rgba(9, 30, 23, 0.55)",
+                color: "#fff",
+                fontSize: 20,
+                lineHeight: 1,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              ✕
+            </button>
             <Image
               src={src}
               alt={alt}
