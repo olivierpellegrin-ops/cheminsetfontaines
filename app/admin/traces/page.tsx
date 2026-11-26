@@ -137,14 +137,31 @@ export default async function AdminTracesPage({
       take: PAGE_SIZE,
       select: traceSelect,
     }),
-    // S4 (D6) : lignes consommées, avec l'itinéraire lié (lien + statut).
+    // S4 (D6) : lignes consommées. PAS de select imbriqué « route » : le
+    // modèle S0 porte routeId SANS relation Prisma, et un select de relation
+    // inexistante passe le typecheck (objet étalé) mais échoue à l'exécution
+    // (PrismaClientValidationError, vécu 26/11 au soir). Les itinéraires
+    // liés sont lus séparément par leurs ids.
     prisma.stravaTrace.findMany({
       where: { status: "CONSUMED" },
       orderBy: { startTime: "desc" },
       take: PAGE_SIZE,
-      select: { ...traceSelect, route: { select: { id: true, status: true } } },
+      select: { ...traceSelect, routeId: true },
     }),
   ]);
+
+  const routeIds = consumedRows
+    .map((r) => r.routeId)
+    .filter((id): id is string => Boolean(id));
+  const routesById = new Map(
+    (routeIds.length
+      ? await prisma.route.findMany({
+          where: { id: { in: routeIds } },
+          select: { id: true, status: true },
+        })
+      : []
+    ).map((r) => [r.id, { id: r.id, status: String(r.status) } as const])
+  );
 
   const toList = (
     rows: { id: string; localTitle: string; startTime: Date; distanceM: number | null }[],
@@ -218,7 +235,7 @@ export default async function AdminTracesPage({
             localTitle: r.localTitle,
             startTime: r.startTime.toISOString(),
             distanceM: r.distanceM,
-            route: r.route ? { id: r.route.id, status: String(r.route.status) } : null,
+            route: r.routeId ? (routesById.get(r.routeId) ?? null) : null,
           })),
         }}
         q={q}
