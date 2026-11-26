@@ -99,6 +99,7 @@ function Row({
   editingRow,
   onRenameOpen,
   onRename,
+  onCancelEdit,
   onDelete,
   onVoir,
 }: {

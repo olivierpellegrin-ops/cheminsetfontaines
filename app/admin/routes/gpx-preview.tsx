@@ -157,7 +157,12 @@ export default function GpxPreview({
 }: {
   file: File | null;
   maptilerKey: string;
-  onUseMetrics: (
+  /**
+   * Optionnel : bouton « Utiliser dans le formulaire » du flux de création.
+   * Absent (brique S3 « Tracés », bouton [Voir]) : le viewer sert uniquement
+   * à VÉRIFIER la trace (satellite, métriques, profil), sans capture.
+   */
+  onUseMetrics?: (
     m: { distanceKm: number; elevationGainM: number },
     capturePng: string | null,
     cameraJson: string | null
@@ -414,7 +419,7 @@ export default function GpxPreview({
   }
 
   async function handleUse() {
-    if (!metrics) return;
+    if (!onUseMetrics || !metrics) return;
     setCapturePending(true);
     let res: { dataUrl: string; camera: ViewerCamera } | null = null;
     try {
@@ -479,9 +484,11 @@ export default function GpxPreview({
                   </>
                 ) : null}
               </ul>
-              <button type="button" className="cf-admin__gpx-use" onClick={handleUse} disabled={capturePending}>
-                {capturePending ? "Capture en cours…" : "Utiliser dans le formulaire"}
-              </button>
+              {onUseMetrics ? (
+                <button type="button" className="cf-admin__gpx-use" onClick={handleUse} disabled={capturePending}>
+                  {capturePending ? "Capture en cours…" : "Utiliser dans le formulaire"}
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="cf-admin__gpx-refit"
@@ -492,11 +499,18 @@ export default function GpxPreview({
               >
                 Recadrer sur le tracé
               </button>
-              <p className="cf-admin__hint">
-                La capture prend le contenu du viseur (1200×800) comme photo principale et
-                reporte distance et D+. Niveau à votre main. Incliner la vue : clic droit (ou
-                Ctrl+clic glisser) ; le relief 3D est actif.
-              </p>
+              {onUseMetrics ? (
+                <p className="cf-admin__hint">
+                  La capture prend le contenu du viseur (1200×800) comme photo principale et
+                  reporte distance et D+. Niveau à votre main. Incliner la vue : clic droit (ou
+                  Ctrl+clic glisser) ; le relief 3D est actif.
+                </p>
+              ) : (
+                <p className="cf-admin__hint">
+                  Vérification du tracé (parcours, piétinement, détour) : satellite MapTiler,
+                  relief 3D actif, incliner la vue par clic droit (ou Ctrl+clic glisser).
+                </p>
+              )}
             </div>
           </div>
           <div className="cf-admin__gpx-profile">
