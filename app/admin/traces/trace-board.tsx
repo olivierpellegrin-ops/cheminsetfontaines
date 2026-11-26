@@ -220,6 +220,11 @@ export default function TraceBoard({
       if (!res.ok) {
         if (hideId) setHidden((h) => h.filter((x) => x !== hideId));
         setError(res.error ?? "Erreur inconnue.");
+      } else if (hideId) {
+        // Succès : l'état serveur revalidé (revalidatePath dans l'action)
+        // fait foi. Sans ceci, l'optimisme garderait la ligne grisée et
+        // incliquable dans sa liste d'arrivée jusqu'au prochain F5.
+        setHidden((h) => h.filter((x) => x !== hideId));
       }
     });
   }
