@@ -107,10 +107,18 @@ function xmlEscape(s: string): string {
 
 /**
  * Retourne le contenu GPX 1.1 complet de l'activité (une seule trace, titrée).
- * Les points hors latlng sont ignorés ; ele et time sont inclus quand Strava
- * les fournit (l'aperçu en déduit durée et vitesse moyenne).
+ * Les points hors latlng sont ignorés ; ele est inclus quand Strava le fournit.
+ * ATTENTION flux « time » : Strava renvoie des SECONDES CUMULÉES depuis le
+ * départ (0, 1, 2…), PAS des dates — on les recompose en ISO 8601 à partir de
+ * startedAt (StravaTrace.startTime). Écrites telles quelles le 26/11, elles
+ * étaient lues comme des ANNÉES par le viewer (new Date("5497") = an 5497,
+ * durées absurdes type 70810320:00:00, vitesse moyenne à 0).
  */
-export async function fetchTraceGpx(stravaId: string, title: string): Promise<string> {
+export async function fetchTraceGpx(
+  stravaId: string,
+  title: string,
+  startedAt?: Date
+): Promise<string> {
   const accessToken = await getValidAccessToken();
   const streams = await fetchStreams(accessToken, stravaId);
   const latlng = streamData(streams.latlng);
@@ -124,7 +132,10 @@ export async function fetchTraceGpx(stravaId: string, title: string): Promise<st
   for (let i = 0; i < latlng.length; i++) {
     let pt = `    <trkpt lat="${latlng[i][0].toFixed(6)}" lon="${latlng[i][1].toFixed(6)}">`;
     if (altitude[i] != null) pt += `<ele>${altitude[i].toFixed(1)}</ele>`;
-    if (i < time.length) pt += `<time>${time[i]}</time>`;
+    if (startedAt && i < time.length) {
+      const date = new Date(startedAt.getTime() + time[i] * 1000);
+      pt += `<time>${date.toISOString()}</time>`;
+    }
     pt += "</trkpt>";
     points.push(pt);
   }

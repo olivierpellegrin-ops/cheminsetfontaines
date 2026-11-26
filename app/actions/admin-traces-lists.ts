@@ -37,7 +37,7 @@ export async function selectTrace(formData: FormData): Promise<TraceActionResult
     return { ok: false, error: "Trace introuvable ou déjà traitée : recharge la page." };
   }
   try {
-    const gpxContent = await fetchTraceGpx(trace.stravaId, trace.localTitle);
+    const gpxContent = await fetchTraceGpx(trace.stravaId, trace.localTitle, trace.startTime);
     await prisma.stravaTrace.update({
       where: { id },
       data: { status: "SELECTED", gpxContent, gpxFetchedAt: new Date() },
@@ -126,7 +126,7 @@ export async function refetchTraceGpx(formData: FormData): Promise<TraceActionRe
     };
   }
   try {
-    const gpxContent = await fetchTraceGpx(trace.stravaId, trace.localTitle);
+    const gpxContent = await fetchTraceGpx(trace.stravaId, trace.localTitle, trace.startTime);
     await prisma.stravaTrace.update({
       where: { id },
       data: { gpxContent, gpxFetchedAt: new Date() },
