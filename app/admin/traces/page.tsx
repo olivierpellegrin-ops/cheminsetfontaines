@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { disconnectStrava } from "@/app/actions/admin-traces";
+import { syncStrava } from "@/app/actions/admin-traces-sync";
 import "./traces.css";
 
 /**
@@ -11,7 +12,7 @@ import "./traces.css";
  * ascenseur, tri du plus récent au plus ancien.
  *   - S1 (livrée) : connexion OAuth Strava (« Connecter Strava », état du
  *     compte dans le bandeau, déconnexion avec révocation des jetons) ;
- *   - S2 : la synchronisation (« Synchroniser maintenant » reste inactif) ;
+ *   - S2 (livrée) : « Synchroniser maintenant » + bilan et dernière synchro ;
  *   - S3 : les actions de ligne et les boutons [>>] entre les colonnes.
  */
 
@@ -40,13 +41,23 @@ const FLASH_MESSAGES: Record<string, { text: string; kind: "ok" | "error" }> = {
 export default async function AdminTracesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ strava?: string }>;
+  searchParams: Promise<{ strava?: string; sync?: string; imp?: string; maj?: string; ign?: string; filt?: string; msg?: string }>;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/admin/login");
 
   const sp = await searchParams;
   const flash = sp.strava ? FLASH_MESSAGES[sp.strava] : undefined;
+  const syncFlash =
+    sp.sync === "ok"
+      ? {
+          kind: "ok" as const,
+          text: `Synchro terminée : ${sp.imp ?? 0} nouveau(x) tracé(s), ${sp.maj ?? 0} mis à jour, ${sp.ign ?? 0} déjà traité(s), ${sp.filt ?? 0} activité(s) hors randonnée ignorée(s).`,
+        }
+      : sp.sync === "err"
+        ? { kind: "error" as const, text: `Échec de la synchronisation : ${sp.msg ?? "erreur inconnue"}` }
+        : undefined;
+  const shownFlash = syncFlash ?? flash;
 
   const [newTraces, selectedTraces, bufferTraces, credential] = await Promise.all([
     prisma.stravaTrace.findMany({
@@ -76,7 +87,9 @@ export default async function AdminTracesPage({
       <div className="cf-traces__bar">
         <span className="cf-traces__bar-status">
           {credential
-            ? `Connecté à Strava en tant que ${credential.athleteName}`
+            ? `Connecté à Strava en tant que ${credential.athleteName}${
+                credential.lastSyncAt ? ` — dernière synchro : ${frDateTime(credential.lastSyncAt)}` : ""
+              }`
             : "Non connecté à Strava"}
         </span>
         {credential ? (
@@ -90,13 +103,21 @@ export default async function AdminTracesPage({
             Connecter Strava
           </Link>
         )}
-        <button type="button" className="cf-traces__bar-btn" disabled title="Brique S2">
-          Synchroniser maintenant
-        </button>
+        {credential ? (
+          <form action={syncStrava}>
+            <button type="submit" className="cf-traces__bar-btn">
+              Synchroniser maintenant
+            </button>
+          </form>
+        ) : (
+          <button type="button" className="cf-traces__bar-btn" disabled title="Connecte d'abord Strava">
+            Synchroniser maintenant
+          </button>
+        )}
       </div>
 
-      {flash ? (
-        <p className={`cf-traces__flash cf-traces__flash--${flash.kind}`}>{flash.text}</p>
+      {shownFlash ? (
+        <p className={`cf-traces__flash cf-traces__flash--${shownFlash.kind}`}>{shownFlash.text}</p>
       ) : null}
 
       <div className="cf-traces__grid">

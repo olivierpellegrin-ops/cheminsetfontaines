@@ -356,5 +356,8 @@ model StravaCredential {
   refreshToken String
   expiresAt    DateTime
   scope        String
+  // Brique S2 : état de la synchronisation hebdo (after = lastSyncAt - 48 h).
+  lastSyncAt      DateTime?
+  lastSyncSummary String? // JSON du dernier bilan (importés/maj/ignorés/filtrés)
   updatedAt    DateTime @updatedAt
 }
