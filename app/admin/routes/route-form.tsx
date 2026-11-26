@@ -43,23 +43,34 @@ export type RouteFormInitial = {
  * Photo Gallery (+), Has Photo Album (toggle).
  * Réutilisé tel quel en B4 pour l'édition (prop initial).
  */
+/**
+ * Brique S4 « tampon vers itinéraire » : quand stravaPrefill est fourni
+ * (page /admin/routes/new?trace=<id>, tracé « Prêt à publier »), le titre est
+ * pré-rempli et l'aperçu GPX charge tout seul le tracé via la route admin
+ * (jamais un fichier public) ; le champ caché stravaTraceId suit le formulaire
+ * pour que createRoute consomme la trace (statut CONSUMED + lien, D6).
+ */
+export type StravaPrefill = { traceId: string; title: string };
+
 export default function RouteForm({
   communes,
   action,
   maptilerKey,
   initial,
   submitLabel,
+  stravaPrefill,
 }: {
   communes: Commune[];
   action: (prev: RouteFormState, fd: FormData) => Promise<RouteFormState>;
   maptilerKey: string;
   initial?: RouteFormInitial;
   submitLabel?: string;
+  stravaPrefill?: StravaPrefill;
 }) {
   const [state, formAction, pending] = useActionState(action, {} as RouteFormState);
   const [communeId, setCommuneId] = useState(initial?.communeId ?? "");
   const [townshipLabel, setTownshipLabel] = useState(initial?.townshipLabel ?? "");
-  const [title, setTitle] = useState(initial?.title ?? "");
+  const [title, setTitle] = useState(initial?.title ?? stravaPrefill?.title ?? "");
   const [slugInput, setSlugInput] = useState(initial?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(initial?.slug));
   const [distance, setDistance] = useState(
@@ -91,6 +102,9 @@ export default function RouteForm({
   return (
     <form action={formAction} className="cf-admin__form">
       {initial ? <input type="hidden" name="routeId" value={initial.id} /> : null}
+      {stravaPrefill ? (
+        <input type="hidden" name="stravaTraceId" value={stravaPrefill.traceId} />
+      ) : null}
       {state?.error ? (
         <p className="cf-admin-login__error" role="alert">{state.error}</p>
       ) : null}
@@ -236,6 +250,12 @@ export default function RouteForm({
               )}
             </span>
           ) : null}
+          {stravaPrefill ? (
+            <span className="cf-admin__file-current">
+              GPX pré-chargé depuis le tracé Strava « {stravaPrefill.title} » —
+              l&apos;aperçu ci-dessous affiche déjà la trace ; inutile de choisir un fichier.
+            </span>
+          ) : null}
         </label>
         <label>
           Photo principale (JPG/PNG/WebP, max 4 Mo)
@@ -284,7 +304,13 @@ export default function RouteForm({
       <GpxPreview
         file={gpxFile}
         maptilerKey={maptilerKey}
-        fallbackGpxUrl={initial?.gpxFileName ? `/gpx/${initial.slug}.gpx` : null}
+        fallbackGpxUrl={
+          initial?.gpxFileName
+            ? `/gpx/${initial.slug}.gpx`
+            : stravaPrefill
+              ? `/api/admin/traces/${stravaPrefill.traceId}/gpx`
+              : null
+        }
         presetCamera={initial?.viewerCamera ?? null}
         onUseMetrics={(m, capturePng, cameraJson) => {
           setDistance(m.distanceKm > 0 ? String(Math.round(m.distanceKm * 10) / 10) : "");

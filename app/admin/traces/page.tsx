@@ -89,10 +89,12 @@ export default async function AdminTracesPage({
       }
     : {};
 
-  const [newTotal, selectedTotal, bufferTotal, credential] = await Promise.all([
+  const [newTotal, selectedTotal, bufferTotal, consumedTotal, credential] = await Promise.all([
     prisma.stravaTrace.count({ where: { status: "NEW", ...qFilter } }),
     prisma.stravaTrace.count({ where: { status: "SELECTED" } }),
     prisma.stravaTrace.count({ where: { status: "BUFFER" } }),
+    // S4 (D6) : la liste repliée « Publiés » en bas de page.
+    prisma.stravaTrace.count({ where: { status: "CONSUMED" } }),
     prisma.stravaCredential.findFirst(),
   ]);
 
@@ -113,7 +115,7 @@ export default async function AdminTracesPage({
     distanceM: true,
   } as const;
 
-  const [newRows, selectedRows, bufferRows] = await Promise.all([
+  const [newRows, selectedRows, bufferRows, consumedRows] = await Promise.all([
     prisma.stravaTrace.findMany({
       where: { status: "NEW", ...qFilter },
       orderBy: { startTime: "desc" },
@@ -135,7 +137,31 @@ export default async function AdminTracesPage({
       take: PAGE_SIZE,
       select: traceSelect,
     }),
+    // S4 (D6) : lignes consommées. PAS de select imbriqué « route » : le
+    // modèle S0 porte routeId SANS relation Prisma, et un select de relation
+    // inexistante passe le typecheck (objet étalé) mais échoue à l'exécution
+    // (PrismaClientValidationError, vécu 26/11 au soir). Les itinéraires
+    // liés sont lus séparément par leurs ids.
+    prisma.stravaTrace.findMany({
+      where: { status: "CONSUMED" },
+      orderBy: { startTime: "desc" },
+      take: PAGE_SIZE,
+      select: { ...traceSelect, routeId: true },
+    }),
   ]);
+
+  const routeIds = consumedRows
+    .map((r) => r.routeId)
+    .filter((id): id is string => Boolean(id));
+  const routesById = new Map(
+    (routeIds.length
+      ? await prisma.route.findMany({
+          where: { id: { in: routeIds } },
+          select: { id: true, status: true },
+        })
+      : []
+    ).map((r) => [r.id, { id: r.id, status: String(r.status) } as const])
+  );
 
   const toList = (
     rows: { id: string; localTitle: string; startTime: Date; distanceM: number | null }[],
@@ -201,6 +227,16 @@ export default async function AdminTracesPage({
           new: toList(newRows, newTotal, pNew, newPages),
           selected: toList(selectedRows, selectedTotal, pSelected, selectedPages),
           buffer: toList(bufferRows, bufferTotal, pBuffer, bufferPages),
+        }}
+        consumed={{
+          total: consumedTotal,
+          rows: consumedRows.map((r) => ({
+            id: r.id,
+            localTitle: r.localTitle,
+            startTime: r.startTime.toISOString(),
+            distanceM: r.distanceM,
+            route: r.routeId ? (routesById.get(r.routeId) ?? null) : null,
+          })),
         }}
         q={q}
         maptilerKey={process.env.MAPTILER_KEY ?? ""}

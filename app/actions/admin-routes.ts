@@ -166,6 +166,40 @@ export async function createRoute(
   const session = await auth();
   if (!session?.user) return { error: "Session expirée, reconnectez-vous." };
 
+  // --- Brique S4 : création depuis un tracé Strava « Prêt à publier »
+  // (formulaire /admin/routes/new?trace=<id>, champ caché stravaTraceId).
+  // Le GPX n'est pas un fichier choisi par l'admin : il vit en base
+  // (gpxContent, décision D4) — on l'injecte ici en File pour réutiliser
+  // TOUT le pipeline upload existant (pre-check taille, nom, écriture
+  // vérifiée sur disque, colonne gpxFileName).
+  const stravaTraceId = String(fd.get("stravaTraceId") ?? "").trim();
+  let stravaSource: { id: string; stravaId: string } | null = null;
+  if (stravaTraceId) {
+    const trace = await prisma.stravaTrace.findUnique({
+      where: { id: stravaTraceId },
+      select: { id: true, stravaId: true, localTitle: true, status: true, gpxContent: true },
+    });
+    if (!trace || trace.status !== "BUFFER") {
+      return {
+        error: "Tracé introuvable ou hors stock « Prêts à publier » : repasse par la page des tracés.",
+      };
+    }
+    if (!trace.gpxContent) {
+      return {
+        error: "GPX absent pour ce tracé : « Retélécharger le GPX » sur la page des tracés, puis reviens.",
+      };
+    }
+    if (!gpxCheck(fd.get("gpxFile"))) {
+      fd.set(
+        "gpxFile",
+        new File([trace.gpxContent], `${trace.localTitle}.gpx`, {
+          type: "application/gpx+xml",
+        })
+      );
+    }
+    stravaSource = { id: trace.id, stravaId: trace.stravaId };
+  }
+
   const parsed = parseForm(fd);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
@@ -286,7 +320,8 @@ export async function createRoute(
       status: published ? "published" : "draft",
       hasPhotoAlbum: hasAlbumToggle || photoRows.length > 0,
       viewerCamera: viewerCamera ?? Prisma.DbNull,
-      source: "saisie_manuelle",
+      source: stravaSource ? "strava" : "saisie_manuelle",
+      sourceStravaId: stravaSource?.stravaId ?? null,
     },
   });
 
@@ -296,8 +331,19 @@ export async function createRoute(
     });
   }
 
+  // --- Brique S4 (D6) : la ligne du tracé est conservée et marquée publiée,
+  // liée à l'itinéraire créé ; elle rejoint la liste repliée « Publiés »
+  // de la page des tracés (badge + lien vers l'itinéraire).
+  if (stravaSource) {
+    await prisma.stravaTrace.update({
+      where: { id: stravaSource.id },
+      data: { status: "CONSUMED", routeId: route.id },
+    });
+  }
+
   revalidatePath("/admin/routes");
   revalidatePath("/fr/routes");
+  revalidatePath("/admin/traces");
   redirect(published ? "/admin/routes" : "/admin/routes?status=draft");
 }
 
