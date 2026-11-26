@@ -6,6 +6,12 @@
  * l'ordre liste 1 -> bouton -> liste 2 -> bouton -> liste 3.
  */
 
+/* Page élargie comme la page adhérents (1280 px) : le conteneur admin de
+   960 px est trop étroit pour lire titre et distance après l'horodatage. */
+.cf-admin__main:has(.cf-admin__traces) {
+  max-width: 1280px;
+}
+
 .cf-admin__traces .cf-admin__head {
   display: flex;
   align-items: baseline;
