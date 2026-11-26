@@ -6,6 +6,7 @@ import GpxPreview from "@/app/admin/routes/gpx-preview";
 import {
   deleteTrace,
   moveTraceToBuffer,
+  refetchTraceGpx,
   renameTrace,
   selectTrace,
   type TraceActionResult,
@@ -205,6 +206,9 @@ export default function TraceBoard({
   const [hidden, setHidden] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [voir, setVoir] = useState<{ id: string; title: string } | null>(null);
+  const [gpxReload, setGpxReload] = useState(0);
+  const [gpxBusy, setGpxBusy] = useState(false);
+  const [gpxError, setGpxError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   /** Exécute une action serveur ; la ligne s'efface tout de suite, revient si échec. */
@@ -228,6 +232,23 @@ export default function TraceBoard({
       }
     });
   }
+
+  /** Correctif S3b : retélécharge le GPX Strava du tracé ouvert en aperçu. */
+  const refetchGpx = async (id: string) => {
+    if (gpxBusy) return;
+    setGpxBusy(true);
+    setGpxError(null);
+    const fd = new FormData();
+    fd.set("traceId", id);
+    const res = await refetchTraceGpx(fd);
+    if (res.ok) {
+      // Nouvelle valeur de clé : TraceGpxViewer relit le GPX réparé.
+      setGpxReload((n) => n + 1);
+    } else {
+      setGpxError(res.error ?? "Le retéléchargement a échoué.");
+    }
+    setGpxBusy(false);
+  };
 
   const transfer = (
     id: string | null,
@@ -319,7 +340,10 @@ export default function TraceBoard({
                   onCancelEdit={() => setEditing(null)}
                   onRename={(title) => rename(t.id, title)}
                   onDelete={() => remove(t.id)}
-                  onVoir={() => setVoir({ id: t.id, title: t.localTitle })}
+                  onVoir={() => {
+                    setGpxError(null);
+                    setVoir({ id: t.id, title: t.localTitle });
+                  }}
                 />
               ))}
             </ul>
@@ -397,11 +421,26 @@ export default function TraceBoard({
           <div className="cf-traces__modal-panel">
             <div className="cf-traces__modal-head">
               <strong>{voir.title}</strong>
-              <button type="button" className="cf-traces__mini" onClick={() => setVoir(null)}>
-                Fermer
-              </button>
+              <div className="cf-traces__modal-head-actions">
+                <button
+                  type="button"
+                  className="cf-traces__mini"
+                  onClick={() => refetchGpx(voir.id)}
+                  disabled={gpxBusy}
+                >
+                  {gpxBusy ? "Retéléchargement…" : "Retélécharger le GPX"}
+                </button>
+                <button type="button" className="cf-traces__mini" onClick={() => setVoir(null)}>
+                  Fermer
+                </button>
+              </div>
             </div>
-            <TraceGpxViewer maptilerKey={maptilerKey} traceId={voir.id} />
+            {gpxError ? (
+              <p className="cf-admin-login__error" role="alert">
+                {gpxError}
+              </p>
+            ) : null}
+            <TraceGpxViewer maptilerKey={maptilerKey} traceId={voir.id} reloadKey={gpxReload} />
           </div>
         </div>
       ) : null}
@@ -410,7 +449,15 @@ export default function TraceBoard({
 }
 
 /** Charge le GPX du tracé depuis la route admin et l'ouvre dans le viewer. */
-function TraceGpxViewer({ maptilerKey, traceId }: { maptilerKey: string; traceId: string }) {
+function TraceGpxViewer({
+  maptilerKey,
+  traceId,
+  reloadKey,
+}: {
+  maptilerKey: string;
+  traceId: string;
+  reloadKey: number;
+}) {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -431,7 +478,7 @@ function TraceGpxViewer({ maptilerKey, traceId }: { maptilerKey: string; traceId
     return () => {
       cancelled = true;
     };
-  }, [traceId]);
+  }, [traceId, reloadKey]);
 
   if (error) {
     return (

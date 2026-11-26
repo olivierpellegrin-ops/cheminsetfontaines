@@ -311,3 +311,10 @@
     min-width: 0;
   }
 }
+
+/* Correctif S3b : boutons côte à côte du bandeau du modal d'aperçu. */
+.cf-traces__modal-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
