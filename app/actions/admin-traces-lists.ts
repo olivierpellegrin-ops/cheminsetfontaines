@@ -37,7 +37,7 @@ export async function selectTrace(formData: FormData): Promise<TraceActionResult
     return { ok: false, error: "Trace introuvable ou déjà traitée : recharge la page." };
   }
   try {
-    const gpxContent = await fetchTraceGpx(trace.stravaId, trace.localTitle);
+    const gpxContent = await fetchTraceGpx(trace.stravaId, trace.localTitle, trace.startTime);
     await prisma.stravaTrace.update({
       where: { id },
       data: { status: "SELECTED", gpxContent, gpxFetchedAt: new Date() },
@@ -102,6 +102,38 @@ export async function deleteTrace(formData: FormData): Promise<TraceActionResult
     where: { id },
     data: { status: "DELETED" },
   });
+  revalidatePath("/admin/traces");
+  return OK;
+}
+
+/**
+ * Correctif S3b : retélécharge le GPX d'un tracé « Sélectionné » ou du
+ * stock tampon « Prêts à publier » (Streams
+ * robuste : timeout + retry + cause réseau) et met à jour gpxContent, sans
+ * toucher au statut ni au titre. Répare une ligne dont le GPX stocké est
+ * invalide ou atrophié (aperçu [Voir] en erreur « Aucune trace ») : le bouton
+ * vit dans le modal d'aperçu, la donnée se répare d'elle même, sans SQL.
+ */
+export async function refetchTraceGpx(formData: FormData): Promise<TraceActionResult> {
+  await requireSession();
+  const id = String(formData.get("traceId") ?? "");
+  const trace = await prisma.stravaTrace.findUnique({ where: { id } });
+  if (!trace || (trace.status !== "SELECTED" && trace.status !== "BUFFER")) {
+    return {
+      ok: false,
+      error:
+        "Seul un tracé des listes « Sélectionnés » ou « Prêts à publier » peut voir son GPX retéléchargé.",
+    };
+  }
+  try {
+    const gpxContent = await fetchTraceGpx(trace.stravaId, trace.localTitle, trace.startTime);
+    await prisma.stravaTrace.update({
+      where: { id },
+      data: { gpxContent, gpxFetchedAt: new Date() },
+    });
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Erreur inconnue." };
+  }
   revalidatePath("/admin/traces");
   return OK;
 }

@@ -10,7 +10,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
  * V1.1 :
  * - tracé jaune avec liseré sombre (lisibilité satellite),
  * - viseur 1200×800 (ratio 3:2) en pointillé épais, FIXE au centre :
- *   c'est le tracé qu'on déplace (pan/zoom) pour le cadrer dans le viseur,
+ *   c'est le tracé qu'on déplace (pan/zoom) pour le cadrer dans le viseur
+ *   (affiché UNIQUEMENT en mode capture ; la vérification [Voir] S3 n'a
+ *   ni viseur ni bouton),
  * - relief 3D (DEM MapTiler) + inclinaison (clic droit) + rotation,
  * - « Utiliser dans le formulaire » : capture exacte du viseur en 1200×800
  *   (instance MapLibre cachée, mêmes centre/zoom/bearing/pitch), PNG avec
@@ -32,6 +34,10 @@ export type GpxMetrics = {
 const CAPTURE_W = 1200;
 const CAPTURE_H = 800;
 const ELEV_NOISE_THRESHOLD = 3; // seuil anti-bruit (m)
+// <time> GPX 1.1 = ISO 8601 complet uniquement. Une valeur non ISO (ex. les
+// secondes brutes du flux Strava, écrites à tort le 26/11) serait lue comme
+// une ANNÉE par new Date() : durées absurdes, vitesse moyenne à 0.
+const ISO_TIME = /^\d{4}-\d{2}-\d{2}T/;
 const TRACE_COLOR = "#ffd500";
 
 function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
@@ -53,7 +59,7 @@ export function computeMetrics(
     lng: c[0],
     lat: c[1],
     ele: c[2] ?? 0,
-    t: times[i] ? new Date(times[i] as string).getTime() : null,
+    t: times[i] && ISO_TIME.test(times[i]) ? new Date(times[i] as string).getTime() : null,
   }));
   let distanceKm = 0;
   let gainM = 0;
@@ -458,10 +464,15 @@ export default function GpxPreview({
           <div className="cf-admin__gpx-layout">
             <div className="cf-admin__gpx-mapwrap">
               <div ref={mapContainer} className="cf-admin__gpx-map" />
-              {/* Viseur 1200×800 (ratio 3:2), fixe : cadrer le tracé dedans */}
-              <div ref={crosshairRef} className="cf-admin__gpx-crosshair">
-                <span className="cf-admin__gpx-crosshair-label">1200 × 800</span>
-              </div>
+              {/* Viseur 1200×800 (ratio 3:2), fixe : cadrer le tracé dedans.
+                  Capture B3 uniquement : sans onUseMetrics (vérification [Voir]
+                  des tracés S3), le viseur n'a pas d'usage —retiré le 26/11
+                  sur demande : il encombrait la carte et sortait du cadre. */}
+              {onUseMetrics ? (
+                <div ref={crosshairRef} className="cf-admin__gpx-crosshair">
+                  <span className="cf-admin__gpx-crosshair-label">1200 × 800</span>
+                </div>
+              ) : null}
             </div>
             <div className="cf-admin__gpx-side">
               <h3>Métriques</h3>
