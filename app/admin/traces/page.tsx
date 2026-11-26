@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { disconnectStrava } from "@/app/actions/admin-traces";
@@ -77,7 +78,9 @@ export default async function AdminTracesPage({
 
   // Recherche par titre : liste 1 uniquement (la plus chargée, spec §7).
   const q = sp.q?.trim() ?? "";
-  const qFilter = q
+  // Annotation explicite : garde mode: "insensitive" comme QueryMode au lieu
+  // de l'élargir en string (le build Vercel typechecke vraiment Prisma).
+  const qFilter: Prisma.StravaTraceWhereInput = q
     ? {
         OR: [
           { localTitle: { contains: q, mode: "insensitive" } },
