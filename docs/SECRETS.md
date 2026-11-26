@@ -10,7 +10,7 @@ le magasin de l'hébergeur au déploiement.
 | Notifications bureau | — | `NOTIFY_EMAIL` (`contact@cheminsetfontaines.fr`) | requis |
 | Envoi d'e-mails (brique N0 « Remplacement Mailchimp », SMTP interne) | prod : fiche Gandi de la mailbox `contact@cheminsetfontaines.fr` · local : Mailpit du docker-compose (`localhost:1025`) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (prod uniquement), `MAIL_FROM` | requis N0 |
 | Stripe (dons v2 : reçus, totaux) | dashboard.stripe.com > Developers > API keys + Webhooks | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | v0.3 |
-| Strava (agent, suivi incrémental) | strava.com/settings/api | `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REFRESH_TOKEN` | v0.4 |
+| Strava (agent, brique S1 : OAuth, jetons chiffrés en base) | strava.com/settings/api — créer l'app « Chemins et Fontaines », domaine de callback : `cheminsetfontaines.vercel.app` (localhost accepté d'office en dev) | `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET` — les jetons d'accès/refresh vivent chiffrés (AES-256-GCM, clé dérivée d'`AUTH_SECRET`) dans la table `StravaCredential`, JAMAIS en env ni en clair | S1 livrée |
 | Modèle de texte de l'agent | console.mistral.ai | `MISTRAL_API_KEY` | v0.4 |
 | Back-office (Auth.js, B0) | génération locale : `openssl rand -base64 32` | `AUTH_SECRET` | requis back-office |
 | Viewer GPX admin (tuiles satellite+terrain) | maptiler.com > Dashboard > Credentials | `MAPTILER_KEY` | requis viewer |

@@ -1,18 +1,18 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { disconnectStrava } from "@/app/actions/admin-traces";
 import "./traces.css";
 
 /**
- * Brique S0 « Agent Strava » (spec cf-spec-agent-strava du 26/11/2026) :
- * squelette de l'environnement « Tracés » — les 3 listes côte à côte sur un
- * même écran, chacune avec son propre ascenseur, tri du plus récent au plus
- * ancien. S0 ne fait que poser le décor :
- *   - S1 branchera la connexion Strava (bouton « Connecter Strava » inactif) ;
- *   - S2 branchera la synchronisation (bouton « Synchroniser » inactif) ;
- *   - S3 branchera les actions de ligne et les boutons [>>].
- * Aucune action n'est encore active : la page affiche des listes vides
- * (modèle StravaTrace prêt après `npx prisma db push`).
+ * Brique S0+S1 « Agent Strava » (spec cf-spec-agent-strava du 26/11/2026) :
+ * les 3 listes côte à côte sur un même écran, chacune avec son propre
+ * ascenseur, tri du plus récent au plus ancien.
+ *   - S1 (livrée) : connexion OAuth Strava (« Connecter Strava », état du
+ *     compte dans le bandeau, déconnexion avec révocation des jetons) ;
+ *   - S2 : la synchronisation (« Synchroniser maintenant » reste inactif) ;
+ *   - S3 : les actions de ligne et les boutons [>>] entre les colonnes.
  */
 
 const frDateTime = (d: Date) =>
@@ -28,9 +28,25 @@ const frDateTime = (d: Date) =>
 const frKms = (m: number | null) =>
   m ? `${(m / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} kms` : "";
 
-export default async function AdminTracesPage() {
+const FLASH_MESSAGES: Record<string, { text: string; kind: "ok" | "error" }> = {
+  connecte: { text: "Compte Strava connecté.", kind: "ok" },
+  refuse: { text: "Connexion refusée côté Strava.", kind: "error" },
+  "etat-invalide": { text: "Session d'autorisation expirée, réessaie.", kind: "error" },
+  "code-manquant": { text: "Code d'autorisation absent, réessaie.", kind: "error" },
+  echec: { text: "Échec de l'échange avec Strava, réessaie.", kind: "error" },
+  "non-autorise": { text: "Session admin expirée, reconnecte-toi.", kind: "error" },
+};
+
+export default async function AdminTracesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ strava?: string }>;
+}) {
   const session = await auth();
   if (!session?.user) redirect("/admin/login");
+
+  const sp = await searchParams;
+  const flash = sp.strava ? FLASH_MESSAGES[sp.strava] : undefined;
 
   const [newTraces, selectedTraces, bufferTraces, credential] = await Promise.all([
     prisma.stravaTrace.findMany({
@@ -61,15 +77,27 @@ export default async function AdminTracesPage() {
         <span className="cf-traces__bar-status">
           {credential
             ? `Connecté à Strava en tant que ${credential.athleteName}`
-            : "Non connecté à Strava (brique S1 : « Connecter Strava »)"}
+            : "Non connecté à Strava"}
         </span>
-        <button type="button" className="cf-traces__bar-btn" disabled title="Brique S1">
-          Connecter Strava
-        </button>
+        {credential ? (
+          <form action={disconnectStrava}>
+            <button type="submit" className="cf-traces__bar-btn cf-traces__bar-btn--secondary">
+              Déconnecter
+            </button>
+          </form>
+        ) : (
+          <Link className="cf-traces__bar-btn" href="/api/admin/strava/connect">
+            Connecter Strava
+          </Link>
+        )}
         <button type="button" className="cf-traces__bar-btn" disabled title="Brique S2">
           Synchroniser maintenant
         </button>
       </div>
+
+      {flash ? (
+        <p className={`cf-traces__flash cf-traces__flash--${flash.kind}`}>{flash.text}</p>
+      ) : null}
 
       <div className="cf-traces__grid">
         {(

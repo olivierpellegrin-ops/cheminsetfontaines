@@ -35,10 +35,33 @@
   padding: 8px 14px;
   font-size: 13px;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
 }
 .cf-traces__bar-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+.cf-traces__bar-btn--secondary {
+  background: #fff;
+  color: #163c32;
+  border: 1px solid #163c32;
+}
+
+/* Messages flash (retour de connexion OAuth). */
+.cf-traces__flash {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.cf-traces__flash--ok {
+  background: #e4efe4;
+  color: #1e5b2a;
+}
+.cf-traces__flash--error {
+  background: #f7e4e4;
+  color: #8f2020;
 }
 
 /* Grille 3 colonnes (les boutons [>>] entre les colonnes arrivent en S3). */
