@@ -74,8 +74,7 @@ export async function renameTrace(formData: FormData): Promise<TraceActionResult
   const id = String(formData.get("traceId") ?? "");
   const title = String(formData.get("title") ?? "")
     .trim()
-    .replace(/
-s+/g, " ");
+    .replace(/\s+/g, " ");
   if (title.length < 1 || title.length > 120) {
     return { ok: false, error: "Le titre doit contenir entre 1 et 120 caractères." };
   }

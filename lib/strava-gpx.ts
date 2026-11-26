@@ -88,6 +88,5 @@ export async function fetchTraceGpx(stravaId: string, title: string): Promise<st
     "</trk>",
     "</gpx>",
     "",
-  ].join("
-");
+  ].join("\n");
 }
