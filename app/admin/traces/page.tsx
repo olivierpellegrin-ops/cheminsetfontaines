@@ -4,17 +4,22 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { disconnectStrava } from "@/app/actions/admin-traces";
 import { syncStrava } from "@/app/actions/admin-traces-sync";
+import TraceBoard, { type TraceListData } from "./trace-board";
 import "./traces.css";
 
 /**
- * Brique S0+S1 « Agent Strava » (spec cf-spec-agent-strava du 26/11/2026) :
+ * Brique S0→S3 « Agent Strava » (spec cf-spec-agent-strava du 26/11/2026) :
  * les 3 listes côte à côte sur un même écran, chacune avec son propre
  * ascenseur, tri du plus récent au plus ancien.
- *   - S1 (livrée) : connexion OAuth Strava (« Connecter Strava », état du
- *     compte dans le bandeau, déconnexion avec révocation des jetons) ;
- *   - S2 (livrée) : « Synchroniser maintenant » + bilan et dernière synchro ;
- *   - S3 : les actions de ligne et les boutons [>>] entre les colonnes.
+ *   - S1 : connexion OAuth Strava (bandeau, déconnexion/révocation) ;
+ *   - S2 : « Synchroniser maintenant » + bilan et dernière synchro ;
+ *   - S3 : actions de ligne, boutons [>>] entre les colonnes, renommage,
+ *     suppression (tombestone), aperçu GPX depuis gpxContent.
+ * Recherche par titre sur la liste 1 (la plus chargée), pagination serveur
+ * de 50 lignes par liste, compteurs réels par statut.
  */
+
+const PAGE_SIZE = 50;
 
 const frDateTime = (d: Date) =>
   d.toLocaleString("fr-FR", {
@@ -25,9 +30,6 @@ const frDateTime = (d: Date) =>
     hour: "2-digit",
     minute: "2-digit",
   });
-
-const frKms = (m: number | null) =>
-  m ? `${(m / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} kms` : "";
 
 const FLASH_MESSAGES: Record<string, { text: string; kind: "ok" | "error" }> = {
   connecte: { text: "Compte Strava connecté.", kind: "ok" },
@@ -41,7 +43,19 @@ const FLASH_MESSAGES: Record<string, { text: string; kind: "ok" | "error" }> = {
 export default async function AdminTracesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ strava?: string; sync?: string; imp?: string; maj?: string; ign?: string; filt?: string; msg?: string }>;
+  searchParams: Promise<{
+    strava?: string;
+    sync?: string;
+    imp?: string;
+    maj?: string;
+    ign?: string;
+    filt?: string;
+    msg?: string;
+    q?: string;
+    p_new?: string;
+    p_selected?: string;
+    p_buffer?: string;
+  }>;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/admin/login");
@@ -52,31 +66,90 @@ export default async function AdminTracesPage({
     sp.sync === "ok"
       ? {
           kind: "ok" as const,
-          text: `Synchro terminée : ${sp.imp ?? 0} nouveau(x) tracé(s), ${sp.maj ?? 0} mis à jour, ${sp.ign ?? 0} déjà traité(s), ${sp.filt ?? 0} activité(s) hors randonnée ignorée(s).`,
+          text: `Synchro terminée : ${sp.imp ?? 0} nouveau(x) tracé(s), ${sp.maj ?? 0} mis à jour, ${
+            sp.ign ?? 0
+          } déjà traité(s), ${sp.filt ?? 0} activité(s) hors randonnée ignorée(s).`,
         }
       : sp.sync === "err"
         ? { kind: "error" as const, text: `Échec de la synchronisation : ${sp.msg ?? "erreur inconnue"}` }
         : undefined;
   const shownFlash = syncFlash ?? flash;
 
-  const [newTraces, selectedTraces, bufferTraces, credential] = await Promise.all([
+  // Recherche par titre : liste 1 uniquement (la plus chargée, spec §7).
+  const q = sp.q?.trim() ?? "";
+  const qFilter = q
+    ? {
+        OR: [
+          { localTitle: { contains: q, mode: "insensitive" } },
+          { stravaTitle: { contains: q, mode: "insensitive" } },
+        ],
+      }
+    : {};
+
+  const [newTotal, selectedTotal, bufferTotal, credential] = await Promise.all([
+    prisma.stravaTrace.count({ where: { status: "NEW", ...qFilter } }),
+    prisma.stravaTrace.count({ where: { status: "SELECTED" } }),
+    prisma.stravaTrace.count({ where: { status: "BUFFER" } }),
+    prisma.stravaCredential.findFirst(),
+  ]);
+
+  const listPage = (raw: string | undefined, pages: number) =>
+    Math.min(Math.max(1, Number(raw) || 1), pages);
+  const pagesOf = (total: number) => Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const selectedPages = pagesOf(selectedTotal);
+  const bufferPages = pagesOf(bufferTotal);
+  const newPages = pagesOf(newTotal);
+  const pNew = listPage(sp.p_new, newPages);
+  const pSelected = listPage(sp.p_selected, selectedPages);
+  const pBuffer = listPage(sp.p_buffer, bufferPages);
+
+  const traceSelect = {
+    id: true,
+    localTitle: true,
+    startTime: true,
+    distanceM: true,
+  } as const;
+
+  const [newRows, selectedRows, bufferRows] = await Promise.all([
     prisma.stravaTrace.findMany({
-      where: { status: "NEW" },
+      where: { status: "NEW", ...qFilter },
       orderBy: { startTime: "desc" },
-      take: 50,
+      skip: (pNew - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      select: traceSelect,
     }),
     prisma.stravaTrace.findMany({
       where: { status: "SELECTED" },
       orderBy: { startTime: "desc" },
-      take: 50,
+      skip: (pSelected - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      select: traceSelect,
     }),
     prisma.stravaTrace.findMany({
       where: { status: "BUFFER" },
       orderBy: { startTime: "desc" },
-      take: 50,
+      skip: (pBuffer - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      select: traceSelect,
     }),
-    prisma.stravaCredential.findFirst(),
   ]);
+
+  const toList = (
+    rows: { id: string; localTitle: string; startTime: Date; distanceM: number | null }[],
+    total: number,
+    page: number,
+    pages: number,
+  ): TraceListData => ({
+    rows: rows.map((r) => ({
+      id: r.id,
+      localTitle: r.localTitle,
+      startTime: r.startTime.toISOString(),
+      distanceM: r.distanceM,
+    })),
+    total,
+    page,
+    pages,
+  });
 
   return (
     <section className="cf-admin__traces">
@@ -120,43 +193,16 @@ export default async function AdminTracesPage({
         <p className={`cf-traces__flash cf-traces__flash--${shownFlash.kind}`}>{shownFlash.text}</p>
       ) : null}
 
-      <div className="cf-traces__grid">
-        {(
-          [
-            { key: "new", title: "Tracés Strava", traces: newTraces },
-            { key: "selected", title: "Sélectionnés", traces: selectedTraces },
-            { key: "buffer", title: "Prêts à publier", traces: bufferTraces },
-          ] as const
-        ).map((list, i) => (
-          <div key={list.key} className="cf-traces__col">
-            <header className="cf-traces__col-head">
-              <h2>{list.title}</h2>
-              <span className="cf-admin__badge cf-admin__badge--draft">{list.traces.length}</span>
-            </header>
-            <div className="cf-traces__col-scroll">
-              {list.traces.length === 0 ? (
-                <p className="cf-traces__empty">
-                  {i === 0
-                    ? "Aucun tracé pour l'instant — la synchronisation arrive avec la brique S2."
-                    : "Liste vide."}
-                </p>
-              ) : (
-                <ul className="cf-traces__rows">
-                  {list.traces.map((t) => (
-                    <li key={t.id} className="cf-traces__row">
-                      <span className="cf-traces__row-time">{frDateTime(t.startTime)}</span>
-                      <span className="cf-traces__row-title">— {t.localTitle}</span>
-                      {frKms(t.distanceM) ? (
-                        <span className="cf-traces__row-kms">· {frKms(t.distanceM)}</span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+      <TraceBoard
+        lists={{
+          new: toList(newRows, newTotal, pNew, newPages),
+          selected: toList(selectedRows, selectedTotal, pSelected, selectedPages),
+          buffer: toList(bufferRows, bufferTotal, pBuffer, bufferPages),
+        }}
+        q={q}
+        maptilerKey={process.env.MAPTILER_KEY ?? ""}
+        connected={Boolean(credential)}
+      />
     </section>
   );
 }
