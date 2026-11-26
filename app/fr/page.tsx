@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { SITE } from "@/lib/site";
-import NewsletterForm from "@/components/NewsletterForm";
 import MembershipModal from "@/components/MembershipModal";
 import GPXButton from "@/components/GPXButton";
 import ZoomImage from "@/components/ZoomImage";
@@ -228,7 +227,16 @@ export default async function HomePage() {
           Recevez nos prochaines sorties, nos nouveaux itinéraires et les
           nouvelles de l&apos;association.
         </p>
-        <NewsletterForm dark />
+        {/* Sobriété Framer (bricole 26/11) : le bandeau ne porte QUE les deux
+            boutons ; le formulaire complet vit sur /fr/newsletters/inscription. */}
+        <div className="news-actions">
+          <Link href="/fr/newsletters/inscription" className="btn btn-ochre btn-sm">
+            S&apos;inscrire
+          </Link>
+          <Link href="/fr/newsletters" className="btn btn-ochre btn-sm">
+            Voir les archives
+          </Link>
+        </div>
       </section>
     </>
   );

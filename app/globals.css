@@ -687,6 +687,18 @@ img {
   color: #f4f1e8;
 }
 
+/* Bricole du 26/11 — sobriété Framer : le bandeau newsletter de l'accueil
+   ne porte QUE les deux boutons ochre (le formulaire complet vit sur
+   /fr/newsletters/inscription). */
+.news-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
 /* Boutons pill ochre taille Framer (padding 10-11/16-18, 14px/600). */
 .btn-sm {
   padding: 10px 16px;
