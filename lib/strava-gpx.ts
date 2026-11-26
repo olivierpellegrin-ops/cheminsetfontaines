@@ -18,10 +18,29 @@ import { getValidAccessToken, STRAVA_API } from "@/lib/strava";
  *   « [Voir] » (Métriques identiques au viewer : D+ à ±3 m de bruit près).
  */
 
+/**
+ * Réponse de l'API Streams avec key_by_type=true : une map indexée par type
+ * de flux DONT LES VALEURS SONT LES OBJETS DE FLUX ({ type, data }), pas les
+ * tableaux bruts (docs officielles : strava.github.io/api/v3/streams).
+ * Le 26/11, lire streams.latlng comme un tableau donnait latlng.length =
+ * undefined : garde « length < 2 » franchie sans lever, boucle jamais
+ * exécutée, GPX à <trkseg> VIDE stocké en sélection comme en
+ * retéléchargement — cause racine des « Aucune trace (<trk>) » du viewer.
+ * On accepte les DEUX formes par sécurité.
+ */
+type StreamData<T> = { data?: T[] } | T[];
+
 interface StravaStreams {
-  latlng?: [number, number][];
-  altitude?: number[];
-  time?: string[];
+  latlng?: StreamData<[number, number]>;
+  altitude?: StreamData<number>;
+  time?: StreamData<number>;
+}
+
+/** Normalise un flux : tableau brut ou objet { type, data } -> tableau de données. */
+function streamData<T>(stream: StreamData<T> | undefined): T[] {
+  if (Array.isArray(stream)) return stream;
+  const data = stream?.data;
+  return Array.isArray(data) ? data : [];
 }
 
 /** Délai max d'un appel Streams (les longues activités peuvent être lourdes). */
@@ -94,17 +113,17 @@ function xmlEscape(s: string): string {
 export async function fetchTraceGpx(stravaId: string, title: string): Promise<string> {
   const accessToken = await getValidAccessToken();
   const streams = await fetchStreams(accessToken, stravaId);
-  const latlng = streams.latlng;
-  if (!latlng || latlng.length < 2) {
+  const latlng = streamData(streams.latlng);
+  if (latlng.length < 2) {
     throw new Error("Strava n'a renvoyé aucun point de trace pour cette activité.");
   }
-  const altitude = streams.altitude ?? [];
-  const time = streams.time ?? [];
+  const altitude = streamData(streams.altitude);
+  const time = streamData(streams.time);
 
   const points: string[] = [];
   for (let i = 0; i < latlng.length; i++) {
     let pt = `    <trkpt lat="${latlng[i][0].toFixed(6)}" lon="${latlng[i][1].toFixed(6)}">`;
-    if (i < altitude.length) pt += `<ele>${altitude[i].toFixed(1)}</ele>`;
+    if (altitude[i] != null) pt += `<ele>${altitude[i].toFixed(1)}</ele>`;
     if (i < time.length) pt += `<time>${time[i]}</time>`;
     pt += "</trkpt>";
     points.push(pt);
