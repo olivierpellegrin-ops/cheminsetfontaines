@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import type { RouteFormState } from "@/app/actions/admin-routes";
+import { createCommune } from "@/app/actions/admin-communes";
 import { composeDetailsRaw } from "@/lib/details";
 import { normalizeSlug } from "@/lib/slug";
 import GpxPreview from "./gpx-preview";
@@ -69,6 +70,12 @@ export default function RouteForm({
 }) {
   const [state, formAction, pending] = useActionState(action, {} as RouteFormState);
   const [communeId, setCommuneId] = useState(initial?.communeId ?? "");
+  // D7 : la liste des communes est LOCALE au formulaire — « + Ajouter une
+  // commune » (ci-dessous) l'enrichit et la sélectionne sans recharger.
+  const [communesLocal, setCommunesLocal] = useState(communes);
+  const [newCommune, setNewCommune] = useState("");
+  const [communeBusy, setCommuneBusy] = useState(false);
+  const [communeError, setCommuneError] = useState<string | null>(null);
   const [townshipLabel, setTownshipLabel] = useState(initial?.townshipLabel ?? "");
   const [title, setTitle] = useState(initial?.title ?? stravaPrefill?.title ?? "");
   const [slugInput, setSlugInput] = useState(initial?.slug ?? "");
@@ -90,7 +97,7 @@ export default function RouteForm({
   const [captureCamera, setCaptureCamera] = useState<string | null>(null);
   const [imageAlt, setImageAlt] = useState(initial?.imageAlt ?? "");
 
-  const communeName = communes.find((c) => c.id === communeId)?.name ?? "";
+  const communeName = communesLocal.find((c) => c.id === communeId)?.name ?? "";
   const autoSlug = normalizeSlug(title);
   const slug = slugTouched ? slugInput : autoSlug;
   const detailsPreview = composeDetailsRaw(
@@ -98,6 +105,35 @@ export default function RouteForm({
     elevation === "" ? null : Number(elevation),
     (difficulty || null) as Difficulty
   );
+
+  /**
+   * D7 (option A) : ajoute une commune manquante SANS quitter le formulaire.
+   * L'action serveur normalise, contrôle l'unicité et crée ; ici on enrichit
+   * la liste locale, on sélectionne la nouvelle commune et on pré-remplit
+   * le libellé affiché (même comportement que le choix dans la liste).
+   */
+  const addCommune = async () => {
+    const name = newCommune.trim();
+    if (name.length < 2 || communeBusy) return;
+    setCommuneBusy(true);
+    setCommuneError(null);
+    const fd = new FormData();
+    fd.set("name", name);
+    const res = await createCommune(fd);
+    if (res.ok) {
+      setCommunesLocal((cs) =>
+        cs.some((c) => c.id === res.commune.id)
+          ? cs
+          : [...cs, res.commune].sort((a, b) => a.name.localeCompare(b.name, "fr"))
+      );
+      setCommuneId(res.commune.id);
+      setTownshipLabel(res.commune.name);
+      setNewCommune("");
+    } else {
+      setCommuneError(res.error);
+    }
+    setCommuneBusy(false);
+  };
 
   return (
     <form action={formAction} className="cf-admin__form">
@@ -152,7 +188,7 @@ export default function RouteForm({
             }}
           >
             <option value="">— Choisir —</option>
-            {communes.map((c) => (
+            {communesLocal.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
@@ -168,6 +204,36 @@ export default function RouteForm({
             placeholder="Défaut : nom INSEE, libre pour un libellé historique"
           />
         </label>
+      </div>
+
+      {/* D7 : ajout d'une commune manquante, en ligne, sans rechargement. */}
+      <div className="cf-admin__commune-add">
+        <input
+          type="text"
+          value={newCommune}
+          placeholder="Commune absente de la liste ? Écris son nom ici…"
+          onChange={(e) => setNewCommune(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addCommune();
+            }
+          }}
+        />
+        <button
+          type="button"
+          onClick={addCommune}
+          disabled={communeBusy || newCommune.trim().length < 2}
+        >
+          {communeBusy ? "Ajout…" : "+ Ajouter la commune"}
+        </button>
+        {communeError ? (
+          <span className="cf-admin__commune-add-error" role="alert">{communeError}</span>
+        ) : (
+          <span className="cf-admin__commune-add-hint">
+            Elle sera sélectionnée d&apos;office (libellé affiché pré-rempli).
+          </span>
+        )}
       </div>
 
       <div className="cf-admin__form-row">

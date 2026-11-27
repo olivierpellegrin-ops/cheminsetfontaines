@@ -15,8 +15,9 @@ type Photo = { title: string; imageUrl: string; imageAlt: string | null };
  * un fond vert-noir rgba(9, 30, 23, 0.88) ; l'image agrandie est GRANDE
  * et COMPLÈTE (hauteur 90vh, largeur plafonnée à 96vw, ratio réel
  * respecté via naturalWidth/naturalHeight), radius 14, ombre
- * 0 12px 40px rgba(0, 0, 0, 0.35) (specs d'origine) ; Échap ou clic sur
- * le fond pour fermer, sans flèches ni bouton ni légende visibles.
+ * 0 12px 40px rgba(0, 0, 0, 0.35) (specs d'origine) ; Échap, clic sur le
+ * fond ou bouton ✕ en haut à droite (bricole du 26/11 : sans bouton
+ * visible, personne ne devinait comment fermer) pour fermer.
  */
 export default function Gallery({ photos }: { photos: Photo[] }) {
   const [index, setIndex] = useState<number | null>(null);
@@ -77,6 +78,34 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
               padding: 24,
             }}
           >
+            <button
+              type="button"
+              aria-label="Fermer"
+              onClick={(e) => {
+                e.stopPropagation();
+                close();
+              }}
+              style={{
+                position: "fixed",
+                top: 24,
+                right: 24,
+                zIndex: 10000,
+                width: 44,
+                height: 44,
+                border: 0,
+                borderRadius: 999,
+                background: "rgba(9, 30, 23, 0.55)",
+                color: "#fff",
+                fontSize: 20,
+                lineHeight: 1,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              ✕
+            </button>
             <Image
               src={photos[index].imageUrl}
               alt={photos[index].imageAlt || photos[index].title}

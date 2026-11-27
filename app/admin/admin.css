@@ -554,3 +554,39 @@ body:has(.cf-admin-login) {
   cursor: pointer;
 }
 .cf-admin__gpx-refit:hover { background: #eef6ef; }
+
+/* ===== D7 (option A, 26/11) : ajout d'une commune en ligne =====
+ * Sous la ligne Commune/Libellé affiché du formulaire itinéraire :
+ * champ libre + bouton ; la commune créée est sélectionnée d'office. */
+.cf-admin__commune-add {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: -8px 0 16px;
+}
+.cf-admin__commune-add input {
+  flex: 1 1 240px;
+  max-width: 360px;
+}
+.cf-admin__commune-add button {
+  background: #163c32;
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cf-admin__commune-add button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.cf-admin__commune-add-hint {
+  font-size: 12px;
+  color: #6b6455;
+}
+.cf-admin__commune-add-error {
+  font-size: 13px;
+  color: #8f2020;
+}
